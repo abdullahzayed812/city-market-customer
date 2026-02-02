@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "retry": "إعادة المحاولة",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "search": "بحث...",
+    "view_all": "عرض الكل",
+    "language_changed": "تغيير اللغة",
+    "restart_app": "اعادة تشغيل التطبيق"
+  },
+  "auth": {
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "first_name": "الاسم الأول",
+    "last_name": "الاسم الأخير",
+    "full_name": "الاسم",
+    "phone": "رقم الهاتف",
+    "login_button": "تسجيل الدخول",
+    "register_button": "إنشاء حساب",
+    "already_have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
+    "dont_have_account": "ليس لديك حساب؟ إنشاء حساب"
+  },
+  "home": {
+    "title": "الرئيسية",
+    "stores": "المتاجر",
+    "categories": "التصنيفات",
+    "search_placeholder": "ابحث عن متاجر أو منتجات"
+  },
+  "store": {
+    "products": "المنتجات",
+    "add_to_cart": "إضافة إلى السلة",
+    "out_of_stock": "نفذت الكمية"
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "empty": "سلة التسوق فارغة",
+    "total": "المجموع",
+    "checkout": "إتمام الطلب",
+    "remove": "إزالة"
+  },
+  "checkout": {
+    "title": "إتمام الطلب",
+    "address": "عنوان التوصيل",
+    "delivery_fee": "رسوم التوصيل",
+    "confirm_order": "تأكيد الطلب",
+    "success": "تم تقديم الطلب بنجاح"
+  },
+  "orders": {
+    "title": "طلباتي",
+    "active": "الطلبات النشطة",
+    "history": "سجل الطلبات",
+    "status": "الحالة",
+    "track": "تتبع الطلب",
+    "details_title": "تفاصيل الطلب"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "addresses": "العناوين المحفوظة",
+    "language": "اللغة",
+    "info": "المعلومات الشخصية"
+  }
+}

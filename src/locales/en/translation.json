@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "search": "Search...",
+    "view_all": "View All",
+    "language_changed": "Change Language",
+    "restart_app": "Restart App"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "full_name": "Name",
+    "phone": "Phone Number",
+    "login_button": "Login",
+    "register_button": "Register",
+    "already_have_account": "Already have an account? Login",
+    "dont_have_account": "Don't have an account? Register"
+  },
+  "home": {
+    "title": "Home",
+    "stores": "Stores",
+    "categories": "Categories",
+    "search_placeholder": "Search for stores or products"
+  },
+  "store": {
+    "products": "Products",
+    "add_to_cart": "Add to Cart",
+    "out_of_stock": "Out of Stock"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "address": "Delivery Address",
+    "delivery_fee": "Delivery Fee",
+    "confirm_order": "Confirm Order",
+    "success": "Order placed successfully"
+  },
+  "orders": {
+    "title": "My Orders",
+    "active": "Active Orders",
+    "history": "Order History",
+    "status": "Status",
+    "track": "Track Order",
+    "details_title": "Order Details"
+  },
+  "profile": {
+    "title": "Profile",
+    "addresses": "Saved Addresses",
+    "language": "Language",
+    "info": "Personal Info"
+  }
+}
