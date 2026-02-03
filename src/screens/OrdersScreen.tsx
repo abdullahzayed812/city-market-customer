@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '../services/api/orderService';
+import { useSocket } from '../app/SocketContext';
 
 const OrdersScreen = ({ navigation }: any) => {
     const { t } = useTranslation();
@@ -11,6 +12,33 @@ const OrdersScreen = ({ navigation }: any) => {
         queryKey: ['myOrders'],
         queryFn: OrderService.getMyOrders,
     });
+
+    const queryClient = useQueryClient();
+    const { socket } = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleUpdate = () => {
+            queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+        };
+
+        const events = [
+            'ORDER_CREATED',
+            'ORDER_CONFIRMED',
+            'ORDER_CANCELLED',
+            'ORDER_READY',
+            'ORDER_PICKED_UP',
+            'ORDER_ON_THE_WAY',
+            'ORDER_DELIVERED',
+        ];
+
+        events.forEach(event => socket.on(event, handleUpdate));
+
+        return () => {
+            events.forEach(event => socket.off(event, handleUpdate));
+        };
+    }, [socket, queryClient]);
 
     const renderOrderItem = ({ item }: { item: any }) => (
         <View style={styles.orderCard}>
@@ -62,11 +90,15 @@ const OrdersScreen = ({ navigation }: any) => {
 
 const getStatusColor = (status: string) => {
     switch (status) {
-        case 'pending': return '#FF9500';
-        case 'confirmed': return '#5856D6';
-        case 'shipped': return '#007AFF';
-        case 'delivered': return '#34C759';
-        case 'cancelled': return '#FF3B30';
+        case 'CREATED': return '#FF9500';
+        case 'PENDING': return '#FF9500';
+        case 'CONFIRMED': return '#5856D6';
+        case 'PREPARING': return '#5856D6';
+        case 'READY': return '#007AFF';
+        case 'PICKED_UP': return '#007AFF';
+        case 'ON_THE_WAY': return '#007AFF';
+        case 'DELIVERED': return '#34C759';
+        case 'CANCELLED': return '#FF3B30';
         default: return '#8E8E93';
     }
 };
