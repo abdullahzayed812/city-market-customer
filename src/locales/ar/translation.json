@@ -11,7 +11,19 @@
     "search": "بحث...",
     "view_all": "عرض الكل",
     "language_changed": "تغيير اللغة",
-    "restart_app": "اعادة تشغيل التطبيق"
+    "restart_app": "اعادة تشغيل التطبيق",
+    "see_all": "عرض الكل",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "description": "الوصف",
+    "select_language": "اختر لغة التطبيق",
+    "language_note": "يرجى ملاحظة أن تغيير اللغة والاتجاه (من اليمين لليسار/من اليسار لليمين) قد يتطلب إعادة تشغيل التطبيق لتطبيقه بشكل صحيح.",
+    "order_prefix": "طلب #",
+    "default": "افتراضي",
+    "label": "التسمية",
+    "address_details": "تفاصيل العنوان",
+    "set_default": "تعيين كعنوان افتراضي"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -23,24 +35,35 @@
     "login_button": "تسجيل الدخول",
     "register_button": "إنشاء حساب",
     "already_have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
-    "dont_have_account": "ليس لديك حساب؟ إنشاء حساب"
+    "dont_have_account": "ليس لديك حساب؟ إنشاء حساب",
+    "login_subtitle": "قم بتسجيل الدخول للمتابعة إلى سيتي ماركت",
+    "register_subtitle": "أنشئ حسابًا لبدء التسوق"
   },
   "home": {
     "title": "الرئيسية",
     "stores": "المتاجر",
     "categories": "التصنيفات",
-    "search_placeholder": "ابحث عن متاجر أو منتجات"
+    "search_placeholder": "ابحث عن متاجر أو منتجات",
+    "open": "مفتوح",
+    "closed": "مغلق"
   },
   "store": {
     "products": "المنتجات",
     "add_to_cart": "إضافة إلى السلة",
-    "out_of_stock": "نفذت الكمية"
+    "out_of_stock": "نفذت الكمية",
+    "added_to_cart": "تمت الإضافة إلى السلة",
+    "confirm_add": "هل تريد إضافة هذا المنتج إلى السلة؟"
+  },
+  "product": {
+    "in_stock": "متوفر في المخزن",
+    "quantity": "الكمية"
   },
   "cart": {
     "title": "سلة التسوق",
     "empty": "سلة التسوق فارغة",
-    "total": "المجموع",
-    "checkout": "إتمام الطلب",
+    "total": "المجموع الكلي",
+    "subtotal": "المجموع الفرعي",
+    "checkout": "الدفع",
     "remove": "إزالة"
   },
   "checkout": {
@@ -48,7 +71,12 @@
     "address": "عنوان التوصيل",
     "delivery_fee": "رسوم التوصيل",
     "confirm_order": "تأكيد الطلب",
-    "success": "تم تقديم الطلب بنجاح"
+    "success": "تم تقديم الطلب بنجاح",
+    "payment_method": "طريقة الدفع",
+    "cash_on_delivery": "الدفع عند الاستلام",
+    "cash_description": "ادفع عند استلام طلبك",
+    "order_summary": "ملخص الطلب",
+    "grand_total": "المجموع الإجمالي"
   },
   "orders": {
     "title": "طلباتي",
@@ -56,12 +84,32 @@
     "history": "سجل الطلبات",
     "status": "الحالة",
     "track": "تتبع الطلب",
-    "details_title": "تفاصيل الطلب"
+    "details_title": "تفاصيل الطلب",
+    "no_orders": "لا توجد طلبات",
+    "payment_summary": "ملخص الدفع",
+    "total_amount": "المبلغ الإجمالي"
   },
   "profile": {
     "title": "الملف الشخصي",
     "addresses": "العناوين المحفوظة",
     "language": "اللغة",
-    "info": "المعلومات الشخصية"
+    "info": "المعلومات الشخصية",
+    "account_settings": "إعدادات الحساب",
+    "support": "الدعم"
+  },
+  "search": {
+    "searching": "جاري البحث عن المنتجات...",
+    "no_results_hint": "حاول البحث عن شيء آخر",
+    "min_chars": "أدخل 3 أحرف على الأقل للبحث"
+  },
+  "addresses": {
+    "no_addresses": "لا توجد عناوين محفوظة",
+    "add_new": "إضافة عنوان جديد",
+    "address_added": "تمت إضافة العنوان",
+    "address_saved": "تم حفظ عنوانك الجديد",
+    "address_deleted": "تم حذف العنوان",
+    "required_fields": "التسمية والعنوان مطلوبان",
+    "placeholder_label": "مثال: المنزل، العمل",
+    "placeholder_address": "أدخل العنوان الكامل"
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,120 +6,381 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ChevronLeft,
+  Package,
+  MapPin,
+  Receipt,
+  Clock,
+} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
+import { theme } from '../theme';
+import { useSocket } from '../app/SocketContext';
 
 const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { socket } = useSocket();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => OrderService.getOrderById(orderId),
   });
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ['order'] });
+    };
+
+    const events = [
+      'ORDER_CREATED',
+      'ORDER_CONFIRMED',
+      'ORDER_CANCELLED',
+      'ORDER_READY',
+      'ORDER_PICKED_UP',
+      'ORDER_ON_THE_WAY',
+      'ORDER_DELIVERED',
+    ];
+
+    events.forEach(event => socket.on(event, handleUpdate));
+
+    return () => {
+      events.forEach(event => socket.off(event, handleUpdate));
+    };
+  }, [socket, queryClient]);
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
+  const orderData = order?.order;
+  const items = order?.items || [];
+  const statusConfig = getStatusConfig(orderData?.status);
+  const date = orderData ? new Date(orderData.createdAt) : new Date();
+
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Order #{order?.order?.id?.slice(-6)}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <ChevronLeft size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.title}>
+            {t('orders.details_title') || 'Order Details'}
           </Text>
-          <Text style={styles.status}>Status: {order?.order?.status}</Text>
-          <Text style={styles.date}>
-            {new Date(order?.order?.createdAt)?.toLocaleString()}
-          </Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Items</Text>
-          {order.items.map((item: any) => (
-            <View key={item.id} style={styles.itemRow}>
-              <Text style={styles.itemName}>
-                {item.productName} x{item.quantity}
-              </Text>
-              <Text style={styles.itemPrice}>
-                ${item.totalPrice?.toFixed(2)}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Status Section */}
+          <View style={styles.statusSection}>
+            <View
+              style={[
+                styles.statusIconContainer,
+                { backgroundColor: statusConfig.color + '15' },
+              ]}
+            >
+              <Package size={40} color={statusConfig.color} />
+            </View>
+            <Text style={[styles.statusText, { color: statusConfig.color }]}>
+              {orderData?.status}
+            </Text>
+            <Text style={styles.orderIdText}>
+              Order #{orderData?.id?.slice(-6)}
+            </Text>
+            <View style={styles.dateRow}>
+              <Clock size={14} color={theme.colors.textMuted} />
+              <Text style={styles.dateText}>
+                {date.toLocaleString([], {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
               </Text>
             </View>
-          ))}
-        </View>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Summary</Text>
-          <View style={styles.summaryRow}>
-            <Text>Delivery Fee</Text>
-            <Text style={styles.total}>
-              ${order?.order?.deliveryFee?.toFixed(2)}
-            </Text>
+          {/* Items Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Package size={20} color={theme.colors.primary} />
+              <Text style={styles.sectionTitle}>
+                {t('store.products') || 'Items'}
+              </Text>
+            </View>
+            <View style={styles.itemsCard}>
+              {items.map((item: any, index: number) => (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.itemRow,
+                    index === items.length - 1 && { borderBottomWidth: 0 },
+                  ]}
+                >
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemName}>{item.productName}</Text>
+                    <Text style={styles.itemQty}>
+                      Quantity: x{item.quantity}
+                    </Text>
+                  </View>
+                  <Text style={styles.itemPrice}>
+                    ${item.totalPrice?.toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View style={styles.summaryRow}>
-            <Text>Subtotal</Text>
-            <Text style={styles.total}>
-              ${order?.order?.subtotal?.toFixed(2)}
-            </Text>
+
+          {/* Address Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MapPin size={20} color={theme.colors.primary} />
+              <Text style={styles.sectionTitle}>{t('checkout.address')}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.addressText}>
+                {orderData?.deliveryAddress}
+              </Text>
+            </View>
           </View>
-          <View style={styles.summaryRow}>
-            <Text>Total Amount</Text>
-            <Text style={styles.total}>
-              ${order?.order?.totalAmount?.toFixed(2)}
-            </Text>
+
+          {/* Summary Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Receipt size={20} color={theme.colors.primary} />
+              <Text style={styles.sectionTitle}>Payment Summary</Text>
+            </View>
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Subtotal</Text>
+                <Text style={styles.summaryValue}>
+                  ${orderData?.subtotal?.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>
+                  {t('checkout.delivery_fee')}
+                </Text>
+                <Text style={styles.summaryValue}>
+                  ${orderData?.deliveryFee?.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={[styles.summaryRow, { marginTop: 8 }]}>
+                <Text style={styles.totalLabel}>Total Amount</Text>
+                <Text style={styles.totalValue}>
+                  ${orderData?.totalAmount?.toFixed(2)}
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case 'CREATED':
+    case 'PENDING':
+      return { color: '#FF9500' };
+    case 'CONFIRMED':
+    case 'PREPARING':
+      return { color: '#5856D6' };
+    case 'READY':
+    case 'PICKED_UP':
+    case 'ON_THE_WAY':
+      return { color: theme.colors.primary };
+    case 'DELIVERED':
+      return { color: theme.colors.success };
+    case 'CANCELLED':
+      return { color: theme.colors.error };
+    default:
+      return { color: theme.colors.textMuted };
+  }
+};
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F2F7' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  safeArea: { flex: 1, backgroundColor: theme.colors.white },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
   header: {
+    padding: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    ...theme.shadows.soft,
   },
-  backButton: { marginRight: 15 },
-  backButtonText: { fontSize: 24, color: '#007AFF' },
-  title: { fontSize: 20, fontWeight: 'bold' },
-  content: { flex: 1 },
-  section: { backgroundColor: '#fff', marginTop: 15, padding: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  status: {
-    fontSize: 16,
-    color: '#007AFF',
-    marginBottom: 5,
-    textTransform: 'capitalize',
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  date: { fontSize: 14, color: '#8E8E93' },
+  title: {
+    fontSize: theme.typography.sizes.xl,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.primary,
+  },
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  statusSection: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    padding: 30,
+    borderBottomLeftRadius: theme.radius.xl,
+    borderBottomRightRadius: theme.radius.xl,
+    ...theme.shadows.soft,
+    marginBottom: theme.spacing.lg,
+  },
+  statusIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  statusText: {
+    fontSize: theme.typography.sizes.xl,
+    fontWeight: theme.typography.weights.bold,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  orderIdText: {
+    fontSize: theme.typography.sizes.md,
+    color: theme.colors.textMuted,
+    fontWeight: theme.typography.weights.semibold,
+    marginBottom: 8,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textMuted,
+    marginLeft: 6,
+  },
+  section: {
+    paddingHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.primary,
+    marginLeft: 8,
+  },
+  itemsCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    ...theme.shadows.soft,
+  },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
+    borderBottomColor: theme.colors.border,
   },
-  itemName: { fontSize: 16 },
-  itemPrice: { fontSize: 16, fontWeight: '600' },
+  itemInfo: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.semibold,
+    color: theme.colors.primary,
+    marginBottom: 2,
+  },
+  itemQty: {
+    fontSize: theme.typography.sizes.xs,
+    color: theme.colors.textMuted,
+  },
+  itemPrice: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.primary,
+  },
+  infoCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.soft,
+  },
+  addressText: {
+    fontSize: theme.typography.sizes.md,
+    color: theme.colors.primary,
+    lineHeight: 22,
+  },
+  summaryCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows.soft,
+  },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginBottom: 8,
   },
-  total: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
+  summaryLabel: {
+    fontSize: theme.typography.sizes.md,
+    color: theme.colors.textMuted,
+  },
+  summaryValue: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.semibold,
+    color: theme.colors.primary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+    marginVertical: 12,
+  },
+  totalLabel: {
+    fontSize: theme.typography.sizes.lg,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.primary,
+  },
+  totalValue: {
+    fontSize: theme.typography.sizes.xl,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.secondary,
+  },
 });
 
 export default OrderDetailsScreen;

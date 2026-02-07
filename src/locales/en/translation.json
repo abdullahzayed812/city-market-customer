@@ -11,7 +11,19 @@
     "search": "Search...",
     "view_all": "View All",
     "language_changed": "Change Language",
-    "restart_app": "Restart App"
+    "restart_app": "Restart App",
+    "see_all": "See All",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "description": "Description",
+    "select_language": "Select App Language",
+    "language_note": "Please note that changing language and direction (RTL/LTR) may require an app restart to apply correctly.",
+    "order_prefix": "Order #",
+    "default": "Default",
+    "label": "Label",
+    "address_details": "Address Details",
+    "set_default": "Set as default address"
   },
   "auth": {
     "email": "Email",
@@ -23,23 +35,34 @@
     "login_button": "Login",
     "register_button": "Register",
     "already_have_account": "Already have an account? Login",
-    "dont_have_account": "Don't have an account? Register"
+    "dont_have_account": "Don't have an account? Register",
+    "login_subtitle": "Sign in to continue to CityMarket",
+    "register_subtitle": "Create an account to start shopping"
   },
   "home": {
     "title": "Home",
     "stores": "Stores",
     "categories": "Categories",
-    "search_placeholder": "Search for stores or products"
+    "search_placeholder": "Search for stores or products",
+    "open": "Open",
+    "closed": "Closed"
   },
   "store": {
     "products": "Products",
     "add_to_cart": "Add to Cart",
-    "out_of_stock": "Out of Stock"
+    "out_of_stock": "Out of Stock",
+    "added_to_cart": "Added to cart",
+    "confirm_add": "Do you want to add this item to your cart?"
+  },
+  "product": {
+    "in_stock": "In Stock",
+    "quantity": "Quantity"
   },
   "cart": {
     "title": "Shopping Cart",
     "empty": "Your cart is empty",
     "total": "Total",
+    "subtotal": "Subtotal",
     "checkout": "Checkout",
     "remove": "Remove"
   },
@@ -48,7 +71,12 @@
     "address": "Delivery Address",
     "delivery_fee": "Delivery Fee",
     "confirm_order": "Confirm Order",
-    "success": "Order placed successfully"
+    "success": "Order placed successfully",
+    "payment_method": "Payment Method",
+    "cash_on_delivery": "Cash on Delivery",
+    "cash_description": "Pay when you receive your order",
+    "order_summary": "Order Summary",
+    "grand_total": "Grand Total"
   },
   "orders": {
     "title": "My Orders",
@@ -56,12 +84,32 @@
     "history": "Order History",
     "status": "Status",
     "track": "Track Order",
-    "details_title": "Order Details"
+    "details_title": "Order Details",
+    "no_orders": "No orders found",
+    "payment_summary": "Payment Summary",
+    "total_amount": "Total Amount"
   },
   "profile": {
     "title": "Profile",
     "addresses": "Saved Addresses",
     "language": "Language",
-    "info": "Personal Info"
+    "info": "Personal Info",
+    "account_settings": "Account Settings",
+    "support": "Support"
+  },
+  "search": {
+    "searching": "Searching products...",
+    "no_results_hint": "Try searching for something else",
+    "min_chars": "Enter at least 3 characters to search"
+  },
+  "addresses": {
+    "no_addresses": "No addresses saved",
+    "add_new": "Add New Address",
+    "address_added": "Address Added",
+    "address_saved": "Your new address has been saved",
+    "address_deleted": "Address Deleted",
+    "required_fields": "Label and address are required",
+    "placeholder_label": "e.g. Home, Work",
+    "placeholder_address": "Enter full address"
   }
 }
