@@ -17,4 +17,12 @@ export const OrderService = {
     const response = await apiClient.post(`/orders/${id}/cancel`);
     return response.data?.data;
   },
+  acceptProposal: async (proposalId: string) => {
+    const response = await apiClient.post(`/orders/proposals/${proposalId}/accept`);
+    return response.data?.data;
+  },
+  rejectProposal: async (proposalId: string, cancelEntireOrder: boolean = false) => {
+    const response = await apiClient.post(`/orders/proposals/${proposalId}/reject`, { cancelEntireOrder });
+    return response.data?.data;
+  },
 };

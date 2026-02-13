@@ -29,6 +29,7 @@ import LanguageSettingsScreen from '../screens/LanguageSettingsScreen';
 import { useAuth } from '../app/AuthContext';
 import SearchScreen from '../screens/SearchScreen';
 import SplashScreen from '../screens/SplashScreen';
+import ReviewProposalsScreen from '../screens/ReviewProposalsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -178,6 +179,11 @@ const RootNavigator = () => {
             <Stack.Screen
               name="LanguageSettings"
               component={LanguageSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ReviewProposals"
+              component={ReviewProposalsScreen}
               options={{ headerShown: false }}
             />
           </>

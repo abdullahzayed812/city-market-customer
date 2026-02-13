@@ -16,6 +16,7 @@ import {
   MapPin,
   Receipt,
   Clock,
+  AlertCircle,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
@@ -66,7 +67,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   }
 
   const orderData = order?.order;
-  const items = order?.items || [];
+  const vendorOrders = order?.vendorOrders || [];
   const statusConfig = getStatusConfig(orderData?.status);
   const date = orderData ? new Date(orderData.createdAt) : new Date();
 
@@ -116,38 +117,55 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 })}
               </Text>
             </View>
+
+            {vendorOrders.some((vo: any) => vo.proposals && vo.proposals.length > 0) && (
+              <TouchableOpacity
+                style={styles.reviewProposalsButton}
+                onPress={() => navigation.navigate('ReviewProposals', { orderId })}
+              >
+                <AlertCircle size={20} color={theme.colors.white} />
+                <Text style={styles.reviewProposalsText}>
+                  {t('proposals.review_button') || 'Review Vendor Proposals'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* Items Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Package size={20} color={theme.colors.primary} />
-              <Text style={styles.sectionTitle}>
-                {t('store.products') || 'Items'}
-              </Text>
-            </View>
-            <View style={styles.itemsCard}>
-              {items.map((item: any, index: number) => (
-                <View
-                  key={item.id}
-                  style={[
-                    styles.itemRow,
-                    index === items.length - 1 && { borderBottomWidth: 0 },
-                  ]}
-                >
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName}>{item.productName}</Text>
-                    <Text style={styles.itemQty}>
-                      Quantity: x{item.quantity}
+          {/* Multi-Vendor Items Sections */}
+          {vendorOrders.map((vo: any) => (
+            <View key={vo.id} style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Package size={20} color={theme.colors.primary} />
+                <Text style={styles.sectionTitle}>
+                  {vo.vendorName}
+                </Text>
+                <View style={[styles.vendorStatusBadge, { backgroundColor: getStatusConfig(vo.status).color + '20' }]}>
+                  <Text style={[styles.vendorStatusText, { color: getStatusConfig(vo.status).color }]}>{vo.status}</Text>
+                </View>
+              </View>
+              <View style={styles.itemsCard}>
+                {vo.items.map((item: any, index: number) => (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.itemRow,
+                      index === vo.items.length - 1 && { borderBottomWidth: 0 },
+                    ]}
+                  >
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemName}>{item.productName}</Text>
+                      <Text style={styles.itemQty}>
+                        Quantity: x{item.quantity}
+                      </Text>
+                    </View>
+                    <Text style={styles.itemPrice}>
+                      ${item.totalPrice?.toFixed(2)}
                     </Text>
                   </View>
-                  <Text style={styles.itemPrice}>
-                    ${item.totalPrice?.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
+                ))}
+              </View>
             </View>
-          </View>
+          ))}
 
           {/* Address Section */}
           <View style={styles.section}>
@@ -259,6 +277,21 @@ const styles = StyleSheet.create({
     ...theme.shadows.soft,
     marginBottom: theme.spacing.lg,
   },
+  reviewProposalsButton: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.error,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 20,
+    alignItems: 'center',
+    ...theme.shadows.medium,
+  },
+  reviewProposalsText: {
+    color: theme.colors.white,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
   statusIconContainer: {
     width: 80,
     height: 80,
@@ -302,6 +335,17 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weights.bold,
     color: theme.colors.primary,
     marginLeft: 8,
+    flex: 1,
+  },
+  vendorStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  vendorStatusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   itemsCard: {
     backgroundColor: theme.colors.white,
