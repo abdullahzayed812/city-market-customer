@@ -22,6 +22,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
 import { theme } from '../theme';
 import { useSocket } from '../app/SocketContext';
+import {
+  OrderWithItems,
+  CustomerOrder,
+  VendorOrder,
+  VendorOrderItem,
+  CustomerOrderStatus,
+  VendorOrderStatus,
+  EventType,
+} from '@city-market/shared'; // Import shared types
 
 const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
@@ -29,10 +38,12 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
     queryKey: ['order', orderId],
     queryFn: () => OrderService.getOrderById(orderId),
   });
+
+  console.log(order);
 
   useEffect(() => {
     if (!socket) return;
@@ -42,13 +53,16 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     };
 
     const events = [
-      'ORDER_CREATED',
-      'ORDER_CONFIRMED',
-      'ORDER_CANCELLED',
-      'ORDER_READY',
-      'ORDER_PICKED_UP',
-      'ORDER_ON_THE_WAY',
-      'ORDER_DELIVERED',
+      EventType.VENDOR_ORDER_PROPOSED,
+      EventType.ORDER_CREATED,
+      EventType.ORDER_CONFIRMED,
+      EventType.ORDER_CANCELLED,
+      EventType.ORDER_READY,
+      EventType.ORDER_PICKED_UP,
+      EventType.ORDER_ON_THE_WAY,
+      EventType.ORDER_DELIVERED,
+      EventType.PROPOSAL_ACCEPTED,
+      EventType.PROPOSAL_REJECTED,
     ];
 
     events.forEach(event => socket.on(event, handleUpdate));
@@ -66,8 +80,42 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     );
   }
 
-  const orderData = order?.order;
-  const vendorOrders = order?.vendorOrders || [];
+  const orderData: CustomerOrder | undefined = order?.order;
+  const vendorOrders: (VendorOrder & {
+    items: VendorOrderItem[];
+    vendorName: string;
+    proposals: any[];
+  })[] = order?.vendorOrders || [];
+
+  const getStatusConfig = (
+    status: CustomerOrderStatus | VendorOrderStatus | undefined,
+  ) => {
+    if (!status) {
+      return { color: theme.colors.textMuted };
+    }
+    switch (status) {
+      case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
+      case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
+      case VendorOrderStatus.PENDING:
+      case VendorOrderStatus.PROPOSAL_SENT:
+        return { color: '#FF9500' }; // Yellow/Orange for pending/waiting
+      case CustomerOrderStatus.READY:
+      case CustomerOrderStatus.IN_DELIVERY:
+      case VendorOrderStatus.CONFIRMED:
+      case VendorOrderStatus.PICKED_UP:
+      case VendorOrderStatus.ON_THE_WAY:
+        return { color: theme.colors.primary }; // Primary color for in-progress
+      case CustomerOrderStatus.COMPLETED:
+      case VendorOrderStatus.DELIVERED:
+        return { color: theme.colors.success }; // Green for completed
+      case CustomerOrderStatus.CANCELLED:
+      case VendorOrderStatus.CANCELLED:
+        return { color: theme.colors.error }; // Red for cancelled
+      default:
+        return { color: theme.colors.textMuted };
+    }
+  };
+
   const statusConfig = getStatusConfig(orderData?.status);
   const date = orderData ? new Date(orderData.createdAt) : new Date();
 
@@ -103,7 +151,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               <Package size={40} color={statusConfig.color} />
             </View>
             <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {orderData?.status}
+              {orderData?.status?.replace(/_/g, ' ')}
             </Text>
             <Text style={styles.orderIdText}>
               Order #{orderData?.id?.slice(-6)}
@@ -118,54 +166,81 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </Text>
             </View>
 
-            {vendorOrders.some((vo: any) => vo.proposals && vo.proposals.length > 0) && (
-              <TouchableOpacity
-                style={styles.reviewProposalsButton}
-                onPress={() => navigation.navigate('ReviewProposals', { orderId })}
-              >
-                <AlertCircle size={20} color={theme.colors.white} />
-                <Text style={styles.reviewProposalsText}>
-                  {t('proposals.review_button') || 'Review Vendor Proposals'}
-                </Text>
-              </TouchableOpacity>
-            )}
+            {vendorOrders.some(
+              vo => vo.proposals && vo.proposals.length > 0,
+            ) && (
+                <TouchableOpacity
+                  style={styles.reviewProposalsButton}
+                  onPress={() =>
+                    navigation.navigate('ReviewProposals', { orderId })
+                  }
+                >
+                  <AlertCircle size={20} color={theme.colors.white} />
+                  <Text style={styles.reviewProposalsText}>
+                    {t('proposals.review_button') || 'Review Vendor Proposals'}
+                  </Text>
+                </TouchableOpacity>
+              )}
           </View>
 
           {/* Multi-Vendor Items Sections */}
-          {vendorOrders.map((vo: any) => (
-            <View key={vo.id} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Package size={20} color={theme.colors.primary} />
-                <Text style={styles.sectionTitle}>
-                  {vo.vendorName}
-                </Text>
-                <View style={[styles.vendorStatusBadge, { backgroundColor: getStatusConfig(vo.status).color + '20' }]}>
-                  <Text style={[styles.vendorStatusText, { color: getStatusConfig(vo.status).color }]}>{vo.status}</Text>
-                </View>
-              </View>
-              <View style={styles.itemsCard}>
-                {vo.items.map((item: any, index: number) => (
+          {vendorOrders.map(
+            (
+              vo: VendorOrder & {
+                items: VendorOrderItem[];
+                vendorName: string;
+                proposals: any[];
+              },
+            ) => (
+              <View key={vo.id} style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Package size={20} color={theme.colors.primary} />
+                  <Text style={styles.sectionTitle}>{vo.vendorName}</Text>
                   <View
-                    key={item.id}
                     style={[
-                      styles.itemRow,
-                      index === vo.items.length - 1 && { borderBottomWidth: 0 },
+                      styles.vendorStatusBadge,
+                      {
+                        backgroundColor:
+                          getStatusConfig(vo.status).color + '20',
+                      },
                     ]}
                   >
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName}>{item.productName}</Text>
-                      <Text style={styles.itemQty}>
-                        Quantity: x{item.quantity}
-                      </Text>
-                    </View>
-                    <Text style={styles.itemPrice}>
-                      ${item.totalPrice?.toFixed(2)}
+                    <Text
+                      style={[
+                        styles.vendorStatusText,
+                        { color: getStatusConfig(vo.status).color },
+                      ]}
+                    >
+                      {vo.status}
                     </Text>
                   </View>
-                ))}
+                </View>
+                <View style={styles.itemsCard}>
+                  {vo.items.map((item: VendorOrderItem, index: number) => (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.itemRow,
+                        index === vo.items.length - 1 && {
+                          borderBottomWidth: 0,
+                        },
+                      ]}
+                    >
+                      <View style={styles.itemInfo}>
+                        <Text style={styles.itemName}>{item.productName}</Text>
+                        <Text style={styles.itemQty}>
+                          Quantity: x{item.quantity}
+                        </Text>
+                      </View>
+                      <Text style={styles.itemPrice}>
+                        ${item.totalPrice?.toFixed(2)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          ))}
+            ),
+          )}
 
           {/* Address Section */}
           <View style={styles.section}>
@@ -214,27 +289,6 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       </View>
     </SafeAreaView>
   );
-};
-
-const getStatusConfig = (status: string) => {
-  switch (status) {
-    case 'CREATED':
-    case 'PENDING':
-      return { color: '#FF9500' };
-    case 'CONFIRMED':
-    case 'PREPARING':
-      return { color: '#5856D6' };
-    case 'READY':
-    case 'PICKED_UP':
-    case 'ON_THE_WAY':
-      return { color: theme.colors.primary };
-    case 'DELIVERED':
-      return { color: theme.colors.success };
-    case 'CANCELLED':
-      return { color: theme.colors.error };
-    default:
-      return { color: theme.colors.textMuted };
-  }
 };
 
 const styles = StyleSheet.create({

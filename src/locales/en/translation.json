@@ -23,7 +23,12 @@
     "default": "Default",
     "label": "Label",
     "address_details": "Address Details",
-    "set_default": "Set as default address"
+    "set_default": "Set as default address",
+    "not_set": "Not set",
+    "help_center": "Help Center",
+    "account_privacy": "Account Privacy",
+    "logout_failed": "Logout failed",
+    "ok": "OK"
   },
   "auth": {
     "email": "Email",

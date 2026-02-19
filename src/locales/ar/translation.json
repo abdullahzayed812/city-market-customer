@@ -23,7 +23,12 @@
     "default": "افتراضي",
     "label": "التسمية",
     "address_details": "تفاصيل العنوان",
-    "set_default": "تعيين كعنوان افتراضي"
+    "set_default": "تعيين كعنوان افتراضي",
+    "not_set": "غير محدد",
+    "help_center": "مركز المساعدة",
+    "account_privacy": "خصوصية الحساب",
+    "logout_failed": "فشل تسجيل الخروج",
+    "ok": "تم"
   },
   "auth": {
     "email": "البريد الإلكتروني",

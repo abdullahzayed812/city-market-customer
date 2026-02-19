@@ -63,14 +63,14 @@ const LanguageSettingsScreen = ({ navigation }: any) => {
                 </View>
 
                 <View style={styles.content}>
-                    <Text style={styles.sectionTitle}>Select App Language</Text>
+                    <Text style={styles.sectionTitle}>{t('common.select_language')}</Text>
                     <LanguageOption label="English" langCode="en" />
                     <LanguageOption label="العربية" langCode="ar" />
                 </View>
 
                 <View style={styles.infoBox}>
                     <Text style={styles.infoText}>
-                        Please note that changing language and direction (RTL/LTR) may require an app restart to apply correctly.
+                        {t('common.language_note')}
                     </Text>
                 </View>
             </View>

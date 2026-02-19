@@ -6,12 +6,18 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Dimensions,
+  // Dimensions,
   StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { MapPin, ChevronLeft, Check, Plus, CreditCard } from 'lucide-react-native';
+import {
+  MapPin,
+  ChevronLeft,
+  Check,
+  Plus,
+  CreditCard,
+} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserService } from '../services/api/userService';
@@ -19,7 +25,7 @@ import { OrderService } from '../services/api/orderService';
 import { useCart } from '../app/CartContext';
 import { theme } from '../theme';
 
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window');
 
 const CheckoutScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -39,14 +45,15 @@ const CheckoutScreen = ({ navigation }: any) => {
         type: 'success',
         text1: t('checkout.success'),
         position: 'top',
-        onHide: () => navigation.replace('Main', { screen: 'Orders' }),
       });
+      navigation.replace('Main', { screen: 'Orders' });
     },
-    onError: () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onError: error => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Failed to place order',
+        text2: error?.message || 'Failed to place order',
         position: 'top',
       });
     },
@@ -105,14 +112,20 @@ const CheckoutScreen = ({ navigation }: any) => {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('checkout.title')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* Address Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -144,10 +157,22 @@ const CheckoutScreen = ({ navigation }: any) => {
                   onPress={() => setSelectedAddress(address.id)}
                 >
                   <View style={styles.addressIconContainer}>
-                    <MapPin size={22} color={selectedAddress === address.id ? theme.colors.primary : theme.colors.textMuted} />
+                    <MapPin
+                      size={22}
+                      color={
+                        selectedAddress === address.id
+                          ? theme.colors.primary
+                          : theme.colors.textMuted
+                      }
+                    />
                   </View>
                   <View style={styles.addressInfo}>
-                    <Text style={[styles.addressLabel, selectedAddress === address.id && styles.selectedText]}>
+                    <Text
+                      style={[
+                        styles.addressLabel,
+                        selectedAddress === address.id && styles.selectedText,
+                      ]}
+                    >
                       {address.label}
                     </Text>
                     <Text style={styles.addressText} numberOfLines={2}>
@@ -173,7 +198,9 @@ const CheckoutScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.paymentInfo}>
                 <Text style={styles.paymentLabel}>Cash on Delivery</Text>
-                <Text style={styles.paymentDesc}>Pay when you receive your order</Text>
+                <Text style={styles.paymentDesc}>
+                  Pay when you receive your order
+                </Text>
               </View>
               <View style={styles.radioActive}>
                 <View style={styles.radioInner} />
@@ -190,8 +217,12 @@ const CheckoutScreen = ({ navigation }: any) => {
                 <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('checkout.delivery_fee')}</Text>
-                <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+                <Text style={styles.summaryLabel}>
+                  {t('checkout.delivery_fee')}
+                </Text>
+                <Text style={styles.summaryValue}>
+                  ${deliveryFee.toFixed(2)}
+                </Text>
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>
@@ -230,7 +261,12 @@ const CheckoutScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.white },
   container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
   header: {
     padding: theme.spacing.lg,
     flexDirection: 'row',

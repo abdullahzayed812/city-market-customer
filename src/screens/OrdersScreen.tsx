@@ -15,13 +15,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
 import { useSocket } from '../app/SocketContext';
 import { theme } from '../theme';
+import { CustomerOrder, CustomerOrderStatus, EventType } from '@city-market/shared'; // Import shared types
 
 const OrdersScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading } = useQuery<CustomerOrder[] | undefined>({
+    // Use CustomerOrder[]
     queryKey: ['myOrders'],
     queryFn: OrderService.getMyOrders,
   });
@@ -34,13 +36,16 @@ const OrdersScreen = ({ navigation }: any) => {
     };
 
     const events = [
-      'ORDER_CREATED',
-      'ORDER_CONFIRMED',
-      'ORDER_CANCELLED',
-      'ORDER_READY',
-      'ORDER_PICKED_UP',
-      'ORDER_ON_THE_WAY',
-      'ORDER_DELIVERED',
+      EventType.VENDOR_ORDER_PROPOSED,
+      EventType.ORDER_CREATED,
+      EventType.ORDER_CONFIRMED,
+      EventType.ORDER_CANCELLED,
+      EventType.ORDER_READY,
+      EventType.ORDER_PICKED_UP,
+      EventType.ORDER_ON_THE_WAY,
+      EventType.ORDER_DELIVERED,
+      EventType.PROPOSAL_ACCEPTED,
+      EventType.PROPOSAL_REJECTED,
     ];
 
     events.forEach(event => socket.on(event, handleUpdate));
@@ -50,28 +55,26 @@ const OrdersScreen = ({ navigation }: any) => {
     };
   }, [socket, queryClient]);
 
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: CustomerOrderStatus) => {
+    // Use CustomerOrderStatus
     switch (status) {
-      case 'CREATED':
-      case 'PENDING':
-        return { color: '#FF9500', label: status };
-      case 'CONFIRMED':
-      case 'PREPARING':
-        return { color: '#5856D6', label: status };
-      case 'READY':
-      case 'PICKED_UP':
-      case 'ON_THE_WAY':
-        return { color: theme.colors.primary, label: status };
-      case 'DELIVERED':
-        return { color: theme.colors.success, label: status };
-      case 'CANCELLED':
-        return { color: theme.colors.error, label: status };
+      case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
+      case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
+        return { color: '#FF9500', label: status }; // Yellow/Orange for pending/waiting
+      case CustomerOrderStatus.READY:
+      case CustomerOrderStatus.IN_DELIVERY:
+        return { color: theme.colors.primary, label: status }; // Primary color for in-progress delivery
+      case CustomerOrderStatus.COMPLETED:
+        return { color: theme.colors.success, label: status }; // Green for completed
+      case CustomerOrderStatus.CANCELLED:
+        return { color: theme.colors.error, label: status }; // Red for cancelled
       default:
         return { color: theme.colors.textMuted, label: status };
     }
   };
 
-  const renderOrderItem = ({ item }: { item: any }) => {
+  const renderOrderItem = ({ item }: { item: CustomerOrder }) => {
+    // Use CustomerOrder
     const statusConfig = getStatusConfig(item.status);
     const date = new Date(item.createdAt);
 
@@ -95,7 +98,7 @@ const OrdersScreen = ({ navigation }: any) => {
             ]}
           >
             <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {statusConfig.label}
+              {statusConfig.label.replace(/_/g, ' ')}
             </Text>
           </View>
         </View>

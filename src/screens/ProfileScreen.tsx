@@ -36,7 +36,7 @@ const ProfileScreen = ({ navigation }: any) => {
       }
       await signOut();
     } catch (error) {
-      Alert.alert(t('common.error'), 'Logout failed');
+      Alert.alert(t('common.error'), t('common.logout_failed'));
     }
   };
 
@@ -73,19 +73,21 @@ const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{profile?.firstName?.charAt(0)}</Text>
+              <Text style={styles.avatarText}>{profile?.fullName?.charAt(0)}</Text>
             </View>
             <TouchableOpacity style={styles.editAvatarButton}>
               <Settings size={16} color={theme.colors.white} />
             </TouchableOpacity>
           </View>
           <Text style={styles.name}>
-            {profile?.firstName} {profile?.lastName}
+            {profile?.fullName}
           </Text>
-          <View style={styles.emailContainer}>
-            <Mail size={14} color={theme.colors.textMuted} />
-            <Text style={styles.email}>{profile?.email}</Text>
-          </View>
+          {profile?.phone && (
+            <View style={styles.emailContainer}>
+              <Phone size={14} color={theme.colors.textMuted} />
+              <Text style={styles.email}>{profile?.phone}</Text>
+            </View>
+          )}
         </View>
 
         {/* Quick Info Group */}
@@ -93,19 +95,19 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.infoRow}>
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>{t('auth.full_name')}</Text>
-              <Text style={styles.infoValue}>{profile?.fullName || 'Not set'}</Text>
+              <Text style={styles.infoValue}>{profile?.fullName || t('common.not_set')}</Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>{t('auth.phone')}</Text>
-              <Text style={styles.infoValue}>{profile?.phone || 'Not set'}</Text>
+              <Text style={styles.infoValue}>{profile?.phone || t('common.not_set')}</Text>
             </View>
           </View>
         </View>
 
         {/* Settings Menu */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Settings</Text>
+          <Text style={styles.sectionTitle}>{t('profile.account_settings')}</Text>
           <View style={styles.menuCard}>
             <ProfileMenuItem
               icon={MapPin}
@@ -124,16 +126,16 @@ const ProfileScreen = ({ navigation }: any) => {
 
         {/* Support Section (Mock) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
           <View style={styles.menuCard}>
             <ProfileMenuItem
               icon={Settings}
-              label="Help Center"
+              label={t('common.help_center')}
               onPress={() => { }}
             />
             <ProfileMenuItem
               icon={User}
-              label="Account Privacy"
+              label={t('common.account_privacy')}
               onPress={() => { }}
               isLast={true}
             />
