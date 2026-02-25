@@ -65,11 +65,18 @@ const SearchScreen = ({ navigation }: any) => {
       <View style={styles.container}>
         {/* Search Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <View style={styles.searchBarContainer}>
-            <Search size={20} color={theme.colors.textMuted} style={styles.searchIcon} />
+            <Search
+              size={20}
+              color={theme.colors.textMuted}
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.input}
               placeholder={t('home.search_placeholder')}
@@ -81,7 +88,10 @@ const SearchScreen = ({ navigation }: any) => {
               returnKeyType="search"
             />
             {query.length > 0 && (
-              <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <TouchableOpacity
+                onPress={clearSearch}
+                style={styles.clearButton}
+              >
                 <X size={18} color={theme.colors.textMuted} />
               </TouchableOpacity>
             )}
@@ -105,11 +115,15 @@ const SearchScreen = ({ navigation }: any) => {
                 <View style={styles.emptyContainer}>
                   <Search size={64} color={theme.colors.surface} />
                   <Text style={styles.emptyText}>{t('common.no_results')}</Text>
-                  <Text style={styles.emptySubText}>Try searching for something else</Text>
+                  <Text style={styles.emptySubText}>
+                    Try searching for something else
+                  </Text>
                 </View>
               ) : (
                 <View style={styles.initialContainer}>
-                  <Text style={styles.initialText}>Enter at least 3 characters to search</Text>
+                  <Text style={styles.initialText}>
+                    Enter at least 3 characters to search
+                  </Text>
                 </View>
               )
             }
@@ -145,7 +159,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingHorizontal: 15,
     height: 48,
-
   },
   searchIcon: {
     marginRight: 10,
@@ -155,7 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.primary,
     height: '100%',
-
   },
   clearButton: {
     padding: 5,

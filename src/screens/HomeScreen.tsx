@@ -10,7 +10,6 @@ import {
   Image,
   Dimensions,
   StatusBar,
-  I18nManager,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +19,7 @@ import { VendorService } from '../services/api/vendorService';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 
 enum VendorStatus {
   OPEN = 'OPEN',
@@ -42,10 +42,19 @@ const HomeScreen = ({ navigation }: any) => {
 
   const renderCategoryItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={styles.categoryCard}
-      // onPress={() => navigation.navigate('Search', { categoryId: item.id })}
+      style={[styles.categoryCard, { backgroundColor: item.color + '15' }]}
+      onPress={() => navigation.navigate('Search', { categoryId: item.id })}
     >
-      <Text style={styles.categoryName} numberOfLines={1}>
+      <ImageWithPlaceholder
+        uri={item.iconUrl ? `${getBaseURL()}${item.iconUrl}` : null}
+        style={styles.categoryIcon}
+        resizeMode="contain"
+      />
+
+      <Text
+        style={[styles.categoryName, { color: item.color }]}
+        numberOfLines={1}
+      >
         {item.name}
       </Text>
     </TouchableOpacity>
@@ -56,8 +65,8 @@ const HomeScreen = ({ navigation }: any) => {
       style={styles.vendorCard}
       onPress={() => navigation.navigate('StoreDetails', { vendorId: item.id })}
     >
-      <Image
-        source={{ uri: `${getBaseURL()}${item.storeImage}` }}
+      <ImageWithPlaceholder
+        uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
         style={styles.vendorImage}
       />
       <View style={styles.vendorInfo}>
@@ -162,26 +171,9 @@ const HomeScreen = ({ navigation }: any) => {
               renderItem={renderCategoryItem}
               keyExtractor={item => item.id}
               contentContainerStyle={styles.categoriesList}
-              inverted={I18nManager.isRTL}
+              // inverted={I18nManager.isRTL}
             />
           </View>
-
-          {/* Promo Banner */}
-          {/* <View style={styles.promoBanner}>
-            <View style={styles.promoContent}>
-              <Text style={styles.promoTitle}>عروض اليوم:</Text>
-              <Text style={styles.promoDesc}>
-                خصم 20% على جميع الفواكه الطازجة!
-              </Text>
-              <Text style={styles.promoCode}>استخدم كود: GUAVA20</Text>
-            </View>
-            <Image
-              source={{
-                uri: 'https://cdn-icons-png.flaticon.com/512/1625/1625048.png',
-              }}
-              style={styles.promoImage}
-            />
-          </View> */}
 
           {/* Nearby Stores */}
           <View style={styles.section}>
@@ -192,13 +184,13 @@ const HomeScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             </View>
             <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
               data={vendors}
               renderItem={renderVendorItem}
               keyExtractor={item => item.id}
+              showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.vendorsList}
-              inverted={I18nManager.isRTL}
+              // inverted={I18nManager.isRTL}
+              numColumns={2}
             />
           </View>
         </ScrollView>
@@ -293,35 +285,28 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weights.medium,
   },
   categoriesList: { paddingHorizontal: theme.spacing.md },
+
   categoryCard: {
     alignItems: 'center',
     marginHorizontal: theme.spacing.sm,
     padding: theme.spacing.sm,
     borderRadius: theme.radius.xs,
     backgroundColor: theme.colors.white,
+    minWidth: 80,
   },
-  // categoryIconContainer: {
-  //   width: 70,
-  //   height: 70,
-  //   borderRadius: 35,
-  //   backgroundColor: theme.colors.white,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   marginBottom: theme.spacing.xs,
-  //   ...theme.shadows.soft,
-  // },
-  // categoryIcon: { width: 45, height: 45 },
-  // placeholderIcon: {
-  //   backgroundColor: theme.colors.surface,
-  //   borderRadius: 22.5,
-  // },
+  categoryIcon: {
+    width: 36,
+    height: 36,
+    resizeMode: 'contain',
+    marginBottom: theme.spacing.xs,
+  },
   categoryName: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.medium,
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.semibold,
     color: theme.colors.primary,
     textAlign: 'center',
   },
-  vendorsList: { paddingHorizontal: theme.spacing.md },
+  vendorsList: { paddingHorizontal: theme.spacing.md, alignItems: 'center' },
   vendorCard: {
     width: width * 0.45,
     backgroundColor: theme.colors.white,
@@ -361,41 +346,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.weights.bold,
     textTransform: 'uppercase',
   },
-  // promoBanner: {
-  //   flexDirection: 'row',
-  //   backgroundColor: '#F7A7A7', // Light coral as in screenshot
-  //   marginHorizontal: theme.spacing.lg,
-  //   marginTop: theme.spacing.lg,
-  //   borderRadius: theme.radius.lg,
-  //   padding: theme.spacing.md,
-  //   alignItems: 'center',
-  //   overflow: 'hidden',
-  // },
-  // promoContent: { flex: 1 },
-  // promoTitle: {
-  //   fontSize: theme.typography.sizes.lg,
-  //   fontWeight: theme.typography.weights.bold,
-  //   color: theme.colors.white,
-  // },
-  // promoDesc: {
-  //   fontSize: theme.typography.sizes.sm,
-  //   color: theme.colors.white,
-  //   marginTop: 2,
-  // },
-  // promoCode: {
-  //   fontSize: theme.typography.sizes.sm,
-  //   fontWeight: theme.typography.weights.bold,
-  //   color: theme.colors.white,
-  //   marginTop: 5,
-  // },
-  // promoImage: {
-  //   width: 80,
-  //   height: 80,
-  //   position: 'absolute',
-  //   right: -10,
-  //   bottom: -10,
-  //   opacity: 0.8,
-  // },
 });
 
 export default HomeScreen;

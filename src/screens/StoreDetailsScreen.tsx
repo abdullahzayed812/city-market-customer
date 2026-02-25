@@ -7,9 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  // Dimensions,
-  // SafeAreaView,
-  StatusBar,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Star, MapPin, Clock } from 'lucide-react-native';
@@ -22,8 +19,7 @@ import { getBaseURL } from '../services/api/apiClient';
 import CustomModal from '../components/common/CustomModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-
-// const { width } = Dimensions.get('window');
+import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 
 const StoreDetailsScreen = ({ route, navigation }: any) => {
   const { vendorId } = route.params;
@@ -69,8 +65,8 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           navigation.navigate('ProductDetails', { productId: item.id })
         }
       >
-        <Image
-          source={{ uri: `${getBaseURL()}${item.imageUrl}` }}
+        <ImageWithPlaceholder
+          uri={item.imageUrl ? `${getBaseURL()}${item.imageUrl}` : null}
           style={styles.productImage}
         />
         <View style={styles.productInfo}>
@@ -105,9 +101,11 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
       <View style={styles.container}>
         {/* Header Image */}
         <View style={styles.headerImageContainer}>
-          <Image
-            source={{ uri: `${getBaseURL()}${vendor?.storeImage}` }}
-            style={styles.vendorHeaderImage}
+          <ImageWithPlaceholder
+            uri={
+              vendor?.storeImage ? `${getBaseURL()}${vendor.storeImage}` : null
+            }
+            style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
           />
           <View style={styles.imageOverlay} />
 
