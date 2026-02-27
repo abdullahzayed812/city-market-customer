@@ -98,7 +98,7 @@ const OrdersScreen = ({ navigation }: any) => {
             ]}
           >
             <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {statusConfig.label.replace(/_/g, ' ')}
+              {t(`orders.status_${item.status.toLowerCase()}`)}
             </Text>
           </View>
         </View>
@@ -162,7 +162,7 @@ const OrdersScreen = ({ navigation }: any) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Package size={64} color={theme.colors.surface} />
-              <Text style={styles.emptyText}>No orders found</Text>
+              <Text style={styles.emptyText}>{t('orders.no_orders')}</Text>
             </View>
           }
         />

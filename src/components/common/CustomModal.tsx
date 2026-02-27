@@ -8,6 +8,7 @@ import {
     TouchableWithoutFeedback,
     Dimensions,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { theme } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -28,11 +29,16 @@ const CustomModal: React.FC<CustomModalProps> = ({
     onClose,
     title,
     message,
-    confirmLabel = 'Confirm',
-    cancelLabel = 'Cancel',
+    confirmLabel,
+    cancelLabel,
     onConfirm,
     children,
 }) => {
+    const { t } = useTranslation();
+
+    const finalConfirmLabel = confirmLabel || t('common.confirm');
+    const finalCancelLabel = cancelLabel || t('common.cancel');
+
     return (
         <Modal
             transparent
@@ -50,11 +56,11 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
                             <View style={styles.buttonContainer}>
                                 <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                                    <Text style={styles.cancelButtonText}>{cancelLabel}</Text>
+                                    <Text style={styles.cancelButtonText}>{finalCancelLabel}</Text>
                                 </TouchableOpacity>
                                 {onConfirm && (
                                     <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-                                        <Text style={styles.confirmButtonText}>{confirmLabel}</Text>
+                                        <Text style={styles.confirmButtonText}>{finalConfirmLabel}</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>

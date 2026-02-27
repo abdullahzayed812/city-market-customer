@@ -81,11 +81,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   }
 
   const orderData: CustomerOrder | undefined = order?.order;
-  const vendorOrders: (VendorOrder & {
-    items: VendorOrderItem[];
-    vendorName: string;
-    proposals: any[];
-  })[] = order?.vendorOrders || [];
+  const vendorOrders: any[] = order?.vendorOrders || [];
 
   const getStatusConfig = (
     status: CustomerOrderStatus | VendorOrderStatus | undefined,
@@ -151,7 +147,9 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               <Package size={40} color={statusConfig.color} />
             </View>
             <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {orderData?.status?.replace(/_/g, ' ')}
+              {orderData?.status
+                ? t(`orders.status_${orderData.status.toLowerCase()}`)
+                : ''}
             </Text>
             <Text style={styles.orderIdText}>
               Order #{orderData?.id?.slice(-6)}
@@ -177,7 +175,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 >
                   <AlertCircle size={20} color={theme.colors.white} />
                   <Text style={styles.reviewProposalsText}>
-                    {t('proposals.review_button') || 'Review Vendor Proposals'}
+                    {t('proposals.review_button')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -211,7 +209,9 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                         { color: getStatusConfig(vo.status).color },
                       ]}
                     >
-                      {vo.status}
+                      {vo.status
+                        ? t(`orders.status_${vo.status.toLowerCase()}`)
+                        : ''}
                     </Text>
                   </View>
                 </View>
@@ -229,7 +229,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemName}>{item.productName}</Text>
                         <Text style={styles.itemQty}>
-                          Quantity: x{item.quantity}
+                          {t('product.quantity')}: x{item.quantity}
                         </Text>
                       </View>
                       <Text style={styles.itemPrice}>
@@ -259,11 +259,13 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Receipt size={20} color={theme.colors.primary} />
-              <Text style={styles.sectionTitle}>Payment Summary</Text>
+              <Text style={styles.sectionTitle}>
+                {t('orders.payment_summary')}
+              </Text>
             </View>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
+                <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
                 <Text style={styles.summaryValue}>
                   ${orderData?.subtotal?.toFixed(2)}
                 </Text>
@@ -278,7 +280,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
+                <Text style={styles.totalLabel}>{t('orders.total_amount')}</Text>
                 <Text style={styles.totalValue}>
                   ${orderData?.totalAmount?.toFixed(2)}
                 </Text>

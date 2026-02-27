@@ -66,13 +66,18 @@ const LoginScreen = ({ navigation }: any) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
             <View style={styles.logoPlaceholder}>
               <LogIn size={40} color={theme.colors.primary} />
             </View>
             <Text style={styles.title}>{t('auth.login_button')}</Text>
-            <Text style={styles.subtitle}>Sign in to continue to CityMarket</Text>
+            <Text style={styles.subtitle}>
+              Sign in to continue to CityMarket
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -115,13 +120,19 @@ const LoginScreen = ({ navigation }: any) => {
               ) : (
                 <>
                   <Text style={styles.buttonText}>{t('common.login')}</Text>
-                  <ChevronRight size={20} color={theme.colors.white} style={{ marginLeft: 8 }} />
+                  <ChevronRight
+                    size={20}
+                    color={theme.colors.white}
+                    style={{ marginLeft: 8 }}
+                  />
                 </>
               )}
             </TouchableOpacity>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>{t('auth.dont_have_account')?.split('?')[0]}? </Text>
+              <Text style={styles.footerText}>
+                {t('auth.dont_have_account')?.split('?')[0]}?{' '}
+              </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                 <Text style={styles.linkText}>Register</Text>
               </TouchableOpacity>

@@ -56,8 +56,8 @@ const MainTabNavigator = () => {
           paddingTop: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 14,
+          fontWeight: 'bold',
         },
       }}
     >
