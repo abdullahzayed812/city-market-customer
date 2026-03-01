@@ -43,8 +43,6 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     queryFn: () => OrderService.getOrderById(orderId),
   });
 
-  console.log(order);
-
   useEffect(() => {
     if (!socket) return;
 
@@ -167,18 +165,18 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             {vendorOrders.some(
               vo => vo.proposals && vo.proposals.length > 0,
             ) && (
-                <TouchableOpacity
-                  style={styles.reviewProposalsButton}
-                  onPress={() =>
-                    navigation.navigate('ReviewProposals', { orderId })
-                  }
-                >
-                  <AlertCircle size={20} color={theme.colors.white} />
-                  <Text style={styles.reviewProposalsText}>
-                    {t('proposals.review_button')}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.reviewProposalsButton}
+                onPress={() =>
+                  navigation.navigate('ReviewProposals', { orderId })
+                }
+              >
+                <AlertCircle size={20} color={theme.colors.white} />
+                <Text style={styles.reviewProposalsText}>
+                  {t('proposals.review_button')}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Multi-Vendor Items Sections */}
@@ -280,7 +278,9 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>
-                <Text style={styles.totalLabel}>{t('orders.total_amount')}</Text>
+                <Text style={styles.totalLabel}>
+                  {t('orders.total_amount')}
+                </Text>
                 <Text style={styles.totalValue}>
                   ${orderData?.totalAmount?.toFixed(2)}
                 </Text>

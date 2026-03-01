@@ -40,13 +40,14 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const data = await AuthService.login({ email, password });
-      await signIn(data.accessToken, data.refreshToken);
+      await signIn(data?.user, data.accessToken, data.refreshToken);
       Toast.show({
         type: 'success',
         text1: 'Login Successful',
         text2: `Welcome back!`,
         position: 'top',
       });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       Toast.show({
         type: 'error',

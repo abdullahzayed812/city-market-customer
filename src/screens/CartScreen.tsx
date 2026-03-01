@@ -92,7 +92,7 @@ const CartScreen = ({ navigation }: any) => {
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('cart.title')}</Text>
-          <View style={{ width: 40 }} /> {/* Spacer */}
+          <View style={{ width: 40 }} />
         </View>
 
         <FlatList

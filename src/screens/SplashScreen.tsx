@@ -14,7 +14,6 @@ const SplashScreen = () => {
         style={styles.backgroundImage}
         resizeMode="cover"
       />
-      <View style={styles.overlay} />
     </View>
   );
 };
@@ -28,12 +27,6 @@ const styles = StyleSheet.create({
     width: width,
     height: height,
     position: 'absolute',
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(79, 82, 64, 0.2)', // Primary color with opacity
   },
   icon: {
     width: 150,

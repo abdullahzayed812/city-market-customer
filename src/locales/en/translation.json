@@ -8,7 +8,7 @@
     "logout": "Logout",
     "login": "Login",
     "register": "Register",
-    "search": "Search...",
+    "search": "Search",
     "view_all": "View All",
     "language_changed": "Change Language",
     "restart_app": "Restart App",
@@ -32,7 +32,9 @@
     "reject": "Reject",
     "accept": "Accept",
     "date": "Date",
-    "go_back": "Go Back"
+    "go_back": "Go Back",
+    "no_results": "No results found",
+    "minutes": "min"
   },
   "auth": {
     "email": "Email",
@@ -54,14 +56,17 @@
     "categories": "Categories",
     "search_placeholder": "Search for stores or products",
     "open": "Open",
-    "closed": "Closed"
+    "closed": "Closed",
+    "welcome": "Welcome to",
+    "brand": "CityMarket"
   },
   "store": {
     "products": "Products",
     "add_to_cart": "Add to Cart",
     "out_of_stock": "Out of Stock",
     "added_to_cart": "Added to cart",
-    "confirm_add": "Do you want to add this item to your cart?"
+    "confirm_add": "Do you want to add this item to your cart?",
+    "info": "Store Info"
   },
   "product": {
     "in_stock": "In Stock",
@@ -142,8 +147,11 @@
   },
   "search": {
     "searching": "Searching products...",
+    "finding": "Finding products...",
     "no_results_hint": "Try searching for something else",
-    "min_chars": "Enter at least 3 characters to search"
+    "min_chars": "Enter at least 3 characters to search",
+    "showing": "Showing",
+    "in": "in"
   },
   "addresses": {
     "no_addresses": "No addresses saved",

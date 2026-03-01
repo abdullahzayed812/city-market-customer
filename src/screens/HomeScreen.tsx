@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,13 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
   Image,
   Dimensions,
   StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ShoppingCart, Star } from 'lucide-react-native';
+import { Search, ShoppingCart, Star, MapPin } from 'lucide-react-native';
 import { CatalogService } from '../services/api/catalogService';
 import { VendorService } from '../services/api/vendorService';
 import { theme } from '../theme';
@@ -27,12 +26,77 @@ enum VendorStatus {
 
 const { width } = Dimensions.get('window');
 
+// 1. Define the Header Component Outside to prevent re-creation on every render
+const HomeHeader = React.memo(
+  ({ t, navigation, categories, renderCategoryItem }: any) => (
+    <View style={styles.headerContainer}>
+      {/* Header Bar */}
+      <View style={styles.headerBar}>
+        <View style={styles.locationContainer}>
+          <Text style={styles.welcomeText}>
+            {t('home.welcome')}
+          </Text>
+          <View style={styles.logoRow}>
+            <Text style={styles.brandName}>{t('home.brand')}</Text>
+            <MapPin
+              size={14}
+              color={theme.colors.accent}
+              style={{ marginLeft: 4 }}
+            />
+          </View>
+        </View>
+        <TouchableOpacity style={styles.cartButton}>
+          <ShoppingCart color={theme.colors.primary} size={22} />
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>0</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <TouchableOpacity
+        style={styles.searchContainer}
+        onPress={() => navigation.navigate('Search')}
+        activeOpacity={0.9}
+      >
+        <Search color={theme.colors.primary} size={20} />
+        <Text style={styles.searchPlaceholder}>
+          {t('home.search_placeholder')}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Categories */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
+        </View>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={categories}
+          renderItem={renderCategoryItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.categoriesList}
+        />
+      </View>
+
+      {/* Stores Title */}
+      <View style={[styles.sectionHeader, { marginTop: theme.spacing.lg }]}>
+        <Text style={styles.sectionTitle}>{t('home.stores')}</Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAll}>{t('common.see_all')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ),
+);
+
 const HomeScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: CatalogService.getCategories,
+    queryKey: ['global-categories'],
+    queryFn: CatalogService.getGlobalCategories,
   });
 
   const { data: vendors, isLoading: vendorsLoading } = useQuery({
@@ -40,76 +104,88 @@ const HomeScreen = ({ navigation }: any) => {
     queryFn: VendorService.getVendors,
   });
 
-  const renderCategoryItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={[styles.categoryCard, { backgroundColor: item.color + '15' }]}
-      onPress={() => navigation.navigate('Search', { categoryId: item.id })}
-    >
-      <ImageWithPlaceholder
-        uri={item.iconUrl ? `${getBaseURL()}${item.iconUrl}` : null}
-        style={styles.categoryIcon}
-        resizeMode="contain"
-      />
-
-      <Text
-        style={[styles.categoryName, { color: item.color }]}
-        numberOfLines={1}
+  const renderCategoryItem = useCallback(
+    ({ item }: { item: any }) => (
+      <TouchableOpacity
+        style={styles.categoryCard}
+        onPress={() => navigation.navigate('Search', { categoryId: item.id })}
+        activeOpacity={0.7}
       >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
+        <View
+          style={[
+            styles.categoryIconContainer,
+            { backgroundColor: (item.color || theme.colors.surface) + '33' },
+          ]}
+        >
+          <ImageWithPlaceholder
+            uri={item.iconUrl ? `${getBaseURL()}${item.iconUrl}` : null}
+            style={styles.categoryIcon}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.categoryName} numberOfLines={1}>
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    ),
+    [navigation],
   );
 
-  const renderVendorItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.vendorCard}
-      onPress={() => navigation.navigate('StoreDetails', { vendorId: item.id })}
-    >
-      <ImageWithPlaceholder
-        uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
-        style={styles.vendorImage}
-      />
-      <View style={styles.vendorInfo}>
-        <Text style={styles.vendorName}>{item.shopName}</Text>
-        <View style={styles.vendorMeta}>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
-            <Star
-              size={14}
-              color={theme.colors.accent}
-              fill={theme.colors.accent}
-            />
-          </View>
+  const renderVendorItem = useCallback(
+    ({ item }: { item: any }) => (
+      <TouchableOpacity
+        style={styles.vendorCard}
+        onPress={() =>
+          navigation.navigate('StoreDetails', { vendorId: item.id })
+        }
+        activeOpacity={0.95}
+      >
+        <View style={styles.vendorImageContainer}>
+          <ImageWithPlaceholder
+            uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
+            style={styles.vendorImage}
+          />
           <View
             style={[
               styles.statusBadge,
               {
                 backgroundColor:
                   item.status === VendorStatus.OPEN
-                    ? 'rgba(52, 199, 89, 0.1)'
-                    : 'rgba(255, 59, 48, 0.1)',
+                    ? theme.colors.success
+                    : theme.colors.error,
               },
             ]}
           >
-            <Text
-              style={[
-                styles.statusText,
-                {
-                  color:
-                    item.status === VendorStatus.OPEN
-                      ? theme.colors.success
-                      : theme.colors.error,
-                },
-              ]}
-            >
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>
               {item.status === VendorStatus.OPEN
                 ? t('home.open')
                 : t('home.closed')}
             </Text>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
+
+        <View style={styles.vendorInfo}>
+          <Text style={styles.vendorName} numberOfLines={1}>
+            {item.shopName}
+          </Text>
+          <View style={styles.vendorMeta}>
+            <View style={styles.ratingContainer}>
+              <Star
+                size={12}
+                color={theme.colors.accent}
+                fill={theme.colors.accent}
+              />
+              <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
+            </View>
+            <Text style={styles.vendorAddress} numberOfLines={1}>
+              {item.address?.split(',')[0]}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    ),
+    [navigation, t],
   );
 
   if (categoriesLoading || vendorsLoading) {
@@ -126,101 +202,60 @@ const HomeScreen = ({ navigation }: any) => {
         barStyle="dark-content"
         backgroundColor={theme.colors.background}
       />
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Image
-              source={require('../../assets/icons/app-icon.png')}
-              style={{ width: 50, height: 50 }}
-              resizeMode="cover"
-            />
-          </View>
-          <TouchableOpacity style={styles.cartButton}>
-            <ShoppingCart color={theme.colors.primary} size={24} />
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>0</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Search Bar */}
-        <TouchableOpacity
-          style={styles.searchContainer}
-          onPress={() => navigation.navigate('Search')}
-        >
-          <Search color={theme.colors.textMuted} size={20} />
-          <Text style={styles.searchPlaceholder}>
-            {t('home.search_placeholder')}
-          </Text>
-        </TouchableOpacity>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Categories */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
-            </View>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={categories}
-              renderItem={renderCategoryItem}
-              keyExtractor={item => item.id}
-              contentContainerStyle={styles.categoriesList}
-              // inverted={I18nManager.isRTL}
-            />
-          </View>
-
-          {/* Nearby Stores */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.stores')}</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAll}>{t('common.see_all')}</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={vendors}
-              renderItem={renderVendorItem}
-              keyExtractor={item => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.vendorsList}
-              // inverted={I18nManager.isRTL}
-              numColumns={2}
-            />
-          </View>
-        </ScrollView>
-      </View>
+      <FlatList
+        data={vendors}
+        renderItem={renderVendorItem}
+        keyExtractor={item => item.id}
+        ListHeaderComponent={
+          <HomeHeader
+            t={t}
+            navigation={navigation}
+            categories={categories}
+            renderCategoryItem={renderCategoryItem}
+          />
+        }
+        numColumns={2}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        columnWrapperStyle={styles.columnWrapper}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.background },
-  container: { flex: 1, backgroundColor: theme.colors.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
+  headerContainer: {
+    paddingBottom: theme.spacing.md,
+  },
+  headerBar: {
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
-    textAlign: 'left',
+  locationContainer: {
+    flex: 1,
   },
-  headerSubtitle: {
-    fontSize: theme.typography.sizes.sm,
+  welcomeText: {
+    fontSize: 12,
     color: theme.colors.primary,
-    opacity: 0.8,
-    textAlign: 'left',
+    opacity: 0.7,
+    fontWeight: '500',
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  brandName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.primary,
+    letterSpacing: -0.5,
   },
   cartButton: {
     width: 44,
@@ -233,20 +268,21 @@ const styles = StyleSheet.create({
   },
   cartBadge: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: theme.colors.error,
-    borderRadius: 10,
-    width: 18,
-    height: 18,
+    top: 8,
+    right: 8,
+    backgroundColor: theme.colors.accent,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: theme.colors.white,
   },
   cartBadgeText: {
-    color: theme.colors.white,
-    fontSize: 10,
+    color: theme.colors.primary,
+    fontSize: 9,
     fontWeight: 'bold',
   },
   searchContainer: {
@@ -254,19 +290,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing.lg,
-    marginVertical: theme.spacing.sm,
+    marginVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
-    height: 50,
-    borderRadius: theme.radius.md,
-    ...theme.shadows.soft,
+    height: 54,
+    borderRadius: theme.radius.lg,
+    ...theme.shadows.medium,
   },
   searchPlaceholder: {
     marginLeft: theme.spacing.sm,
     color: theme.colors.textMuted,
     fontSize: theme.typography.sizes.md,
+    fontWeight: '500',
   },
   scrollContent: { paddingBottom: theme.spacing.xl },
-  section: { marginTop: theme.spacing.lg },
+  section: { marginTop: theme.spacing.sm },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -275,76 +312,114 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   sectionTitle: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 18,
+    fontWeight: '700',
     color: theme.colors.primary,
   },
   seeAll: {
-    color: theme.colors.secondary,
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.medium,
+    color: theme.colors.accent,
+    fontSize: 14,
+    fontWeight: '600',
   },
   categoriesList: { paddingHorizontal: theme.spacing.md },
-
   categoryCard: {
     alignItems: 'center',
-    marginHorizontal: theme.spacing.sm,
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.xs,
-    backgroundColor: theme.colors.white,
-    minWidth: 80,
+    marginHorizontal: theme.spacing.xs,
+    width: 80,
+  },
+  categoryIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32, // Perfect circle
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+    ...theme.shadows.medium, // Slightly stronger shadow for depth
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.8)', // Subtle glass-like border
   },
   categoryIcon: {
-    width: 36,
-    height: 36,
-    resizeMode: 'contain',
-    marginBottom: theme.spacing.xs,
+    width: 38,
+    height: 38,
   },
   categoryName: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
+    fontSize: 12,
+    fontWeight: '600',
     color: theme.colors.primary,
     textAlign: 'center',
   },
-  vendorsList: { paddingHorizontal: theme.spacing.md, alignItems: 'center' },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+  },
   vendorCard: {
-    width: width * 0.45,
+    width: (width - theme.spacing.lg * 2 - theme.spacing.md) / 2,
     backgroundColor: theme.colors.white,
     borderRadius: theme.radius.lg,
-    marginHorizontal: theme.spacing.sm,
     overflow: 'hidden',
-    ...theme.shadows.medium,
-    marginBottom: theme.spacing.sm,
+    ...theme.shadows.soft,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
-  vendorImage: { width: '100%', height: 180, resizeMode: 'cover' },
+  vendorImageContainer: {
+    width: '100%',
+    height: 140,
+  },
+  vendorImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  statusBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.white,
+    marginRight: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.white,
+    textTransform: 'uppercase',
+  },
   vendorInfo: { padding: theme.spacing.sm },
   vendorName: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 15,
+    fontWeight: '700',
     color: theme.colors.primary,
   },
   vendorMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: theme.spacing.xs,
+    marginTop: 4,
   },
-  ratingContainer: { flexDirection: 'row', alignItems: 'center' },
-  ratingText: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
-    marginRight: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: theme.spacing.sm,
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(228, 166, 48, 0.1)',
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: theme.radius.sm,
+    borderRadius: 6,
+    marginRight: 8,
   },
-  statusText: {
-    fontSize: 10,
-    fontWeight: theme.typography.weights.bold,
-    textTransform: 'uppercase',
+  ratingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.accent,
+    marginLeft: 2,
+  },
+  vendorAddress: {
+    fontSize: 11,
+    color: theme.colors.textMuted,
+    flex: 1,
   },
 });
 

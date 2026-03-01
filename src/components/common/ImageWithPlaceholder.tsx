@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Image, View, StyleSheet, ImageStyle, ViewStyle } from 'react-native';
+import { Package } from 'lucide-react-native';
+import { theme } from '../../theme';
 
 interface Props {
   uri: string | null | undefined;
@@ -17,7 +19,11 @@ const ImageWithPlaceholder = ({
   const [hasError, setHasError] = useState(false);
 
   if (!uri || hasError) {
-    return <View style={[styles.placeholder, style, placeholderStyle]} />;
+    return (
+      <View style={[styles.placeholder, style, placeholderStyle]}>
+        <Package size={24} color={theme.colors.textMuted} />
+      </View>
+    );
   }
 
   return (
@@ -32,7 +38,9 @@ const ImageWithPlaceholder = ({
 
 const styles = StyleSheet.create({
   placeholder: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

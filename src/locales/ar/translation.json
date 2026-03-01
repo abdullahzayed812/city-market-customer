@@ -8,7 +8,7 @@
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
-    "search": "بحث...",
+    "search": "بحث",
     "view_all": "عرض الكل",
     "language_changed": "تغيير اللغة",
     "restart_app": "اعادة تشغيل التطبيق",
@@ -32,7 +32,9 @@
     "reject": "رفض",
     "accept": "قبول",
     "date": "التاريخ",
-    "go_back": "رجوع"
+    "go_back": "رجوع",
+    "no_results": "لم يتم العثور على نتائج",
+    "minutes": "دقيقة"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -54,14 +56,17 @@
     "categories": "التصنيفات",
     "search_placeholder": "ابحث عن متاجر أو منتجات",
     "open": "مفتوح",
-    "closed": "مغلق"
+    "closed": "مغلق",
+    "welcome": "مرحباً بك في",
+    "brand": "سيتي ماركت"
   },
   "store": {
     "products": "المنتجات",
     "add_to_cart": "إضافة إلى السلة",
     "out_of_stock": "نفذت الكمية",
     "added_to_cart": "تمت الإضافة إلى السلة",
-    "confirm_add": "هل تريد إضافة هذا المنتج إلى السلة؟"
+    "confirm_add": "هل تريد إضافة هذا المنتج إلى السلة؟",
+    "info": "معلومات المتجر"
   },
   "product": {
     "in_stock": "متوفر في المخزن",
@@ -134,16 +139,19 @@
   },
   "profile": {
     "title": "الملف الشخصي",
-    "addresses": "العناوين المحفوظة",
+    "addresses": "Saved Addresses",
     "language": "اللغة",
     "info": "المعلومات الشخصية",
     "account_settings": "إعدادات الحساب",
     "support": "الدعم"
   },
   "search": {
-    "searching": "جاري البحث عن المنتجات...",
+    "searching": "جاري البحث...",
+    "finding": "جاري العثور على المنتجات...",
     "no_results_hint": "حاول البحث عن شيء آخر",
-    "min_chars": "أدخل 3 أحرف على الأقل للبحث"
+    "min_chars": "أدخل 3 أحرف على الأقل للبحث",
+    "showing": "عرض",
+    "in": "في"
   },
   "addresses": {
     "no_addresses": "لا توجد عناوين محفوظة",
