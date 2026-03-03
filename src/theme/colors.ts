@@ -1,14 +1,18 @@
 export const colors = {
-    primary: '#4F5240',
-    secondary: '#707A6D',
-    background: '#E4E5DB',
-    surface: '#B4B5AB',
-    textMuted: '#9D9383',
-    accent: '#E4A630',
+    primary: '#10B981',      // Vibrant Emerald
+    primaryDark: '#059669',  // Emerald-600
+    primaryLight: '#D1FAE5', // Emerald-100
+    secondary: '#4B5563',    // Slate-600
+    background: '#F9FAFB',   // Gray-50
+    surface: '#FFFFFF',      // White
+    textPrimary: '#111827',  // Gray-900 (High contrast text)
+    textSecondary: '#4B5563',// Slate-600
+    textMuted: '#9CA3AF',    // Gray-400
+    accent: '#F59E0B',       // Amber-500
     white: '#FFFFFF',
     black: '#000000',
-    error: '#FF3B30',
-    success: '#34C759',
+    error: '#EF4444',
+    success: '#10B981',
     cardBackground: '#FFFFFF',
-    border: '#D1D1D6',
+    border: '#E5E7EB',       // Gray-200
 };

@@ -13,7 +13,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        lng: I18nManager.isRTL ? 'ar' : 'en',
+        lng: 'ar',
         fallbackLng: 'ar',
         interpolation: {
             escapeValue: false,

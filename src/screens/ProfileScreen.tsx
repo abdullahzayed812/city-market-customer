@@ -11,13 +11,45 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { User, MapPin, Globe, LogOut, ChevronRight, Mail, Phone, Settings } from 'lucide-react-native';
+import {
+  User,
+  MapPin,
+  Globe,
+  LogOut,
+  ChevronRight,
+  Phone,
+  Settings,
+} from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../app/AuthContext';
 import { UserService } from '../services/api/userService';
 import { AuthService } from '../services/api/authService';
 import { theme } from '../theme';
+
+const ProfileMenuItem = ({
+  icon: Icon,
+  label,
+  value,
+  onPress,
+  isLast = false,
+  color = theme.colors.primary,
+}: any) => (
+  <TouchableOpacity
+    style={[styles.menuItem, isLast && { borderBottomWidth: 0 }]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <View style={[styles.menuIconContainer, { backgroundColor: color + '10' }]}>
+      <Icon size={20} color={color} />
+    </View>
+    <View style={styles.menuContent}>
+      <Text style={styles.menuLabel}>{label}</Text>
+      {value && <Text style={styles.menuValueText}>{value}</Text>}
+    </View>
+    <ChevronRight size={20} color={theme.colors.border} />
+  </TouchableOpacity>
+);
 
 const ProfileScreen = ({ navigation }: any) => {
   const { t, i18n } = useTranslation();
@@ -40,23 +72,6 @@ const ProfileScreen = ({ navigation }: any) => {
     }
   };
 
-  const ProfileMenuItem = ({ icon: Icon, label, value, onPress, isLast = false, color = theme.colors.primary }: any) => (
-    <TouchableOpacity
-      style={[styles.menuItem, isLast && { borderBottomWidth: 0 }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.menuIconContainer, { backgroundColor: color + '10' }]}>
-        <Icon size={20} color={color} />
-      </View>
-      <View style={styles.menuContent}>
-        <Text style={styles.menuLabel}>{label}</Text>
-        {value && <Text style={styles.menuValueText}>{value}</Text>}
-      </View>
-      <ChevronRight size={20} color={theme.colors.border} />
-    </TouchableOpacity>
-  );
-
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -73,15 +88,15 @@ const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{profile?.fullName?.charAt(0)}</Text>
+              <Text style={styles.avatarText}>
+                {profile?.fullName?.charAt(0)}
+              </Text>
             </View>
             <TouchableOpacity style={styles.editAvatarButton}>
               <Settings size={16} color={theme.colors.white} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.name}>
-            {profile?.fullName}
-          </Text>
+          <Text style={styles.name}>{profile?.fullName}</Text>
           {profile?.phone && (
             <View style={styles.emailContainer}>
               <Phone size={14} color={theme.colors.textMuted} />
@@ -95,19 +110,25 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.infoRow}>
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>{t('auth.full_name')}</Text>
-              <Text style={styles.infoValue}>{profile?.fullName || t('common.not_set')}</Text>
+              <Text style={styles.infoValue}>
+                {profile?.fullName || t('common.not_set')}
+              </Text>
             </View>
             <View style={styles.infoDivider} />
             <View style={styles.infoCol}>
               <Text style={styles.infoLabel}>{t('auth.phone')}</Text>
-              <Text style={styles.infoValue}>{profile?.phone || t('common.not_set')}</Text>
+              <Text style={styles.infoValue}>
+                {profile?.phone || t('common.not_set')}
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Settings Menu */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.account_settings')}</Text>
+          <Text style={styles.sectionTitle}>
+            {t('profile.account_settings')}
+          </Text>
           <View style={styles.menuCard}>
             <ProfileMenuItem
               icon={MapPin}
@@ -131,12 +152,12 @@ const ProfileScreen = ({ navigation }: any) => {
             <ProfileMenuItem
               icon={Settings}
               label={t('common.help_center')}
-              onPress={() => { }}
+              onPress={() => {}}
             />
             <ProfileMenuItem
               icon={User}
               label={t('common.account_privacy')}
-              onPress={() => { }}
+              onPress={() => {}}
               isLast={true}
             />
           </View>
@@ -144,7 +165,12 @@ const ProfileScreen = ({ navigation }: any) => {
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <View style={[styles.menuIconContainer, { backgroundColor: theme.colors.error + '10' }]}>
+          <View
+            style={[
+              styles.menuIconContainer,
+              { backgroundColor: theme.colors.error + '10' },
+            ]}
+          >
             <LogOut size={20} color={theme.colors.error} />
           </View>
           <Text style={styles.logoutText}>{t('common.logout')}</Text>
@@ -159,7 +185,12 @@ const ProfileScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.white },
   container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
   profileHeader: {
     backgroundColor: theme.colors.white,
     paddingTop: 40,
