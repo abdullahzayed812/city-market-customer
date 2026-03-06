@@ -33,9 +33,7 @@ const HomeHeader = React.memo(
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <View style={styles.locationContainer}>
-          <Text style={styles.welcomeText}>
-            {t('home.welcome')}
-          </Text>
+          <Text style={styles.welcomeText}>{t('home.welcome')}</Text>
           <View style={styles.logoRow}>
             <Text style={styles.brandName}>{t('home.brand')}</Text>
             <MapPin
@@ -103,6 +101,8 @@ const HomeScreen = ({ navigation }: any) => {
     queryKey: ['vendors'],
     queryFn: VendorService.getVendors,
   });
+
+  console.log(vendors);
 
   const renderCategoryItem = useCallback(
     ({ item }: { item: any }) => (
@@ -176,7 +176,7 @@ const HomeScreen = ({ navigation }: any) => {
                 color={theme.colors.accent}
                 fill={theme.colors.accent}
               />
-              <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
+              <Text style={styles.ratingText}>{item.averageRating}</Text>
             </View>
             <Text style={styles.vendorAddress} numberOfLines={1}>
               {item.address?.split(',')[0]}

@@ -66,7 +66,10 @@
     "out_of_stock": "نفذت الكمية",
     "added_to_cart": "تمت الإضافة إلى السلة",
     "confirm_add": "هل تريد إضافة هذا المنتج إلى السلة؟",
-    "info": "معلومات المتجر"
+    "info": "معلومات المتجر",
+    "reviews": "التقييمات",
+    "no_reviews": "لا توجد تقييمات لهذا المتجر بعد",
+    "view_reviews": "عرض كل التقييمات"
   },
   "product": {
     "in_stock": "متوفر في المخزن",
@@ -90,7 +93,10 @@
     "cash_on_delivery": "الدفع عند الاستلام",
     "cash_description": "ادفع عند استلام طلبك",
     "order_summary": "ملخص الطلب",
-    "grand_total": "المجموع الإجمالي"
+    "grand_total": "المجموع الإجمالي",
+    "select_address": "يرجى اختيار عنوان التوصيل",
+    "address_not_found": "العنوان المختار غير موجود",
+    "failed_to_place_order": "فشل تقديم الطلب"
   },
   "orders": {
     "title": "طلباتي",
@@ -162,5 +168,15 @@
     "required_fields": "التسمية والعنوان مطلوبان",
     "placeholder_label": "مثال: المنزل، العمل",
     "placeholder_address": "أدخل العنوان الكامل"
+  },
+  "rating": {
+    "rate_vendor_title": "تقييم المتجر",
+    "rate_experience": "تقييم التجربة",
+    "select_stars": "يرجى اختيار نجمة واحدة على الأقل",
+    "comment_placeholder": "اكتب تعليقك (اختياري)",
+    "thank_you_title": "تم بنجاح!",
+    "thank_you": "شكراً لتقييمك لـ {{vendorName}}!",
+    "thank_you_generic": "شكراً لتقييمك!",
+    "submit_failed": "فشل إرسال التقييم"
   }
 }

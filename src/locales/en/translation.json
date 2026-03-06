@@ -66,7 +66,10 @@
     "out_of_stock": "Out of Stock",
     "added_to_cart": "Added to cart",
     "confirm_add": "Do you want to add this item to your cart?",
-    "info": "Store Info"
+    "info": "Store Info",
+    "reviews": "Reviews",
+    "no_reviews": "No reviews yet for this store",
+    "view_reviews": "View all reviews"
   },
   "product": {
     "in_stock": "In Stock",
@@ -90,7 +93,10 @@
     "cash_on_delivery": "Cash on Delivery",
     "cash_description": "Pay when you receive your order",
     "order_summary": "Order Summary",
-    "grand_total": "Grand Total"
+    "grand_total": "Grand Total",
+    "select_address": "Please select a delivery address",
+    "address_not_found": "Selected address not found",
+    "failed_to_place_order": "Failed to place order"
   },
   "orders": {
     "title": "My Orders",
@@ -162,5 +168,15 @@
     "required_fields": "Label and address are required",
     "placeholder_label": "e.g. Home, Work",
     "placeholder_address": "Enter full address"
+  },
+  "rating": {
+    "rate_vendor_title": "Rate Vendor",
+    "rate_experience": "Rate Experience",
+    "select_stars": "Please select at least one star",
+    "comment_placeholder": "Write a review (optional)",
+    "thank_you_title": "Success!",
+    "thank_you": "Thank you for your review of {{vendorName}}!",
+    "thank_you_generic": "Thank you for your review!",
+    "submit_failed": "Failed to submit rating"
   }
 }

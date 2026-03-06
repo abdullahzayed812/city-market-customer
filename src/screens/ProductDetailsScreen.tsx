@@ -34,7 +34,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => CatalogService.getProductById(productId),
+    queryFn: () => CatalogService.getVendorProductById(productId),
   });
 
   const handleIncrement = () => setQuantity(prev => prev + 1);

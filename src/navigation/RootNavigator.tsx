@@ -32,6 +32,7 @@ import { useAuth } from '../app/AuthContext';
 import SearchScreen from '../screens/SearchScreen';
 import SplashScreen from '../screens/SplashScreen';
 import ReviewProposalsScreen from '../screens/ReviewProposalsScreen';
+import VendorReviewsScreen from '../screens/VendorReviewsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -186,6 +187,11 @@ const RootNavigator = () => {
             <Stack.Screen
               name="ReviewProposals"
               component={ReviewProposalsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="VendorReviews"
+              component={VendorReviewsScreen}
               options={{ headerShown: false }}
             />
           </>

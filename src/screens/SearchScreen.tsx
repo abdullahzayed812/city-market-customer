@@ -38,7 +38,7 @@ const SearchScreen = ({ navigation, route }: any) => {
   } = useQuery({
     queryKey: ['search', query, categoryId],
     queryFn: () =>
-      CatalogService.searchProducts({
+      CatalogService.searchVendorProducts({
         globalCategoryId: categoryId || undefined,
         search: query.length > 2 ? query : undefined,
       }),
@@ -123,9 +123,8 @@ const SearchScreen = ({ navigation, route }: any) => {
               style={styles.input}
               placeholder={
                 selectedCategory
-                  ? `${t('common.search')} ${t('search.in')} ${
-                      selectedCategory.name
-                    }`
+                  ? `${t('common.search')} ${t('search.in')} ${selectedCategory.name
+                  }`
                   : t('home.search_placeholder')
               }
               value={query}

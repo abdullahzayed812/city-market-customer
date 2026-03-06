@@ -48,9 +48,11 @@ const ProductCard = React.memo(({ item, navigation, onAdd }: any) => (
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.productName} numberOfLines={1}>
+          {item.name}
+        </Text>
         <Text style={styles.productDesc} numberOfLines={1}>
           {item.description}
         </Text>
@@ -64,11 +66,11 @@ const ProductCard = React.memo(({ item, navigation, onAdd }: any) => (
 const ProductRow = ({ items, navigation, onAdd }: any) => (
   <View style={styles.row}>
     {items.map((product: any) => (
-      <ProductCard 
-        key={product.id} 
-        item={product} 
-        navigation={navigation} 
-        onAdd={onAdd} 
+      <ProductCard
+        key={product.id}
+        item={product}
+        navigation={navigation}
+        onAdd={onAdd}
       />
     ))}
     {items.length === 1 && <View style={styles.productCardWrapper} />}
@@ -79,20 +81,26 @@ const ProductRow = ({ items, navigation, onAdd }: any) => (
 const StoreHeader = React.memo(({ t, vendor, navigation, insets }: any) => (
   <View>
     <View style={{ height: 200 + insets.top }}>
-        <TouchableOpacity
-            style={[styles.backButton, { top: insets.top + 10 }]}
-            onPress={() => navigation.goBack()}
-        >
-            <ChevronLeft color={theme.colors.white} size={24} />
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.backButton, { top: insets.top + 10 }]}
+        onPress={() => navigation.goBack()}
+      >
+        <ChevronLeft color={theme.colors.white} size={24} />
+      </TouchableOpacity>
     </View>
 
     <View style={styles.infoCard}>
       <View style={styles.titleRow}>
         <Text style={styles.shopName}>{vendor?.shopName}</Text>
         <View style={styles.ratingBadge}>
-          <Star size={12} color={theme.colors.primary} fill={theme.colors.accent} />
-          <Text style={styles.ratingValue}>4.8</Text>
+          <Star
+            size={12}
+            color={theme.colors.primary}
+            fill={theme.colors.accent}
+          />
+          <Text style={styles.ratingValue}>
+            {vendor?.averageRating?.toFixed(1) || '0.0'}
+          </Text>
         </View>
       </View>
 
@@ -107,13 +115,20 @@ const StoreHeader = React.memo(({ t, vendor, navigation, insets }: any) => (
             {vendor?.address?.split(',')[0]}
           </Text>
         </View>
-        <View style={styles.metaItem}>
-          <Clock size={14} color={theme.colors.accent} />
-          <Text style={styles.metaText}>20-30 {t('common.minutes')}</Text>
-        </View>
-        <TouchableOpacity style={styles.infoButton}>
-           <Info size={18} color={theme.colors.primary} />
+        <TouchableOpacity
+          style={styles.metaItem}
+          onPress={() =>
+            navigation.navigate('VendorReviews', { vendorId: vendor?.id })
+          }
+        >
+          <Star size={14} color={theme.colors.accent} />
+          <Text style={styles.metaText}>
+            {vendor?.totalRatings || 0} {t('store.reviews')}
+          </Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity style={styles.infoButton}>
+          <Info size={18} color={theme.colors.primary} />
+        </TouchableOpacity> */}
       </View>
     </View>
   </View>
@@ -135,7 +150,7 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products', vendorId],
-    queryFn: () => CatalogService.getProductsByVendor(vendorId),
+    queryFn: () => CatalogService.getVendorProductsByVendor(vendorId),
   });
 
   const { data: vendorCategories, isLoading: categoriesLoading } = useQuery({
@@ -182,13 +197,16 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     }
   };
 
-  const renderRow = useCallback(({ item }: { item: any[] }) => (
-    <ProductRow 
-      items={item} 
-      navigation={navigation} 
-      onAdd={handleAddToCart} 
-    />
-  ), [navigation, handleAddToCart]);
+  const renderRow = useCallback(
+    ({ item }: { item: any[] }) => (
+      <ProductRow
+        items={item}
+        navigation={navigation}
+        onAdd={handleAddToCart}
+      />
+    ),
+    [navigation, handleAddToCart],
+  );
 
   if (vendorLoading || productsLoading || categoriesLoading) {
     return (
@@ -200,14 +218,20 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
+
       <View style={[styles.headerImageContainer, { height: 240 + insets.top }]}>
-          <ImageWithPlaceholder
-            uri={vendor?.storeImage ? `${getBaseURL()}${vendor.storeImage}` : null}
-            style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
-          />
-          <View style={styles.imageOverlay} />
+        <ImageWithPlaceholder
+          uri={
+            vendor?.storeImage ? `${getBaseURL()}${vendor.storeImage}` : null
+          }
+          style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
+        />
+        <View style={styles.imageOverlay} />
       </View>
 
       <SectionList
@@ -220,22 +244,20 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           </View>
         )}
         ListHeaderComponent={
-          <StoreHeader 
+          <StoreHeader
             t={t}
-            vendor={vendor} 
-            navigation={navigation} 
-            insets={insets} 
+            vendor={vendor}
+            navigation={navigation}
+            insets={insets}
           />
         }
         stickySectionHeadersEnabled={true}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        style={{ paddingTop: 0 }} 
+        style={{ paddingTop: 0 }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {t('common.no_results')}
-            </Text>
+            <Text style={styles.emptyText}>{t('common.no_results')}</Text>
           </View>
         }
       />

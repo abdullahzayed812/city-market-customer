@@ -17,11 +17,13 @@ import {
   Receipt,
   Clock,
   AlertCircle,
+  Star,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
 import { theme } from '../theme';
 import { useSocket } from '../app/SocketContext';
+import { VendorRatingModal } from '../components/VendorRatingModal';
 import {
   OrderWithItems,
   CustomerOrder,
@@ -37,6 +39,8 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { socket } = useSocket();
+  const [ratingModalVisible, setRatingModalVisible] = React.useState(false);
+  const [selectedVendorForRating, setSelectedVendorForRating] = React.useState<any>(null);
 
   const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
     queryKey: ['order', orderId],
@@ -236,6 +240,21 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                     </View>
                   ))}
                 </View>
+                {orderData?.status === CustomerOrderStatus.COMPLETED &&
+                  vo.status === VendorOrderStatus.DELIVERED && (
+                    <TouchableOpacity
+                      style={styles.rateVendorButton}
+                      onPress={() => {
+                        setSelectedVendorForRating(vo);
+                        setRatingModalVisible(true);
+                      }}
+                    >
+                      <Star size={16} color={theme.colors.accent} fill={theme.colors.accent} />
+                      <Text style={styles.rateVendorText}>
+                        {t('rating.rate_experience')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
               </View>
             ),
           )}
@@ -288,6 +307,16 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             </View>
           </View>
         </ScrollView>
+
+        {selectedVendorForRating && (
+          <VendorRatingModal
+            visible={ratingModalVisible}
+            onClose={() => setRatingModalVisible(false)}
+            orderId={orderData!.id}
+            vendorName={selectedVendorForRating.vendorName}
+            vendorId={selectedVendorForRating.vendorId}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -402,6 +431,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',
+  },
+  rateVendorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.accent,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginTop: 10,
+    alignSelf: 'flex-end',
+  },
+  rateVendorText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginLeft: 6,
   },
   itemsCard: {
     backgroundColor: theme.colors.white,

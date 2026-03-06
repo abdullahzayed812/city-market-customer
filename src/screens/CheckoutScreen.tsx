@@ -49,11 +49,11 @@ const CheckoutScreen = ({ navigation }: any) => {
       navigation.replace('Main', { screen: 'Orders' });
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onError: error => {
+    onError: (error: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: error?.message || 'Failed to place order',
+        text2: error?.response?.data?.message || t('checkout.failed_to_place_order'),
         position: 'top',
       });
     },
@@ -64,7 +64,7 @@ const CheckoutScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Please select a delivery address',
+        text2: t('checkout.select_address'),
         position: 'top',
       });
       return;
@@ -75,7 +75,7 @@ const CheckoutScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Selected address not found',
+        text2: t('checkout.address_not_found'),
         position: 'top',
       });
       return;
@@ -84,7 +84,7 @@ const CheckoutScreen = ({ navigation }: any) => {
     const orderData = {
       vendorId: items[0].vendorId,
       items: items.map(item => ({
-        productId: item.id,
+        vendorProductId: item.id,
         quantity: item.quantity,
       })),
       deliveryAddress: address.address,
@@ -144,7 +144,7 @@ const CheckoutScreen = ({ navigation }: any) => {
                 onPress={() => navigation.navigate('Addresses')}
               >
                 <MapPin size={32} color={theme.colors.surface} />
-                <Text style={styles.emptyAddressText}>+ Add New Address</Text>
+                <Text style={styles.emptyAddressText}>{`+ ${t('addresses.add_new')}`}</Text>
               </TouchableOpacity>
             ) : (
               addresses?.map((address: any) => (
@@ -191,15 +191,15 @@ const CheckoutScreen = ({ navigation }: any) => {
 
           {/* Payment Method (Mock) */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <Text style={styles.sectionTitle}>{t('checkout.payment_method')}</Text>
             <View style={styles.paymentCard}>
               <View style={styles.paymentIconContainer}>
                 <CreditCard size={22} color={theme.colors.primary} />
               </View>
               <View style={styles.paymentInfo}>
-                <Text style={styles.paymentLabel}>Cash on Delivery</Text>
+                <Text style={styles.paymentLabel}>{t('checkout.cash_on_delivery')}</Text>
                 <Text style={styles.paymentDesc}>
-                  Pay when you receive your order
+                  {t('checkout.cash_description')}
                 </Text>
               </View>
               <View style={styles.radioActive}>
@@ -210,7 +210,7 @@ const CheckoutScreen = ({ navigation }: any) => {
 
           {/* Order Summary */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Order Summary</Text>
+            <Text style={styles.sectionTitle}>{t('checkout.order_summary')}</Text>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>{t('cart.total')}</Text>
@@ -226,7 +226,7 @@ const CheckoutScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>
-                <Text style={styles.grandTotalLabel}>Grand Total</Text>
+                <Text style={styles.grandTotalLabel}>{t('checkout.grand_total')}</Text>
                 <Text style={styles.grandTotalValue}>
                   ${grandTotal.toFixed(2)}
                 </Text>

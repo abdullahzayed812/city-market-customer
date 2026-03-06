@@ -2,8 +2,8 @@ import apiClient from './apiClient';
 import {
   ApiResponse,
   Category,
-  Product,
-  ProductFilter,
+  VendorProduct,
+  VendorProductFilter,
 } from '@city-market/shared';
 
 export const CatalogService = {
@@ -25,33 +25,33 @@ export const CatalogService = {
     );
     return response.data?.data;
   },
-  getProducts: async (filter?: ProductFilter) => {
-    const response = await apiClient.get<ApiResponse<Product[]>>(
+  getVendorProducts: async (filter?: VendorProductFilter) => {
+    const response = await apiClient.get<ApiResponse<VendorProduct[]>>(
       '/catalog/products/search',
       { params: filter },
     );
     return response.data?.data;
   },
-  getProductsByCategory: async (categoryId: string) => {
-    const response = await apiClient.get<ApiResponse<Product[]>>(
+  getVendorProductsByCategory: async (categoryId: string) => {
+    const response = await apiClient.get<ApiResponse<VendorProduct[]>>(
       `/catalog/products/category/${categoryId}`,
     );
     return response.data?.data;
   },
-  getProductsByVendor: async (vendorId: string) => {
-    const response = await apiClient.get<ApiResponse<{ data: Product[] }>>(
+  getVendorProductsByVendor: async (vendorId: string) => {
+    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[] }>>(
       `/catalog/products/vendor/${vendorId}`,
     );
     return response.data?.data;
   },
-  getProductById: async (id: string) => {
-    const response = await apiClient.get<ApiResponse<Product>>(
+  getVendorProductById: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<VendorProduct>>(
       `/catalog/products/${id}`,
     );
     return response.data?.data;
   },
-  searchProducts: async (filter: ProductFilter) => {
-    const response = await apiClient.get<ApiResponse<{ data: Product[] }>>(
+  searchVendorProducts: async (filter: VendorProductFilter) => {
+    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[] }>>(
       `/catalog/products/search`,
       { params: filter },
     );
