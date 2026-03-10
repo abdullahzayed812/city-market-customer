@@ -34,7 +34,9 @@
     "date": "التاريخ",
     "go_back": "رجوع",
     "no_results": "لم يتم العثور على نتائج",
-    "minutes": "دقيقة"
+    "minutes": "دقيقة",
+    "kg": "كجم",
+    "gram": "جرام"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -58,7 +60,18 @@
     "open": "مفتوح",
     "closed": "مغلق",
     "welcome": "مرحباً بك في",
-    "brand": "سيتي ماركت"
+    "brand": "سيتي ماركت",
+    "type_supermarket": "سوبر ماركت",
+    "type_pharmacy": "صيدلية",
+    "type_butcher": "جزارة",
+    "type_poultry": "دواجن",
+    "type_fish": "أسماك",
+    "type_roastery": "مقلاة",
+    "type_bakery": "مخبز",
+    "type_pastry": "حلواني",
+    "type_stationery": "مكتبة",
+    "type_vegfruit": "خضروات وفاكهة",
+    "type_other": "أخرى"
   },
   "store": {
     "products": "المنتجات",
@@ -109,6 +122,7 @@
     "payment_summary": "ملخص الدفع",
     "total_amount": "المبلغ الإجمالي",
     "status_pending_vendor_confirmation": "في انتظار تأكيد المتجر",
+    "status_preparing": "جاري التجهيز",
     "status_waiting_customer_decision": "في انتظار قرارك",
     "status_ready": "جاهز للتسليم",
     "status_picked_up": "استلمه المندوب",
@@ -119,7 +133,9 @@
     "status_proposal_sent": "تم إرسال العرض",
     "status_confirmed": "مؤكد",
     "status_on_the_way": "في الطريق",
-    "status_delivered": "تم التوصيل"
+    "status_delivered": "تم التوصيل",
+    "actual_weight": "الوزن الفعلي",
+    "order_number": "طلب #"
   },
   "proposals": {
     "title": "مراجعة العروض",
@@ -141,7 +157,10 @@
     "reject_proposal_message": "الرفض سيؤدي إلى إلغاء طلب هذا المتجر. هل تريد الاستمرار؟",
     "cancel_shop_label": "إلغاء طلب المتجر",
     "cancel_entire_order_label": "إلغاء الطلب بالكامل",
-    "cancel_entire_order_instead": "إلغاء الطلب بالكامل بدلاً من ذلك"
+    "cancel_entire_order_instead": "إلغاء الطلب بالكامل بدلاً من ذلك",
+    "type_weight_adjustment": "تعديل الوزن",
+    "requested_weight": "الوزن المطلوب",
+    "proposed_weight": "الوزن المقترح"
   },
   "profile": {
     "title": "الملف الشخصي",

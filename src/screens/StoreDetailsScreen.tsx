@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Star, MapPin, Clock, Info } from 'lucide-react-native';
+import { ChevronLeft, Star, MapPin } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { CatalogService } from '../services/api/catalogService';
 import { VendorService } from '../services/api/vendorService';
@@ -21,6 +21,7 @@ import CustomModal from '../components/common/CustomModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
+import { MeasurementType } from '@city-market/shared';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - theme.spacing.lg * 2 - theme.spacing.md) / 2;
@@ -56,14 +57,19 @@ const ProductCard = React.memo(({ item, navigation, onAdd }: any) => (
         <Text style={styles.productDesc} numberOfLines={1}>
           {item.description}
         </Text>
-        <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+        <View style={styles.priceInfo}>
+          {item.measurementType === MeasurementType.WEIGHT && (
+            <Text style={styles.unitText}>/kg</Text>
+          )}
+          <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   </View>
 ));
 
 // 2. Separate Row Component
-const ProductRow = ({ items, navigation, onAdd }: any) => (
+const ProductRow = React.memo(({ items, navigation, onAdd }: any) => (
   <View style={styles.row}>
     {items.map((product: any) => (
       <ProductCard
@@ -75,7 +81,7 @@ const ProductRow = ({ items, navigation, onAdd }: any) => (
     ))}
     {items.length === 1 && <View style={styles.productCardWrapper} />}
   </View>
-);
+));
 
 // 3. Separate Store Header Component
 const StoreHeader = React.memo(({ t, vendor, navigation, insets }: any) => (
@@ -126,9 +132,6 @@ const StoreHeader = React.memo(({ t, vendor, navigation, insets }: any) => (
             {vendor?.totalRatings || 0} {t('store.reviews')}
           </Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.infoButton}>
-          <Info size={18} color={theme.colors.primary} />
-        </TouchableOpacity> */}
       </View>
     </View>
   </View>
@@ -184,9 +187,22 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     setModalVisible(true);
   }, []);
 
-  const confirmAddToCart = () => {
+  const confirmAddToCart = useCallback(() => {
     if (selectedProduct) {
-      addToCart({ ...selectedProduct, quantity: 1, vendorId });
+      const item: any = {
+        ...selectedProduct,
+        vendorId,
+        measurementType: selectedProduct.measurementType,
+      };
+
+      if (selectedProduct.measurementType === MeasurementType.WEIGHT) {
+        item.weightGrams = 500;
+        item.weight = 0.5;
+      } else {
+        item.quantity = 1;
+      }
+
+      addToCart(item);
       setModalVisible(false);
       setSelectedProduct(null);
       Toast.show({
@@ -195,7 +211,7 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
         position: 'bottom',
       });
     }
-  };
+  }, [selectedProduct, vendorId, addToCart, t]);
 
   const renderRow = useCallback(
     ({ item }: { item: any[] }) => (
@@ -207,6 +223,8 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     ),
     [navigation, handleAddToCart],
   );
+
+  const handleCloseModal = useCallback(() => setModalVisible(false), []);
 
   if (vendorLoading || productsLoading || categoriesLoading) {
     return (
@@ -220,7 +238,7 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        translucent
+        // translucent
         backgroundColor="transparent"
       />
 
@@ -264,7 +282,7 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
       <CustomModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={handleCloseModal}
         title={t('common.confirm')}
         message={t('store.confirm_add')}
         confirmLabel={t('common.yes')}
@@ -372,15 +390,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.primary,
   },
-  infoButton: {
-    marginLeft: 'auto',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   listContent: {
     paddingBottom: 40,
   },
@@ -412,7 +421,7 @@ const styles = StyleSheet.create({
     ...theme.shadows.soft,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.03)',
-    height: 220,
+    height: 230,
   },
   imageWrapper: {
     width: '100%',
@@ -458,10 +467,19 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     marginBottom: 4,
   },
+  priceInfo: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
   productPrice: {
-    fontSize: 15,
+    fontSize: theme.typography.sizes.md,
     fontWeight: '800',
     color: theme.colors.accent,
+  },
+  unitText: {
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textMuted,
+    marginLeft: 2,
   },
   emptyContainer: {
     paddingVertical: 50,

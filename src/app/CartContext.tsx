@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
+import { MeasurementType } from '@city-market/shared';
 
 interface CartItem {
     id: string;
     name: string;
     price: number;
-    quantity: number;
+    quantity?: number;
+    weight?: number;
+    weightGrams?: number;
     vendorId: string;
+    measurementType: MeasurementType;
+    imageUrl?: string;
 }
 
 interface CartContextType {
@@ -13,6 +18,7 @@ interface CartContextType {
     addToCart: (item: CartItem) => void;
     removeFromCart: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
+    updateWeight: (id: string, weightGrams: number) => void;
     clearCart: () => void;
     total: number;
 }
@@ -26,7 +32,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setItems((prev) => {
             const existing = prev.find((i) => i.id === item.id);
             if (existing) {
-                return prev.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+                if (item.measurementType === MeasurementType.UNIT) {
+                    return prev.map((i) => i.id === item.id ? { ...i, quantity: (i.quantity || 0) + (item.quantity || 1) } : i);
+                } else {
+                    return prev.map((i) => i.id === item.id ? { 
+                        ...i, 
+                        weightGrams: (i.weightGrams || 0) + (item.weightGrams || 500),
+                        weight: ((i.weightGrams || 0) + (item.weightGrams || 500)) / 1000
+                    } : i);
+                }
             }
             return [...prev, item];
         });
@@ -44,12 +58,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity } : i));
     };
 
+    const updateWeight = (id: string, weightGrams: number) => {
+        if (weightGrams <= 0) {
+            removeFromCart(id);
+            return;
+        }
+        setItems((prev) => prev.map((i) => i.id === id ? { ...i, weightGrams, weight: weightGrams / 1000 } : i));
+    };
+
     const clearCart = () => setItems([]);
 
-    const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+    const total = useMemo(() => items.reduce((sum, item) => {
+        if (item.measurementType === MeasurementType.UNIT) {
+            return sum + item.price * (item.quantity || 0);
+        } else {
+            return sum + (item.price * (item.weightGrams || 0)) / 1000;
+        }
+    }, 0), [items]);
 
     return (
-        <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total }}>
+        <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, updateWeight, clearCart, total }}>
             {children}
         </CartContext.Provider>
     );

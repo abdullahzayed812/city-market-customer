@@ -34,7 +34,9 @@
     "date": "Date",
     "go_back": "Go Back",
     "no_results": "No results found",
-    "minutes": "min"
+    "minutes": "min",
+    "kg": "kg",
+    "gram": "g"
   },
   "auth": {
     "email": "Email",
@@ -58,7 +60,18 @@
     "open": "Open",
     "closed": "Closed",
     "welcome": "Welcome to",
-    "brand": "CityMarket"
+    "brand": "CityMarket",
+    "type_supermarket": "Supermarket",
+    "type_pharmacy": "Pharmacy",
+    "type_butcher": "Butcher",
+    "type_poultry": "Poultry",
+    "type_fish": "Fish",
+    "type_roastery": "Roastery",
+    "type_bakery": "Bakery",
+    "type_pastry": "Pastry",
+    "type_stationery": "Stationery",
+    "type_vegfruit": "Vegetables & Fruits",
+    "type_other": "Other"
   },
   "store": {
     "products": "Products",
@@ -109,6 +122,7 @@
     "payment_summary": "Payment Summary",
     "total_amount": "Total Amount",
     "status_pending_vendor_confirmation": "Pending Vendor Confirmation",
+    "status_preparing": "Preparing",
     "status_waiting_customer_decision": "Waiting for your decision",
     "status_ready": "Ready for Pickup",
     "status_picked_up": "Picked Up",
@@ -119,7 +133,9 @@
     "status_proposal_sent": "Proposal Sent",
     "status_confirmed": "Confirmed",
     "status_on_the_way": "On the way",
-    "status_delivered": "Delivered"
+    "status_delivered": "Delivered",
+    "actual_weight": "Actual Weight",
+    "order_number": "Order #"
   },
   "proposals": {
     "title": "Review Proposals",
@@ -128,8 +144,11 @@
     "type": "Type",
     "status": "Status",
     "proposed_quantity": "Proposed Quantity",
+    "requested_weight": "Requested Weight",
+    "proposed_weight": "Proposed Weight",
     "review_button": "Review Vendor Proposals",
     "type_quantity_reduction": "Quantity Reduction",
+    "type_weight_reduction": "Weight Reduction",
     "type_unavailable": "Unavailable",
     "status_pending": "Pending",
     "status_accepted": "Accepted",
@@ -141,7 +160,8 @@
     "reject_proposal_message": "Rejecting will cancel this shop order. Continue?",
     "cancel_shop_label": "Cancel Shop",
     "cancel_entire_order_label": "Cancel Entire Order",
-    "cancel_entire_order_instead": "Cancel Entire Order Instead"
+    "cancel_entire_order_instead": "Cancel Entire Order Instead",
+    "type_weight_adjustment": "Weight Adjustment"
   },
   "profile": {
     "title": "Profile",

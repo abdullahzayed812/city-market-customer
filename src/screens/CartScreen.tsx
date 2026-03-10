@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,50 +15,85 @@ import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
 import QuantitySelector from '../components/common/QuantitySelector';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MeasurementType } from '@city-market/shared';
 
 const CartScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
-  const { items, removeFromCart, updateQuantity, total } = useCart();
+  const { items, removeFromCart, updateQuantity, updateWeight, total } =
+    useCart();
 
-  const handleUpdateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity > 0) {
-      updateQuantity(id, newQuantity);
-    }
-  };
+  const handleUpdateAmount = useCallback(
+    (item: any, increment: boolean) => {
+      if (item.measurementType === MeasurementType.WEIGHT) {
+        const currentWeight = item.weightGrams || 0;
+        const newWeight = increment ? currentWeight + 500 : currentWeight - 500;
+        if (newWeight > 0) {
+          updateWeight(item.id, newWeight);
+        }
+      } else {
+        const currentQty = item.quantity || 0;
+        const newQty = increment ? currentQty + 1 : currentQty - 1;
+        if (newQty > 0) {
+          updateQuantity(item.id, newQty);
+        }
+      }
+    },
+    [updateWeight, updateQuantity],
+  );
 
-  const renderCartItem = ({ item }: { item: any }) => (
-    <View style={styles.cartItem}>
-      <Image
-        source={{
-          uri: item.imageUrl
-            ? `${getBaseURL()}${item.imageUrl}`
-            : 'https://via.placeholder.com/100',
-        }}
-        style={styles.itemImage}
-      />
-      <View style={styles.itemDetails}>
-        <View style={styles.itemHeader}>
-          <Text style={styles.itemName} numberOfLines={2}>
-            {item.name}
-          </Text>
-          <TouchableOpacity
-            onPress={() => removeFromCart(item.id)}
-            style={styles.removeButton}
-          >
-            <Trash2 size={20} color={theme.colors.error} />
-          </TouchableOpacity>
-        </View>
+  const renderCartItem = useCallback(
+    ({ item }: { item: any }) => (
+      <View style={styles.cartItem}>
+        <Image
+          source={{
+            uri: item.imageUrl
+              ? `${getBaseURL()}${item.imageUrl}`
+              : 'https://via.placeholder.com/100',
+          }}
+          style={styles.itemImage}
+        />
+        <View style={styles.itemDetails}>
+          <View style={styles.itemHeader}>
+            <Text style={styles.itemName} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <TouchableOpacity
+              onPress={() => removeFromCart(item.id)}
+              style={styles.removeButton}
+            >
+              <Trash2 size={20} color={theme.colors.error} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.itemFooter}>
-          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-          <QuantitySelector
-            quantity={item.quantity}
-            onIncrement={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-            onDecrement={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-          />
+          <View style={styles.itemFooter}>
+            <View style={styles.priceInfo}>
+              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+              {item.measurementType === MeasurementType.WEIGHT && (
+                <Text style={styles.unitText}>/kg</Text>
+              )}
+            </View>
+            <QuantitySelector
+              quantity={
+                item.measurementType === MeasurementType.WEIGHT
+                  ? item.weightGrams
+                  : item.quantity
+              }
+              onIncrement={() => handleUpdateAmount(item, true)}
+              onDecrement={() => handleUpdateAmount(item, false)}
+              minQuantity={
+                item.measurementType === MeasurementType.WEIGHT ? 500 : 1
+              }
+              displayValue={
+                item.measurementType === MeasurementType.WEIGHT
+                  ? `${(item.weightGrams / 1000).toFixed(1)} kg`
+                  : undefined
+              }
+            />
+          </View>
         </View>
       </View>
-    </View>
+    ),
+    [removeFromCart, handleUpdateAmount],
   );
 
   if (items.length === 0) {
@@ -177,7 +212,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: theme.spacing.md,
     justifyContent: 'space-between',
-  },
+  } as any,
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -197,12 +232,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 2,
     marginTop: 8,
+  },
+  priceInfo: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
   },
   itemPrice: {
     fontSize: theme.typography.sizes.lg,
     fontWeight: theme.typography.weights.bold,
     color: theme.colors.secondary,
+  },
+  unitText: {
+    fontSize: theme.typography.sizes.md,
+    color: theme.colors.textMuted,
+    marginLeft: 2,
   },
   footer: {
     padding: theme.spacing.lg,

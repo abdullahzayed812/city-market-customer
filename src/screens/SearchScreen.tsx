@@ -25,6 +25,7 @@ import { CatalogService } from '../services/api/catalogService';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
+import { MeasurementType } from '@city-market/shared';
 
 const SearchScreen = ({ navigation, route }: any) => {
   const { t } = useTranslation();
@@ -88,8 +89,13 @@ const SearchScreen = ({ navigation, route }: any) => {
             </Text>
           </View>
           <View style={styles.footerRow}>
-            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-            {item.stockQuantity < 5 && (
+            <View style={styles.priceInfo}>
+                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                {item.measurementType === MeasurementType.WEIGHT && (
+                    <Text style={styles.unitText}>/kg</Text>
+                )}
+            </View>
+            {(item.measurementType === MeasurementType.UNIT ? item.stockQuantity < 5 : item.stockWeightGrams < 5000) && (
               <Text style={styles.stockWarning}>
                 {t('store.low_stock') || 'Low Stock'}
               </Text>
@@ -320,10 +326,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  priceInfo: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+  },
   itemPrice: {
     fontSize: 16,
     fontWeight: '800',
     color: theme.colors.accent,
+  },
+  unitText: {
+      fontSize: 10,
+      color: theme.colors.textMuted,
+      marginLeft: 2,
   },
   stockWarning: {
     fontSize: 10,

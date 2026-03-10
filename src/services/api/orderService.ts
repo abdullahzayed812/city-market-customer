@@ -27,6 +27,12 @@ export const OrderService = {
     );
     return response.data?.data;
   },
+  getOrderProposals: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `/orders/customer-orders/${id}/proposals`,
+    );
+    return response.data?.data;
+  },
   cancelOrder: async (id: string) => {
     // Corrected to use PUT /orders/:id/status with CustomerOrderStatus.CANCELLED
     const response = await apiClient.put<ApiResponse<null>>(

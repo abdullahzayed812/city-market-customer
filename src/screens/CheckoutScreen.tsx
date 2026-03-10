@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  // Dimensions,
   StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -24,8 +23,7 @@ import { UserService } from '../services/api/userService';
 import { OrderService } from '../services/api/orderService';
 import { useCart } from '../app/CartContext';
 import { theme } from '../theme';
-
-// const { width } = Dimensions.get('window');
+import { MeasurementType } from '@city-market/shared';
 
 const CheckoutScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -48,18 +46,18 @@ const CheckoutScreen = ({ navigation }: any) => {
       });
       navigation.replace('Main', { screen: 'Orders' });
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onError: (error: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: error?.response?.data?.message || t('checkout.failed_to_place_order'),
+        text2:
+          error?.response?.data?.message || t('checkout.failed_to_place_order'),
         position: 'top',
       });
     },
   });
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = useCallback(() => {
     if (!selectedAddress) {
       Toast.show({
         type: 'error',
@@ -82,10 +80,17 @@ const CheckoutScreen = ({ navigation }: any) => {
     }
 
     const orderData = {
-      vendorId: items[0].vendorId,
+      customerId: '', // Will be added by service or backend from token
       items: items.map(item => ({
         vendorProductId: item.id,
-        quantity: item.quantity,
+        quantity:
+          item.measurementType === MeasurementType.UNIT
+            ? item.quantity
+            : undefined,
+        weightGrams:
+          item.measurementType === MeasurementType.WEIGHT
+            ? item.weightGrams
+            : undefined,
       })),
       deliveryAddress: address.address,
       deliveryLatitude: address.latitude,
@@ -93,7 +98,10 @@ const CheckoutScreen = ({ navigation }: any) => {
     };
 
     orderMutation.mutate(orderData);
-  };
+  }, [selectedAddress, addresses, items, orderMutation, t, navigation]);
+
+  const deliveryFee = 15.0;
+  const grandTotal = useMemo(() => total + deliveryFee, [total, deliveryFee]);
 
   if (addressesLoading) {
     return (
@@ -102,9 +110,6 @@ const CheckoutScreen = ({ navigation }: any) => {
       </View>
     );
   }
-
-  const deliveryFee = 5.0;
-  const grandTotal = total + deliveryFee;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -144,7 +149,9 @@ const CheckoutScreen = ({ navigation }: any) => {
                 onPress={() => navigation.navigate('Addresses')}
               >
                 <MapPin size={32} color={theme.colors.surface} />
-                <Text style={styles.emptyAddressText}>{`+ ${t('addresses.add_new')}`}</Text>
+                <Text style={styles.emptyAddressText}>{`+ ${t(
+                  'addresses.add_new',
+                )}`}</Text>
               </TouchableOpacity>
             ) : (
               addresses?.map((address: any) => (
@@ -191,13 +198,17 @@ const CheckoutScreen = ({ navigation }: any) => {
 
           {/* Payment Method (Mock) */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('checkout.payment_method')}</Text>
+            <Text style={styles.sectionTitle}>
+              {t('checkout.payment_method')}
+            </Text>
             <View style={styles.paymentCard}>
               <View style={styles.paymentIconContainer}>
                 <CreditCard size={22} color={theme.colors.primary} />
               </View>
               <View style={styles.paymentInfo}>
-                <Text style={styles.paymentLabel}>{t('checkout.cash_on_delivery')}</Text>
+                <Text style={styles.paymentLabel}>
+                  {t('checkout.cash_on_delivery')}
+                </Text>
                 <Text style={styles.paymentDesc}>
                   {t('checkout.cash_description')}
                 </Text>
@@ -210,7 +221,9 @@ const CheckoutScreen = ({ navigation }: any) => {
 
           {/* Order Summary */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('checkout.order_summary')}</Text>
+            <Text style={styles.sectionTitle}>
+              {t('checkout.order_summary')}
+            </Text>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>{t('cart.total')}</Text>
@@ -226,7 +239,9 @@ const CheckoutScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>
-                <Text style={styles.grandTotalLabel}>{t('checkout.grand_total')}</Text>
+                <Text style={styles.grandTotalLabel}>
+                  {t('checkout.grand_total')}
+                </Text>
                 <Text style={styles.grandTotalValue}>
                   ${grandTotal.toFixed(2)}
                 </Text>

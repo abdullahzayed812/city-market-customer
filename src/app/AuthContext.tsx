@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
@@ -31,16 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const token = await AsyncStorage.getItem('auth_token');
         const userData = await AsyncStorage.getItem('user');
-        const parsedUser = JSON.parse(userData || '');
-
-        if (token) {
-          if (parsedUser) {
-            setUserToken(token);
-            setUser(parsedUser);
-          } else {
-            // Token invalid or corrupt
-            await AsyncStorage.removeItem('auth_token');
-          }
+        
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData);
+          setUserToken(token);
+          setUser(parsedUser);
         }
       } catch (e) {
         console.error('Failed to load auth data', e);
@@ -50,32 +45,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     bootstrapAsync();
-  }, [user]);
+  }, []);
 
-  const authContext = {
+  const authContext = useMemo(() => ({
     userToken,
     user,
     isAuthenticated: !!userToken,
     isLoading,
-    signIn: async (user: any, token: string, refreshToken: string) => {
-      if (user && token) {
-        await AsyncStorage.setItem('user', JSON.stringify(user));
+    signIn: async (userData: any, token: string, refreshToken: string) => {
+      if (userData && token) {
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
         await AsyncStorage.setItem('auth_token', token);
         await AsyncStorage.setItem('refresh_token', refreshToken);
 
         setUserToken(token);
-        setUser(user);
+        setUser(userData);
       } else {
         throw new Error('Invalid token received');
       }
     },
     signOut: async () => {
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('refresh_token');
+      await AsyncStorage.multiRemove(['auth_token', 'refresh_token', 'user']);
       setUserToken(null);
       setUser(null);
     },
-  };
+  }), [userToken, user, isLoading]);
 
   return (
     <AuthContext.Provider value={authContext}>{children}</AuthContext.Provider>

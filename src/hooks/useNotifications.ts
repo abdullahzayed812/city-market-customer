@@ -98,15 +98,15 @@ export const useNotifications = (appType: AppType) => {
 
   const handleNotificationNavigation = (remoteMessage: RemoteMessage) => {
     console.log('Navigating based on notification:', remoteMessage);
-    const { type, orderId } = remoteMessage.data || {};
+    const { type, orderId } = (remoteMessage.data || {}) as any;
     
     if (type === 'ORDER_UPDATE' || type === 'DELIVERY_UPDATE') {
       if (navigationRef.isReady()) {
-        navigationRef.navigate('OrderDetails' as never, { orderId } as never);
+        (navigationRef.navigate as any)('OrderDetails', { orderId });
       }
     } else if (type === 'ORDER_CHANGES_PROPOSED') {
       if (navigationRef.isReady()) {
-        navigationRef.navigate('ReviewProposals' as never, { orderId } as never);
+        (navigationRef.navigate as any)('ReviewProposals', { orderId });
       }
     }
   };

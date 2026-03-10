@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Share2, Heart } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { CatalogService } from '../services/api/catalogService';
 import { useCart } from '../app/CartContext';
 import { theme } from '../theme';
@@ -21,6 +21,7 @@ import { getBaseURL } from '../services/api/apiClient';
 import QuantitySelector from '../components/common/QuantitySelector';
 import CustomModal from '../components/common/CustomModal';
 import Toast from 'react-native-toast-message';
+import { MeasurementType } from '@city-market/shared';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +30,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { t } = useTranslation();
   const { addToCart } = useCart();
 
-  const [quantity, setQuantity] = useState(1);
+  const [amount, setAmount] = useState(1); // quantity or weightGrams
   const [modalVisible, setModalVisible] = useState(false);
 
   const { data: product, isLoading } = useQuery({
@@ -37,15 +38,53 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     queryFn: () => CatalogService.getVendorProductById(productId),
   });
 
-  const handleIncrement = () => setQuantity(prev => prev + 1);
-  const handleDecrement = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+  useEffect(() => {
+    if (product) {
+      if (product.measurementType === MeasurementType.WEIGHT) {
+        setAmount(500); // Default 0.5kg
+      } else {
+        setAmount(1);
+      }
+    }
+  }, [product]);
 
-  const handleAddToCart = () => {
+  const isWeight = product?.measurementType === MeasurementType.WEIGHT;
+
+  const handleIncrement = useCallback(() => {
+    if (isWeight) {
+      setAmount(prev => prev + 500);
+    } else {
+      setAmount(prev => prev + 1);
+    }
+  }, [isWeight]);
+
+  const handleDecrement = useCallback(() => {
+    if (isWeight) {
+      setAmount(prev => (prev > 500 ? prev - 500 : 500));
+    } else {
+      setAmount(prev => (prev > 1 ? prev - 1 : 1));
+    }
+  }, [isWeight]);
+
+  const handleAddToCart = useCallback(() => {
     setModalVisible(true);
-  };
+  }, []);
 
-  const confirmAddToCart = () => {
-    addToCart({ ...product, quantity });
+  const confirmAddToCart = useCallback(() => {
+    if (!product) return;
+    const cartItem: any = {
+      ...product,
+      measurementType: product.measurementType,
+    };
+
+    if (isWeight) {
+      cartItem.weightGrams = amount;
+      cartItem.weight = amount / 1000;
+    } else {
+      cartItem.quantity = amount;
+    }
+
+    addToCart(cartItem);
     setModalVisible(false);
     Toast.show({
       type: 'success',
@@ -53,7 +92,23 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       position: 'bottom',
     });
     navigation.goBack();
-  };
+  }, [product, isWeight, amount, addToCart, t, navigation]);
+
+  const imageUrl = useMemo(() => product?.imageUrl
+    ? `${getBaseURL()}${product.imageUrl}`
+    : 'https://via.placeholder.com/400', [product?.imageUrl]);
+
+  const stockAvailable = useMemo(() => {
+      if (!product) return false;
+      return isWeight ? ((product.stockWeightGrams || 0) > 0) : ((product.stockQuantity || 0) > 0);
+  }, [isWeight, product]);
+
+  const maxAmount = useMemo(() => {
+      if (!product) return 0;
+      return isWeight ? (product.stockWeightGrams || 0) : (product.stockQuantity || 0);
+  }, [isWeight, product]);
+
+  const handleCloseModal = useCallback(() => setModalVisible(false), []);
 
   if (isLoading) {
     return (
@@ -62,10 +117,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       </View>
     );
   }
-
-  const imageUrl = product?.imageUrl
-    ? `${getBaseURL()}${product.imageUrl}`
-    : 'https://via.placeholder.com/400';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -78,16 +129,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
           >
             <ChevronLeft color={theme.colors.primary} size={24} />
           </TouchableOpacity>
-          {/* <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={[styles.circleButton, { marginRight: 12 }]}
-            >
-              <Share2 color={theme.colors.primary} size={20} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.circleButton}>
-              <Heart color={theme.colors.primary} size={20} />
-            </TouchableOpacity>
-          </View> */}
         </View>
 
         <ScrollView
@@ -99,9 +140,12 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.infoContainer}>
             <View style={styles.titleRow}>
               <Text style={styles.productName}>{product?.name}</Text>
-              <Text style={styles.productPrice}>
-                ${product?.price.toFixed(2)}
-              </Text>
+              <View style={styles.priceContainer}>
+                <Text style={styles.productPrice}>
+                  ${product?.price.toFixed(2)}
+                </Text>
+                {isWeight && <Text style={styles.priceUnit}> / kg</Text>}
+              </View>
             </View>
 
             <View style={styles.divider} />
@@ -116,15 +160,14 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
                 style={[
                   styles.stockDot,
                   {
-                    backgroundColor:
-                      product?.stockQuantity > 0
-                        ? theme.colors.success
-                        : theme.colors.error,
+                    backgroundColor: stockAvailable
+                      ? theme.colors.success
+                      : theme.colors.error,
                   },
                 ]}
               />
               <Text style={styles.stockText}>
-                {product?.stockQuantity > 0
+                {stockAvailable
                   ? t('product.in_stock') || 'In Stock'
                   : t('store.out_of_stock')}
               </Text>
@@ -132,13 +175,15 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
 
             <View style={styles.quantitySection}>
               <Text style={styles.sectionTitle}>
-                {t('product.quantity') || 'Quantity'}
+                {isWeight ? (t('orders.weight') || 'Weight') : (t('product.quantity') || 'Quantity')}
               </Text>
               <QuantitySelector
-                quantity={quantity}
+                quantity={amount}
                 onIncrement={handleIncrement}
                 onDecrement={handleDecrement}
-                maxQuantity={product?.stockQuantity}
+                maxQuantity={maxAmount}
+                minQuantity={isWeight ? 500 : 1}
+                displayValue={isWeight ? `${(amount / 1000).toFixed(1)} kg` : undefined}
               />
             </View>
           </View>
@@ -148,10 +193,10 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
           <TouchableOpacity
             style={[
               styles.addButton,
-              product?.stockQuantity <= 0 && styles.disabledButton,
+              !stockAvailable && styles.disabledButton,
             ]}
             onPress={handleAddToCart}
-            disabled={product?.stockQuantity <= 0}
+            disabled={!stockAvailable}
           >
             <Text style={styles.addButtonText}>{t('store.add_to_cart')}</Text>
           </TouchableOpacity>
@@ -159,7 +204,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
 
         <CustomModal
           visible={modalVisible}
-          onClose={() => setModalVisible(false)}
+          onClose={handleCloseModal}
           title={t('common.confirm')}
           message={t('store.confirm_add')}
           confirmLabel={t('common.yes')}
@@ -191,9 +236,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 10,
-  },
-  headerRight: {
-    flexDirection: 'row',
   },
   circleButton: {
     width: 44,
@@ -234,10 +276,18 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
   productPrice: {
     fontSize: theme.typography.sizes.xl,
     fontWeight: theme.typography.weights.bold,
     color: theme.colors.secondary,
+  },
+  priceUnit: {
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textMuted,
   },
   divider: {
     height: 1,

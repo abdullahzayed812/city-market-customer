@@ -8,6 +8,8 @@ interface QuantitySelectorProps {
     onIncrement: () => void;
     onDecrement: () => void;
     maxQuantity?: number;
+    minQuantity?: number;
+    displayValue?: string;
 }
 
 const QuantitySelector: React.FC<QuantitySelectorProps> = ({
@@ -15,19 +17,21 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
     onIncrement,
     onDecrement,
     maxQuantity,
+    minQuantity = 1,
+    displayValue,
 }) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity
-                style={[styles.button, quantity <= 1 && styles.disabledButton]}
+                style={[styles.button, quantity <= minQuantity && styles.disabledButton]}
                 onPress={onDecrement}
-                disabled={quantity <= 1}
+                disabled={quantity <= minQuantity}
             >
-                <Minus size={20} color={quantity <= 1 ? theme.colors.textMuted : theme.colors.primary} />
+                <Minus size={20} color={quantity <= minQuantity ? theme.colors.textMuted : theme.colors.primary} />
             </TouchableOpacity>
 
             <View style={styles.quantityContainer}>
-                <Text style={styles.quantityText}>{quantity}</Text>
+                <Text style={styles.quantityText}>{displayValue || quantity}</Text>
             </View>
 
             <TouchableOpacity
@@ -53,7 +57,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.colors.border,
         padding: 4,
-        width: 130,
+        width: 150,
         justifyContent: 'space-between',
     },
     button: {
@@ -79,4 +83,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default QuantitySelector;
+export default React.memo(QuantitySelector);

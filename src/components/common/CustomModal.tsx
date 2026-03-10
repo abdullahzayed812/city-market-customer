@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     TouchableWithoutFeedback,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { theme } from '../../theme';
@@ -21,6 +22,8 @@ interface CustomModalProps {
     confirmLabel?: string;
     cancelLabel?: string;
     onConfirm?: () => void;
+    confirmColor?: string;
+    loading?: boolean;
     children?: React.ReactNode;
 }
 
@@ -32,6 +35,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
     confirmLabel,
     cancelLabel,
     onConfirm,
+    confirmColor,
+    loading,
     children,
 }) => {
     const { t } = useTranslation();
@@ -55,12 +60,20 @@ const CustomModal: React.FC<CustomModalProps> = ({
                             {children}
 
                             <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                                <TouchableOpacity style={styles.cancelButton} onPress={onClose} disabled={loading}>
                                     <Text style={styles.cancelButtonText}>{finalCancelLabel}</Text>
                                 </TouchableOpacity>
                                 {onConfirm && (
-                                    <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-                                        <Text style={styles.confirmButtonText}>{finalConfirmLabel}</Text>
+                                    <TouchableOpacity 
+                                        style={[styles.confirmButton, confirmColor ? { backgroundColor: confirmColor } : null]} 
+                                        onPress={onConfirm}
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <ActivityIndicator size="small" color={theme.colors.white} />
+                                        ) : (
+                                            <Text style={styles.confirmButtonText}>{finalConfirmLabel}</Text>
+                                        )}
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -123,6 +136,8 @@ const styles = StyleSheet.create({
         borderRadius: theme.radius.md,
         backgroundColor: theme.colors.primary,
         alignItems: 'center',
+        minHeight: 48,
+        justifyContent: 'center',
     },
     confirmButtonText: {
         color: theme.colors.white,

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import {
   Info,
   Layers,
   Clock,
+  Scale,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +28,6 @@ import CustomModal from '../components/common/CustomModal';
 import { theme } from '../theme';
 
 import {
-  OrderWithItems,
   OrderItemProposal,
   ProposalType,
   ProposalStatus,
@@ -48,15 +48,23 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
     useState<ProposalWithVendor | null>(null);
   const [modalType, setModalType] = useState<ModalType>(null);
 
-  const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
-    queryKey: ['order', orderId],
-    queryFn: () => OrderService.getOrderById(orderId),
+  const { data: fetchedProposals, isLoading: isLoadingProposals } = useQuery({
+    queryKey: ['order-proposals', orderId],
+    queryFn: () => OrderService.getOrderProposals(orderId),
   });
+
+  const isLoading = isLoadingProposals;
+
+  const closeModal = useCallback(() => {
+    setModalType(null);
+    setSelectedProposal(null);
+  }, []);
 
   const acceptMutation = useMutation({
     mutationFn: (proposalId: string) => OrderService.acceptProposal(proposalId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-proposals', orderId] });
       closeModal();
     },
   });
@@ -71,6 +79,7 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
     }) => OrderService.rejectProposal(proposalId, cancelEntireOrder),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-proposals', orderId] });
       closeModal();
     },
   });
@@ -78,27 +87,19 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
   const isActionLoading = acceptMutation.isPending || rejectMutation.isPending;
 
   const proposals: ProposalWithVendor[] = useMemo(() => {
-    const vendorOrders: any[] = order?.vendorOrders || [];
+    if (!fetchedProposals) return [];
+    return fetchedProposals as ProposalWithVendor[];
+  }, [fetchedProposals]);
 
-    return vendorOrders.flatMap((vo: any) =>
-      (vo.proposals || []).map((proposal: any) => ({
-        ...proposal,
-        vendorName: vo.vendorName,
-      })),
-    );
-  }, [order]);
+  const openModal = useCallback(
+    (proposal: ProposalWithVendor, type: ModalType) => {
+      setSelectedProposal(proposal);
+      setModalType(type);
+    },
+    [],
+  );
 
-  const openModal = (proposal: ProposalWithVendor, type: ModalType) => {
-    setSelectedProposal(proposal);
-    setModalType(type);
-  };
-
-  const closeModal = () => {
-    setModalType(null);
-    setSelectedProposal(null);
-  };
-
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     if (!selectedProposal || !modalType) return;
 
     if (modalType === 'accept') {
@@ -118,7 +119,33 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
         cancelEntireOrder: true,
       });
     }
-  };
+  }, [selectedProposal, modalType, acceptMutation, rejectMutation]);
+
+  const getTypeColor = useCallback((type: ProposalType) => {
+    switch (type) {
+      case ProposalType.QUANTITY_REDUCTION:
+        return '#FF9500';
+      case ProposalType.WEIGHT_ADJUSTMENT:
+        return '#FF9500';
+      case ProposalType.UNAVAILABLE:
+        return theme.colors.error;
+      default:
+        return theme.colors.textMuted;
+    }
+  }, []);
+
+  const getStatusColor = useCallback((status: ProposalStatus) => {
+    switch (status) {
+      case ProposalStatus.PENDING:
+        return theme.colors.secondary;
+      case ProposalStatus.ACCEPTED:
+        return theme.colors.success;
+      case ProposalStatus.REJECTED:
+        return theme.colors.error;
+      default:
+        return theme.colors.textMuted;
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -131,7 +158,7 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
   if (proposals.length === 0) {
     return (
       <View style={styles.centered}>
-        <View style={styles.emptyIconContainer}>
+        <View style={styles.emptyIconContainer as any}>
           <Check size={64} color={theme.colors.success} />
         </View>
         <Text style={styles.noProposalsText}>
@@ -147,30 +174,6 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
       </View>
     );
   }
-
-  const getTypeColor = (type: ProposalType) => {
-    switch (type) {
-      case ProposalType.QUANTITY_REDUCTION:
-        return '#FF9500';
-      case ProposalType.UNAVAILABLE:
-        return theme.colors.error;
-      default:
-        return theme.colors.textMuted;
-    }
-  };
-
-  const getStatusColor = (status: ProposalStatus) => {
-    switch (status) {
-      case ProposalStatus.PENDING:
-        return theme.colors.secondary;
-      case ProposalStatus.ACCEPTED:
-        return theme.colors.success;
-      case ProposalStatus.REJECTED:
-        return theme.colors.error;
-      default:
-        return theme.colors.textMuted;
-    }
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -203,8 +206,13 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
           {proposals.map(proposal => (
             <View key={proposal.id} style={styles.proposalCard}>
               <View style={styles.cardHeader}>
-                <Store size={20} color={theme.colors.primary} />
-                <Text style={styles.vendorName}>{proposal.vendorName}</Text>
+                <View>
+                  <View style={styles.vendorRow}>
+                    <Store size={16} color={theme.colors.primary} />
+                    <Text style={styles.vendorName}>{proposal.vendorName}</Text>
+                  </View>
+                  <Text style={styles.productName}>{proposal.productName}</Text>
+                </View>
               </View>
 
               <View style={styles.divider} />
@@ -236,9 +244,37 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
                   />
                 )}
 
+                {(proposal.requestedWeight !== undefined ||
+                  proposal.requestedWeightGrams !== undefined) && (
+                  <InfoRow
+                    icon={<Scale size={16} color={theme.colors.textMuted} />}
+                    label={t('proposals.requested_weight')}
+                    value={`≈ ${(
+                      proposal.requestedWeight ||
+                      proposal.requestedWeightGrams! / 1000
+                    ).toFixed(2)} ${t('common.kg')}`}
+                  />
+                )}
+
+                {(proposal.proposedWeight !== undefined ||
+                  proposal.proposedWeightGrams !== undefined) && (
+                  <InfoRow
+                    icon={<Scale size={16} color={theme.colors.textMuted} />}
+                    label={t('proposals.proposed_weight')}
+                    value={`${(
+                      (proposal.proposedWeight as number) ||
+                      proposal.proposedWeightGrams! / 1000
+                    ).toFixed(2)} ${t('common.kg')}`}
+                    valueStyle={{
+                      color: theme.colors.primary,
+                      fontWeight: 'bold',
+                    }}
+                  />
+                )}
+
                 <InfoRow
                   icon={<Clock size={16} color={theme.colors.textMuted} />}
-                  label={t('common.date') || 'Date'}
+                  label={t('common.date')}
                   value={new Date(proposal.createdAt).toLocaleString([], {
                     dateStyle: 'medium',
                     timeStyle: 'short',
@@ -270,80 +306,85 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
             </View>
           ))}
         </ScrollView>
-      </View>
 
-      {/* CONFIRMATION MODAL */}
-      <CustomModal
-        visible={!!modalType}
-        onClose={closeModal}
-        title={
-          modalType === 'accept'
-            ? t('proposals.confirm_accept_title')
-            : t('proposals.reject_proposal_title')
-        }
-        message={
-          modalType === 'accept'
-            ? t('proposals.confirm_accept_message')
-            : t('proposals.reject_proposal_message')
-        }
-        confirmLabel={
-          modalType === 'accept'
-            ? t('common.accept')
-            : modalType === 'reject-shop'
-            ? t('proposals.cancel_shop_label')
-            : t('proposals.cancel_entire_order_label')
-        }
-        onConfirm={handleConfirm}
-      >
-        {modalType === 'reject-shop' && (
-          <TouchableOpacity
-            style={styles.cancelAllButton}
-            onPress={() => setModalType('reject-all')}
-          >
-            <Text style={styles.cancelAllText}>
-              {t('proposals.cancel_entire_order_instead')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </CustomModal>
+        <CustomModal
+          visible={modalType !== null}
+          onClose={closeModal}
+          onConfirm={handleConfirm}
+          title={
+            modalType === 'accept'
+              ? t('proposals.confirm_accept_title')
+              : t('proposals.reject_proposal_title')
+          }
+          message={
+            modalType === 'accept'
+              ? t('proposals.confirm_accept_message')
+              : t('proposals.reject_proposal_message')
+          }
+          confirmLabel={
+            modalType === 'accept' ? t('common.accept') : t('common.reject')
+          }
+          confirmColor={
+            modalType === 'accept' ? theme.colors.success : theme.colors.error
+          }
+          loading={isActionLoading}
+        >
+          {modalType === 'reject-shop' && (
+            <TouchableOpacity
+              style={styles.alternativeAction}
+              onPress={() => setModalType('reject-all')}
+            >
+              <Text style={styles.alternativeActionText}>
+                {t('proposals.cancel_entire_order_instead')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </CustomModal>
+      </View>
     </SafeAreaView>
   );
 };
 
-const InfoRow = ({
-  icon,
-  label,
-  value,
-  valueStyle,
-  badge,
-  badgeColor,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  valueStyle?: any;
-  badge?: boolean;
-  badgeColor?: string;
-}) => (
-  <View style={styles.infoRow}>
-    <View style={styles.labelContainer}>
-      {icon}
-      <Text style={styles.label}>{label}</Text>
-    </View>
-    {badge ? (
-      <View style={[styles.badge, { backgroundColor: badgeColor + '20' }]}>
-        <Text style={[styles.badgeText, { color: badgeColor }]}>{value}</Text>
+const InfoRow = React.memo(
+  ({
+    icon,
+    label,
+    value,
+    valueStyle,
+    badge,
+    badgeColor,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    value?: string;
+    valueStyle?: any;
+    badge?: boolean;
+    badgeColor?: string;
+  }) => (
+    <View style={styles.infoRow}>
+      <View style={styles.labelContainer}>
+        {icon}
+        <Text style={styles.label}>{label}</Text>
       </View>
-    ) : (
-      <Text style={[styles.value, valueStyle]}>{value}</Text>
-    )}
-  </View>
+      {badge ? (
+        <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+          <Text style={styles.badgeText}>{value}</Text>
+        </View>
+      ) : (
+        <Text style={[styles.value, valueStyle]}>{value}</Text>
+      )}
+    </View>
+  ),
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.white },
-  container: { flex: 1, backgroundColor: theme.colors.background },
-
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  container: {
+    flex: 1,
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -351,199 +392,177 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: theme.colors.background,
   },
-
   header: {
-    padding: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.white,
-    ...theme.shadows.soft,
   },
-
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   title: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
   },
-
-  scrollContent: { padding: theme.spacing.lg },
-
+  scrollContent: {
+    padding: 20,
+  },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.secondary + '15',
-    padding: 20,
-    borderRadius: 16,
+    backgroundColor: '#FFF9E6',
+    padding: 15,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: theme.colors.secondary + '30',
+    borderColor: '#FFEBB3',
   },
-
   infoText: {
     flex: 1,
-    marginLeft: 12,
-    color: theme.colors.primary,
+    marginLeft: 10,
     fontSize: 14,
+    color: '#856404',
     lineHeight: 20,
-    fontWeight: '500',
   },
-
   proposalCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 15,
     marginBottom: 20,
-    ...theme.shadows.medium,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-
   vendorName: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     color: theme.colors.primary,
-    marginLeft: 10,
+    marginLeft: 6,
   },
-
+  vendorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+  },
   divider: {
     height: 1,
     backgroundColor: theme.colors.border,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-
   cardBody: {
-    marginBottom: 8,
+    marginBottom: 15,
   },
-
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-
   labelContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   label: {
     fontSize: 14,
-    fontWeight: '600',
     color: theme.colors.textMuted,
-    marginLeft: 10,
+    marginLeft: 8,
   },
-
   value: {
     fontSize: 14,
-    color: theme.colors.primary,
-    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    fontWeight: '500',
   },
-
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 20,
   },
-
   badgeText: {
+    color: theme.colors.white,
     fontSize: 12,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
   },
-
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 12,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    gap: 12,
   },
-
   actionButton: {
-    flex: 0.48,
+    flex: 1,
     flexDirection: 'row',
-    height: 50,
-    borderRadius: 14,
-    justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.soft,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
   },
-
   acceptButton: {
     backgroundColor: theme.colors.success,
   },
-
   rejectButton: {
     backgroundColor: theme.colors.error,
   },
-
   buttonText: {
     color: theme.colors.white,
     fontWeight: 'bold',
     marginLeft: 8,
-    fontSize: 15,
-  },
-
-  cancelAllButton: {
-    marginTop: 12,
-    padding: 14,
-    backgroundColor: theme.colors.error + '15',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.error + '30',
-  },
-
-  cancelAllText: {
-    color: theme.colors.error,
-    textAlign: 'center',
-    fontWeight: 'bold',
     fontSize: 14,
   },
-
+  alternativeAction: {
+    marginTop: 15,
+    padding: 10,
+    alignItems: 'center',
+  },
+  alternativeActionText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   emptyIconContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: theme.colors.success + '15',
+    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
-
   noProposalsText: {
     fontSize: 18,
     color: theme.colors.textMuted,
-    fontWeight: 'bold',
     marginBottom: 30,
-    textAlign: 'center',
   },
-
   backButtonLarge: {
     backgroundColor: theme.colors.primary,
     paddingHorizontal: 40,
-    paddingVertical: 14,
-    borderRadius: 16,
-    ...theme.shadows.medium,
+    paddingVertical: 15,
+    borderRadius: 12,
   },
-
   backButtonLargeText: {
     color: theme.colors.white,
-    fontWeight: 'bold',
     fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

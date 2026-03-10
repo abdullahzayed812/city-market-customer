@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -26,13 +26,13 @@ import { useSocket } from '../app/SocketContext';
 import { VendorRatingModal } from '../components/VendorRatingModal';
 import {
   OrderWithItems,
-  CustomerOrder,
   VendorOrder,
   VendorOrderItem,
   CustomerOrderStatus,
   VendorOrderStatus,
   EventType,
-} from '@city-market/shared'; // Import shared types
+  OrderItemProposal,
+} from '@city-market/shared';
 
 const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
@@ -40,21 +40,20 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
   const [ratingModalVisible, setRatingModalVisible] = React.useState(false);
-  const [selectedVendorForRating, setSelectedVendorForRating] = React.useState<any>(null);
+  const [selectedVendorForRating, setSelectedVendorForRating] =
+    React.useState<any>(null);
 
   const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
     queryKey: ['order', orderId],
     queryFn: () => OrderService.getOrderById(orderId),
   });
 
-  useEffect(() => {
-    if (!socket) return;
+  const handleUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+  }, [queryClient, orderId]);
 
-    const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ['order'] });
-    };
-
-    const events = [
+  const socketEvents = useMemo(
+    () => [
       EventType.VENDOR_ORDER_PROPOSED,
       EventType.ORDER_CREATED,
       EventType.ORDER_CONFIRMED,
@@ -65,14 +64,60 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       EventType.ORDER_DELIVERED,
       EventType.PROPOSAL_ACCEPTED,
       EventType.PROPOSAL_REJECTED,
-    ];
+    ],
+    [],
+  );
 
-    events.forEach(event => socket.on(event, handleUpdate));
+  useEffect(() => {
+    if (!socket) return;
+
+    socketEvents.forEach(event => socket.on(event, handleUpdate));
 
     return () => {
-      events.forEach(event => socket.off(event, handleUpdate));
+      socketEvents.forEach(event => socket.off(event, handleUpdate));
     };
-  }, [socket, queryClient]);
+  }, [socket, handleUpdate, socketEvents]);
+
+  const getStatusConfig = useCallback(
+    (status: CustomerOrderStatus | VendorOrderStatus | undefined) => {
+      if (!status) {
+        return { color: theme.colors.textMuted };
+      }
+      switch (status) {
+        case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
+        case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
+        case VendorOrderStatus.PENDING:
+        case VendorOrderStatus.PROPOSAL_SENT:
+          return { color: '#FF9500' };
+        case CustomerOrderStatus.READY:
+        case CustomerOrderStatus.IN_DELIVERY:
+        case VendorOrderStatus.CONFIRMED:
+        case VendorOrderStatus.PICKED_UP:
+        case VendorOrderStatus.ON_THE_WAY:
+          return { color: theme.colors.primary };
+        case CustomerOrderStatus.COMPLETED:
+        case VendorOrderStatus.DELIVERED:
+          return { color: theme.colors.success };
+        case CustomerOrderStatus.CANCELLED:
+        case VendorOrderStatus.CANCELLED:
+          return { color: theme.colors.error };
+        default:
+          return { color: theme.colors.textMuted };
+      }
+    },
+    [],
+  );
+
+  const orderData = order?.order;
+  const vendorOrders = order?.vendorOrders || [];
+  const statusConfig = useMemo(
+    () => getStatusConfig(orderData?.status),
+    [orderData?.status, getStatusConfig],
+  );
+  const date = useMemo(
+    () => (orderData ? new Date(orderData.createdAt) : new Date()),
+    [orderData],
+  );
 
   if (isLoading) {
     return (
@@ -81,41 +126,6 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       </View>
     );
   }
-
-  const orderData: CustomerOrder | undefined = order?.order;
-  const vendorOrders: any[] = order?.vendorOrders || [];
-
-  const getStatusConfig = (
-    status: CustomerOrderStatus | VendorOrderStatus | undefined,
-  ) => {
-    if (!status) {
-      return { color: theme.colors.textMuted };
-    }
-    switch (status) {
-      case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
-      case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
-      case VendorOrderStatus.PENDING:
-      case VendorOrderStatus.PROPOSAL_SENT:
-        return { color: '#FF9500' }; // Yellow/Orange for pending/waiting
-      case CustomerOrderStatus.READY:
-      case CustomerOrderStatus.IN_DELIVERY:
-      case VendorOrderStatus.CONFIRMED:
-      case VendorOrderStatus.PICKED_UP:
-      case VendorOrderStatus.ON_THE_WAY:
-        return { color: theme.colors.primary }; // Primary color for in-progress
-      case CustomerOrderStatus.COMPLETED:
-      case VendorOrderStatus.DELIVERED:
-        return { color: theme.colors.success }; // Green for completed
-      case CustomerOrderStatus.CANCELLED:
-      case VendorOrderStatus.CANCELLED:
-        return { color: theme.colors.error }; // Red for cancelled
-      default:
-        return { color: theme.colors.textMuted };
-    }
-  };
-
-  const statusConfig = getStatusConfig(orderData?.status);
-  const date = orderData ? new Date(orderData.createdAt) : new Date();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -128,9 +138,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
           >
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.title}>
-            {t('orders.details_title') || 'Order Details'}
-          </Text>
+          <Text style={styles.title}>{t('orders.details_title')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -154,7 +162,8 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 : ''}
             </Text>
             <Text style={styles.orderIdText}>
-              Order #{orderData?.id?.slice(-6)}
+              {t('orders.order_number')}
+              {orderData?.id?.slice(-6)}
             </Text>
             <View style={styles.dateRow}>
               <Clock size={14} color={theme.colors.textMuted} />
@@ -166,8 +175,8 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </Text>
             </View>
 
-            {vendorOrders.some(
-              vo => vo.proposals && vo.proposals.length > 0,
+            {vendorOrders.some(vo =>
+              vo.items.some(item => item.actualWeightGrams != null),
             ) && (
               <TouchableOpacity
                 style={styles.reviewProposalsButton}
@@ -188,14 +197,16 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             (
               vo: VendorOrder & {
                 items: VendorOrderItem[];
-                vendorName: string;
-                proposals: any[];
+                vendorName?: string;
+                proposals?: OrderItemProposal[];
               },
             ) => (
               <View key={vo.id} style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Package size={20} color={theme.colors.primary} />
-                  <Text style={styles.sectionTitle}>{vo.vendorName}</Text>
+                  <Text style={styles.sectionTitle}>
+                    {vo.vendorName || t('common.vendor')}
+                  </Text>
                   <View
                     style={[
                       styles.vendorStatusBadge,
@@ -230,49 +241,75 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                     >
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemName}>{item.productName}</Text>
-                        <Text style={styles.itemQty}>
-                          {t('product.quantity')}: x{item.quantity}
-                        </Text>
+                        <View style={styles.weightContainer}>
+                          {item.quantity ? (
+                            <Text style={styles.itemQty}>
+                              {t('product.quantity')}: x{item.quantity}
+                            </Text>
+                          ) : (
+                            <>
+                              <Text style={styles.itemQty}>
+                                {t('proposals.requested_weight')}: ≈{' '}
+                                {(item.requestedWeightGrams! / 1000).toFixed(2)}{' '}
+                                {t('common.kg')}
+                              </Text>
+                              {item.actualWeightGrams != null && (
+                                <Text
+                                  style={[
+                                    styles.itemQty,
+                                    styles.proposedWeightText,
+                                  ]}
+                                >
+                                  {t('orders.actual_weight')}:{' '}
+                                  {(item.actualWeightGrams / 1000).toFixed(2)}{' '}
+                                  {t('common.kg')}
+                                </Text>
+                              )}
+                            </>
+                          )}
+                        </View>
                       </View>
                       <Text style={styles.itemPrice}>
-                        ${item.totalPrice?.toFixed(2)}
+                        ${item.totalPrice.toFixed(2)}
                       </Text>
                     </View>
                   ))}
                 </View>
-                {orderData?.status === CustomerOrderStatus.COMPLETED &&
-                  vo.status === VendorOrderStatus.DELIVERED && (
-                    <TouchableOpacity
-                      style={styles.rateVendorButton}
-                      onPress={() => {
-                        setSelectedVendorForRating(vo);
-                        setRatingModalVisible(true);
-                      }}
-                    >
-                      <Star size={16} color={theme.colors.accent} fill={theme.colors.accent} />
-                      <Text style={styles.rateVendorText}>
-                        {t('rating.rate_experience')}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                {vo.status === VendorOrderStatus.DELIVERED && (
+                  <TouchableOpacity
+                    style={styles.rateButton}
+                    onPress={() => {
+                      setSelectedVendorForRating({
+                        id: vo.vendorId,
+                        name: vo.vendorName || t('common.vendor'),
+                      });
+                      setRatingModalVisible(true);
+                    }}
+                  >
+                    <Star size={16} color={theme.colors.white} />
+                    <Text style={styles.rateButtonText}>
+                      {t('rating.rate_vendor_title')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ),
           )}
 
-          {/* Address Section */}
+          {/* Delivery Address Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <MapPin size={20} color={theme.colors.primary} />
               <Text style={styles.sectionTitle}>{t('checkout.address')}</Text>
             </View>
-            <View style={styles.infoCard}>
+            <View style={styles.card}>
               <Text style={styles.addressText}>
                 {orderData?.deliveryAddress}
               </Text>
             </View>
           </View>
 
-          {/* Summary Section */}
+          {/* Payment Summary Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Receipt size={20} color={theme.colors.primary} />
@@ -280,41 +317,37 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 {t('orders.payment_summary')}
               </Text>
             </View>
-            <View style={styles.summaryCard}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
-                <Text style={styles.summaryValue}>
-                  ${orderData?.subtotal?.toFixed(2)}
+            <View style={styles.card}>
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>{t('cart.subtotal')}</Text>
+                <Text style={styles.priceValue}>
+                  ${orderData?.subtotal.toFixed(2)}
                 </Text>
               </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>
                   {t('checkout.delivery_fee')}
                 </Text>
-                <Text style={styles.summaryValue}>
-                  ${orderData?.deliveryFee?.toFixed(2)}
+                <Text style={styles.priceValue}>
+                  ${orderData?.deliveryFee.toFixed(2)}
                 </Text>
               </View>
-              <View style={styles.divider} />
-              <View style={[styles.summaryRow, { marginTop: 8 }]}>
-                <Text style={styles.totalLabel}>
-                  {t('orders.total_amount')}
-                </Text>
+              <View style={[styles.priceRow, styles.totalRow]}>
+                <Text style={styles.totalLabel}>{t('cart.total')}</Text>
                 <Text style={styles.totalValue}>
-                  ${orderData?.totalAmount?.toFixed(2)}
+                  ${orderData?.totalAmount.toFixed(2)}
                 </Text>
               </View>
             </View>
           </View>
         </ScrollView>
-
         {selectedVendorForRating && (
           <VendorRatingModal
             visible={ratingModalVisible}
             onClose={() => setRatingModalVisible(false)}
-            orderId={orderData!.id}
-            vendorName={selectedVendorForRating.vendorName}
-            vendorId={selectedVendorForRating.vendorId}
+            vendorId={selectedVendorForRating.id}
+            vendorName={selectedVendorForRating.name}
+            orderId={orderId}
           />
         )}
       </View>
@@ -323,21 +356,28 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.white },
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.white,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
   },
   header: {
-    padding: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: theme.colors.white,
-    ...theme.shadows.soft,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   backButton: {
     width: 40,
@@ -346,36 +386,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
   },
   scrollContent: {
     paddingBottom: 30,
   },
   statusSection: {
-    alignItems: 'center',
     backgroundColor: theme.colors.white,
-    padding: 30,
-    borderBottomLeftRadius: theme.radius.xl,
-    borderBottomRightRadius: theme.radius.xl,
-    ...theme.shadows.soft,
-    marginBottom: theme.spacing.lg,
-  },
-  reviewProposalsButton: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.error,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 20,
+    padding: 25,
     alignItems: 'center',
-    ...theme.shadows.medium,
-  },
-  reviewProposalsText: {
-    color: theme.colors.white,
-    fontWeight: 'bold',
-    marginLeft: 10,
+    marginBottom: 15,
   },
   statusIconContainer: {
     width: 80,
@@ -383,85 +405,77 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 15,
   },
   statusText: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
   orderIdText: {
-    fontSize: theme.typography.sizes.md,
+    fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: theme.typography.weights.semibold,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
-    fontSize: theme.typography.sizes.sm,
+    fontSize: 12,
     color: theme.colors.textMuted,
-    marginLeft: 6,
+    marginLeft: 5,
   },
   section: {
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginTop: 15,
+    paddingHorizontal: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
-    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginLeft: 10,
     flex: 1,
   },
   vendorStatusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 12,
   },
   vendorStatusText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
   },
-  rateVendorButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  card: {
     backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.accent,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginTop: 10,
-    alignSelf: 'flex-end',
-  },
-  rateVendorText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginLeft: 6,
+    borderRadius: 15,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   itemsCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    ...theme.shadows.soft,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -469,65 +483,90 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
-    marginBottom: 2,
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
   },
   itemQty: {
-    fontSize: theme.typography.sizes.xs,
+    fontSize: 13,
     color: theme.colors.textMuted,
   },
   itemPrice: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 15,
+    fontWeight: 'bold',
     color: theme.colors.primary,
   },
-  infoCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.soft,
-  },
-  addressText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.primary,
-    lineHeight: 22,
-  },
-  summaryCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.soft,
-  },
-  summaryRow: {
+  priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  summaryLabel: {
-    fontSize: theme.typography.sizes.md,
+  priceLabel: {
+    fontSize: 14,
     color: theme.colors.textMuted,
   },
-  summaryValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
+  priceValue: {
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+    fontWeight: '500',
   },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginVertical: 12,
+  totalRow: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   totalLabel: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
   },
   totalValue: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.secondary,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  addressText: {
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+    lineHeight: 20,
+  },
+  reviewProposalsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF9500',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  reviewProposalsText: {
+    color: theme.colors.white,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  rateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  rateButtonText: {
+    color: theme.colors.white,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  weightContainer: {
+    marginTop: 2,
+  },
+  proposedWeightText: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+    marginTop: 2,
   },
 });
 

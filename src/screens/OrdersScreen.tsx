@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
 import { useSocket } from '../app/SocketContext';
 import { theme } from '../theme';
-import { CustomerOrder, CustomerOrderStatus, EventType } from '@city-market/shared'; // Import shared types
+import {
+  CustomerOrder,
+  CustomerOrderStatus,
+  EventType,
+} from '@city-market/shared';
 
 const OrdersScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -23,21 +27,19 @@ const OrdersScreen = ({ navigation }: any) => {
   const { socket } = useSocket();
 
   const { data: orders, isLoading } = useQuery<CustomerOrder[] | undefined>({
-    // Use CustomerOrder[]
     queryKey: ['myOrders'],
     queryFn: OrderService.getMyOrders,
   });
 
-  useEffect(() => {
-    if (!socket) return;
+  const handleUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+  }, [queryClient]);
 
-    const handleUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
-    };
-
-    const events = [
+  const socketEvents = useMemo(
+    () => [
       EventType.VENDOR_ORDER_PROPOSED,
       EventType.ORDER_CREATED,
+      EventType.ORDER_PREPARING,
       EventType.ORDER_CONFIRMED,
       EventType.ORDER_CANCELLED,
       EventType.ORDER_READY,
@@ -46,96 +48,102 @@ const OrdersScreen = ({ navigation }: any) => {
       EventType.ORDER_DELIVERED,
       EventType.PROPOSAL_ACCEPTED,
       EventType.PROPOSAL_REJECTED,
-    ];
+    ],
+    [],
+  );
 
-    events.forEach(event => socket.on(event, handleUpdate));
+  useEffect(() => {
+    if (!socket) return;
+
+    socketEvents.forEach(event => socket.on(event, handleUpdate));
 
     return () => {
-      events.forEach(event => socket.off(event, handleUpdate));
+      socketEvents.forEach(event => socket.off(event, handleUpdate));
     };
-  }, [socket, queryClient]);
+  }, [socket, handleUpdate, socketEvents]);
 
-  const getStatusConfig = (status: CustomerOrderStatus) => {
-    // Use CustomerOrderStatus
+  const getStatusConfig = useCallback((status: CustomerOrderStatus) => {
     switch (status) {
       case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
       case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
-        return { color: '#FF9500', label: status }; // Yellow/Orange for pending/waiting
+        return { color: '#FF9500', label: status };
       case CustomerOrderStatus.READY:
       case CustomerOrderStatus.IN_DELIVERY:
-        return { color: theme.colors.primary, label: status }; // Primary color for in-progress delivery
+        return { color: theme.colors.primary, label: status };
       case CustomerOrderStatus.COMPLETED:
-        return { color: theme.colors.success, label: status }; // Green for completed
+        return { color: theme.colors.success, label: status };
       case CustomerOrderStatus.CANCELLED:
-        return { color: theme.colors.error, label: status }; // Red for cancelled
+        return { color: theme.colors.error, label: status };
       default:
         return { color: theme.colors.textMuted, label: status };
     }
-  };
+  }, []);
 
-  const renderOrderItem = ({ item }: { item: CustomerOrder }) => {
-    // Use CustomerOrder
-    const statusConfig = getStatusConfig(item.status);
-    const date = new Date(item.createdAt);
+  const renderOrderItem = useCallback(
+    ({ item }: { item: CustomerOrder }) => {
+      const statusConfig = getStatusConfig(item.status);
+      const date = new Date(item.createdAt);
 
-    return (
-      <TouchableOpacity
-        style={styles.orderCard}
-        onPress={() =>
-          navigation.navigate('OrderDetails', { orderId: item.id })
-        }
-        activeOpacity={0.7}
-      >
-        <View style={styles.orderHeader}>
-          <View style={styles.orderIdContainer}>
-            <Package size={20} color={theme.colors.primary} />
-            <Text style={styles.orderId}>Order #{item.id.slice(-6)}</Text>
+      return (
+        <TouchableOpacity
+          style={styles.orderCard}
+          onPress={() =>
+            navigation.navigate('OrderDetails', { orderId: item.id })
+          }
+          activeOpacity={0.7}
+        >
+          <View style={styles.orderHeader}>
+            <View style={styles.orderIdContainer}>
+              <Package size={20} color={theme.colors.primary} />
+              <Text style={styles.orderId}>Order #{item.id.slice(-6)}</Text>
+            </View>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: statusConfig.color + '15' },
+              ]}
+            >
+              <Text style={[styles.statusText, { color: statusConfig.color }]}>
+                {t(`orders.status_${item.status.toLowerCase()}`)}
+              </Text>
+            </View>
           </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusConfig.color + '15' },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {t(`orders.status_${item.status.toLowerCase()}`)}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <View style={styles.orderInfo}>
-          <View style={styles.infoItem}>
-            <Calendar size={14} color={theme.colors.textMuted} />
-            <Text style={styles.infoText}>{date.toLocaleDateString()}</Text>
+          <View style={styles.orderInfo}>
+            <View style={styles.infoItem}>
+              <Calendar size={14} color={theme.colors.textMuted} />
+              <Text style={styles.infoText}>{date.toLocaleDateString()}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Clock size={14} color={theme.colors.textMuted} />
+              <Text style={styles.infoText}>
+                {date.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </View>
           </View>
-          <View style={styles.infoItem}>
-            <Clock size={14} color={theme.colors.textMuted} />
-            <Text style={styles.infoText}>
-              {date.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.orderFooter}>
-          <View>
-            <Text style={styles.totalLabel}>{t('cart.total')}</Text>
-            <Text style={styles.totalValue}>
-              ${item.totalAmount.toFixed(2)}
-            </Text>
+          <View style={styles.orderFooter}>
+            <View>
+              <Text style={styles.totalLabel}>{t('cart.total')}</Text>
+              <Text style={styles.totalValue}>
+                ${item.totalAmount.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.trackButton}>
+              <Text style={styles.trackButtonText}>{t('orders.track')}</Text>
+              <ChevronRight size={16} color={theme.colors.primary} />
+            </View>
           </View>
-          <View style={styles.trackButton}>
-            <Text style={styles.trackButtonText}>{t('orders.track')}</Text>
-            <ChevronRight size={16} color={theme.colors.primary} />
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        </TouchableOpacity>
+      );
+    },
+    [getStatusConfig, navigation, t],
+  );
 
   if (isLoading) {
     return (

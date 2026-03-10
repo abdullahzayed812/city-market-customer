@@ -42,7 +42,8 @@ export const VendorRatingCard: React.FC<VendorRatingCardProps> = ({
 
     setIsSubmitting(true);
     try {
-      await RatingService.rateVendor(orderId, stars, comment);
+      if (!vendorId) throw new Error("Missing vendorId");
+      await RatingService.rateVendor(orderId, vendorId, stars, comment);
       setIsSubmitted(true);
       if (onSuccess) onSuccess();
     } catch (error: any) {

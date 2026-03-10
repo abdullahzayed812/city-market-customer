@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   Dimensions,
   StatusBar,
 } from 'react-native';
@@ -25,12 +24,11 @@ enum VendorStatus {
 }
 
 const { width } = Dimensions.get('window');
+const VENDOR_CARD_WIDTH = width * 0.44;
 
-// 1. Define the Header Component Outside to prevent re-creation on every render
 const HomeHeader = React.memo(
   ({ t, navigation, categories, renderCategoryItem }: any) => (
     <View style={styles.headerContainer}>
-      {/* Header Bar */}
       <View style={styles.headerBar}>
         <View style={styles.locationContainer}>
           <Text style={styles.welcomeText}>{t('home.welcome')}</Text>
@@ -51,7 +49,6 @@ const HomeHeader = React.memo(
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
       <TouchableOpacity
         style={styles.searchContainer}
         onPress={() => navigation.navigate('Search')}
@@ -63,7 +60,6 @@ const HomeHeader = React.memo(
         </Text>
       </TouchableOpacity>
 
-      {/* Categories */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
@@ -76,14 +72,6 @@ const HomeHeader = React.memo(
           keyExtractor={item => item.id}
           contentContainerStyle={styles.categoriesList}
         />
-      </View>
-
-      {/* Stores Title */}
-      <View style={[styles.sectionHeader, { marginTop: theme.spacing.lg }]}>
-        <Text style={styles.sectionTitle}>{t('home.stores')}</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAll}>{t('common.see_all')}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   ),
@@ -102,7 +90,16 @@ const HomeScreen = ({ navigation }: any) => {
     queryFn: VendorService.getVendors,
   });
 
-  console.log(vendors);
+  const groupedVendors = useMemo(() => {
+    if (!vendors) return [];
+    const groups: Record<string, any[]> = {};
+    vendors.forEach((v: any) => {
+      const type = v.type || 'Other';
+      if (!groups[type]) groups[type] = [];
+      groups[type].push(v);
+    });
+    return Object.entries(groups).map(([type, items]) => ({ type, items }));
+  }, [vendors]);
 
   const renderCategoryItem = useCallback(
     ({ item }: { item: any }) => (
@@ -188,6 +185,27 @@ const HomeScreen = ({ navigation }: any) => {
     [navigation, t],
   );
 
+  const renderSection = ({ item }: { item: any }) => (
+    <View style={styles.typeSection}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>
+          {t(`home.type_${item.type.toLowerCase()}`)}
+        </Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAll}>{t('common.see_all')}</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={item.items}
+        renderItem={renderVendorItem}
+        keyExtractor={v => v.id}
+        contentContainerStyle={styles.vendorsHorizontalList}
+      />
+    </View>
+  );
+
   if (categoriesLoading || vendorsLoading) {
     return (
       <View style={styles.centered}>
@@ -203,9 +221,9 @@ const HomeScreen = ({ navigation }: any) => {
         backgroundColor={theme.colors.background}
       />
       <FlatList
-        data={vendors}
-        renderItem={renderVendorItem}
-        keyExtractor={item => item.id}
+        data={groupedVendors}
+        renderItem={renderSection}
+        keyExtractor={item => item.type}
         ListHeaderComponent={
           <HomeHeader
             t={t}
@@ -214,10 +232,8 @@ const HomeScreen = ({ navigation }: any) => {
             renderCategoryItem={renderCategoryItem}
           />
         }
-        numColumns={2}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        columnWrapperStyle={styles.columnWrapper}
       />
     </SafeAreaView>
   );
@@ -304,6 +320,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: { paddingBottom: theme.spacing.xl },
   section: { marginTop: theme.spacing.sm },
+  typeSection: { marginTop: theme.spacing.lg },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -330,13 +347,13 @@ const styles = StyleSheet.create({
   categoryIconContainer: {
     width: 64,
     height: 64,
-    borderRadius: 32, // Perfect circle
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
-    ...theme.shadows.medium, // Slightly stronger shadow for depth
+    ...theme.shadows.medium,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.8)', // Subtle glass-like border
+    borderColor: 'rgba(255,255,255,0.8)',
   },
   categoryIcon: {
     width: 38,
@@ -348,23 +365,23 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     textAlign: 'center',
   },
-  columnWrapper: {
-    justifyContent: 'space-between',
+  vendorsHorizontalList: {
     paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.sm,
   },
   vendorCard: {
-    width: (width - theme.spacing.lg * 2 - theme.spacing.md) / 2,
+    width: VENDOR_CARD_WIDTH,
     backgroundColor: theme.colors.white,
     borderRadius: theme.radius.lg,
     overflow: 'hidden',
     ...theme.shadows.soft,
-    marginBottom: theme.spacing.md,
+    marginRight: theme.spacing.md,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
   },
   vendorImageContainer: {
     width: '100%',
-    height: 140,
+    height: 150,
   },
   vendorImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   statusBadge: {
@@ -390,34 +407,34 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     textTransform: 'uppercase',
   },
-  vendorInfo: { padding: theme.spacing.sm },
+  vendorInfo: { padding: theme.spacing.md },
   vendorName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: theme.colors.primary,
   },
   vendorMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(228, 166, 48, 0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 6,
-    marginRight: 8,
+    marginRight: 10,
   },
   ratingText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: theme.colors.accent,
-    marginLeft: 2,
+    marginLeft: 3,
   },
   vendorAddress: {
-    fontSize: 11,
+    fontSize: 12,
     color: theme.colors.textMuted,
     flex: 1,
   },
