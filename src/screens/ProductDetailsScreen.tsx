@@ -19,7 +19,6 @@ import { useCart } from '../app/CartContext';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
 import QuantitySelector from '../components/common/QuantitySelector';
-import CustomModal from '../components/common/CustomModal';
 import Toast from 'react-native-toast-message';
 import { MeasurementType } from '@city-market/shared';
 
@@ -31,7 +30,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { addToCart } = useCart();
 
   const [amount, setAmount] = useState(1); // quantity or weightGrams
-  const [modalVisible, setModalVisible] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],
@@ -67,10 +65,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
   }, [isWeight]);
 
   const handleAddToCart = useCallback(() => {
-    setModalVisible(true);
-  }, []);
-
-  const confirmAddToCart = useCallback(() => {
     if (!product) return;
     const cartItem: any = {
       ...product,
@@ -85,7 +79,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     }
 
     addToCart(cartItem);
-    setModalVisible(false);
     Toast.show({
       type: 'success',
       text1: t('store.added_to_cart'),
@@ -107,8 +100,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
       if (!product) return 0;
       return isWeight ? (product.stockWeightGrams || 0) : (product.stockQuantity || 0);
   }, [isWeight, product]);
-
-  const handleCloseModal = useCallback(() => setModalVisible(false), []);
 
   if (isLoading) {
     return (
@@ -201,16 +192,6 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
             <Text style={styles.addButtonText}>{t('store.add_to_cart')}</Text>
           </TouchableOpacity>
         </View>
-
-        <CustomModal
-          visible={modalVisible}
-          onClose={handleCloseModal}
-          title={t('common.confirm')}
-          message={t('store.confirm_add')}
-          confirmLabel={t('common.yes')}
-          cancelLabel={t('common.no')}
-          onConfirm={confirmAddToCart}
-        />
       </View>
     </SafeAreaView>
   );

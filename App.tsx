@@ -7,16 +7,21 @@ import { SocketProvider } from './src/app/SocketContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import { I18nManager } from 'react-native';
 import './src/locales/i18n';
-import Toast from 'react-native-toast-message';
+import Toast, { BaseToastProps } from 'react-native-toast-message';
 import { useNotifications } from './src/hooks/useNotifications';
 import { AppType } from '@city-market/shared';
+import { NotificationBanner } from './src/components/common/NotificationBanner';
 
 // Force RTL if needed (example: if current language is Arabic)
-// Note: This usually requires a restart to take effect
 I18nManager.allowRTL(true);
 
+const toastConfig = {
+  notification: ({ text1, text2, props }: BaseToastProps) => (
+    <NotificationBanner text1={text1} text2={text2} onPress={props.onPress} />
+  ),
+};
+
 const AppContent = () => {
-  // Notification hook must be inside providers that use its dependencies (Auth)
   useNotifications(AppType.CUSTOMER);
   return <RootNavigator />;
 };
@@ -29,7 +34,7 @@ const App = () => {
           <CartProvider>
             <SocketProvider>
               <AppContent />
-              <Toast />
+              <Toast config={toastConfig} topOffset={50} />
             </SocketProvider>
           </CartProvider>
         </APIProvider>

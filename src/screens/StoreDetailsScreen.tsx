@@ -17,7 +17,6 @@ import { VendorService } from '../services/api/vendorService';
 import { useCart } from '../app/CartContext';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
-import CustomModal from '../components/common/CustomModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
@@ -143,9 +142,6 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
   const { addToCart } = useCart();
   const insets = useSafeAreaInsets();
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-
   const { data: vendor, isLoading: vendorLoading } = useQuery({
     queryKey: ['vendor', vendorId],
     queryFn: () => VendorService.getVendorById(vendorId),
@@ -183,35 +179,26 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
   }, [products, vendorCategories]);
 
   const handleAddToCart = useCallback((product: any) => {
-    setSelectedProduct(product);
-    setModalVisible(true);
-  }, []);
+    const item: any = {
+      ...product,
+      vendorId,
+      measurementType: product.measurementType,
+    };
 
-  const confirmAddToCart = useCallback(() => {
-    if (selectedProduct) {
-      const item: any = {
-        ...selectedProduct,
-        vendorId,
-        measurementType: selectedProduct.measurementType,
-      };
-
-      if (selectedProduct.measurementType === MeasurementType.WEIGHT) {
-        item.weightGrams = 500;
-        item.weight = 0.5;
-      } else {
-        item.quantity = 1;
-      }
-
-      addToCart(item);
-      setModalVisible(false);
-      setSelectedProduct(null);
-      Toast.show({
-        type: 'success',
-        text1: t('store.added_to_cart'),
-        position: 'bottom',
-      });
+    if (product.measurementType === MeasurementType.WEIGHT) {
+      item.weightGrams = 500;
+      item.weight = 0.5;
+    } else {
+      item.quantity = 1;
     }
-  }, [selectedProduct, vendorId, addToCart, t]);
+
+    addToCart(item);
+    Toast.show({
+      type: 'success',
+      text1: t('store.added_to_cart'),
+      position: 'bottom',
+    });
+  }, [vendorId, addToCart, t]);
 
   const renderRow = useCallback(
     ({ item }: { item: any[] }) => (
@@ -223,8 +210,6 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     ),
     [navigation, handleAddToCart],
   );
-
-  const handleCloseModal = useCallback(() => setModalVisible(false), []);
 
   if (vendorLoading || productsLoading || categoriesLoading) {
     return (
@@ -278,16 +263,6 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
             <Text style={styles.emptyText}>{t('common.no_results')}</Text>
           </View>
         }
-      />
-
-      <CustomModal
-        visible={modalVisible}
-        onClose={handleCloseModal}
-        title={t('common.confirm')}
-        message={t('store.confirm_add')}
-        confirmLabel={t('common.yes')}
-        cancelLabel={t('common.no')}
-        onConfirm={confirmAddToCart}
       />
     </View>
   );

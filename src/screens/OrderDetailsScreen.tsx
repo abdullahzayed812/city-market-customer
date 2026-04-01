@@ -48,6 +48,11 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     queryFn: () => OrderService.getOrderById(orderId),
   });
 
+  const { data: fetchedProposals, isLoading: isLoadingProposals } = useQuery({
+    queryKey: ['order-proposals', orderId],
+    queryFn: () => OrderService.getOrderProposals(orderId),
+  });
+
   const handleUpdate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['order', orderId] });
   }, [queryClient, orderId]);
@@ -119,7 +124,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     [orderData],
   );
 
-  if (isLoading) {
+  if (isLoading || isLoadingProposals) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -175,9 +180,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </Text>
             </View>
 
-            {vendorOrders.some(vo =>
-              vo.items.some(item => item.actualWeightGrams != null),
-            ) && (
+            {fetchedProposals.length && (
               <TouchableOpacity
                 style={styles.reviewProposalsButton}
                 onPress={() =>
