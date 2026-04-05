@@ -2,7 +2,6 @@ import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
@@ -24,6 +23,7 @@ import { OrderService } from '../services/api/orderService';
 import { theme } from '../theme';
 import { useSocket } from '../app/SocketContext';
 import { VendorRatingModal } from '../components/VendorRatingModal';
+import { OrderStatusStepper } from '../components/OrderStatusStepper';
 import {
   OrderWithItems,
   VendorOrder,
@@ -33,6 +33,7 @@ import {
   EventType,
   OrderItemProposal,
 } from '@city-market/shared';
+import { styles } from './OrderDetailsScreen.styles';
 
 const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
@@ -153,34 +154,41 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
         >
           {/* Status Section */}
           <View style={styles.statusSection}>
-            <View
-              style={[
-                styles.statusIconContainer,
-                { backgroundColor: statusConfig.color + '15' },
-              ]}
-            >
-              <Package size={40} color={statusConfig.color} />
-            </View>
-            <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {orderData?.status
-                ? t(`orders.status_${orderData.status.toLowerCase()}`)
-                : ''}
-            </Text>
-            <Text style={styles.orderIdText}>
-              {t('orders.order_number')}
-              {orderData?.id?.slice(-6)}
-            </Text>
-            <View style={styles.dateRow}>
-              <Clock size={14} color={theme.colors.textMuted} />
-              <Text style={styles.dateText}>
-                {date.toLocaleString([], {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                })}
-              </Text>
+            <View style={styles.statusHeader}>
+              <View>
+                <Text style={styles.orderIdText}>
+                  {t('orders.order_number')}
+                  {orderData?.id?.slice(-6)}
+                </Text>
+                <View style={styles.dateRow}>
+                  <Clock size={14} color={theme.colors.textMuted} />
+                  <Text style={styles.dateText}>
+                    {date.toLocaleString([], {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: statusConfig.color + '15' },
+                ]}
+              >
+                <Text style={[styles.statusBadgeText, { color: statusConfig.color }]}>
+                  {orderData?.status
+                    ? t(`orders.status_${orderData.status.toLowerCase()}`)
+                    : ''}
+                </Text>
+              </View>
             </View>
 
-            {fetchedProposals.length && (
+            <View style={styles.stepperWrapper}>
+              <OrderStatusStepper currentStatus={orderData?.status} />
+            </View>
+
+            {fetchedProposals.length > 0 && (
               <TouchableOpacity
                 style={styles.reviewProposalsButton}
                 onPress={() =>
@@ -357,220 +365,5 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.white,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-  },
-  scrollContent: {
-    paddingBottom: 30,
-  },
-  statusSection: {
-    backgroundColor: theme.colors.white,
-    padding: 25,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  statusIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  statusText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  orderIdText: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    marginBottom: 10,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    marginLeft: 5,
-  },
-  section: {
-    marginTop: 15,
-    paddingHorizontal: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-    marginLeft: 10,
-    flex: 1,
-  },
-  vendorStatusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  vendorStatusText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  card: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 15,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  itemsCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    marginBottom: 4,
-  },
-  itemQty: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-  },
-  itemPrice: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  priceLabel: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-  },
-  priceValue: {
-    fontSize: 14,
-    color: theme.colors.textPrimary,
-    fontWeight: '500',
-  },
-  totalRow: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  addressText: {
-    fontSize: 14,
-    color: theme.colors.textPrimary,
-    lineHeight: 20,
-  },
-  reviewProposalsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF9500',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  reviewProposalsText: {
-    color: theme.colors.white,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  rateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  rateButtonText: {
-    color: theme.colors.white,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  weightContainer: {
-    marginTop: 2,
-  },
-  proposedWeightText: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-});
 
 export default OrderDetailsScreen;
