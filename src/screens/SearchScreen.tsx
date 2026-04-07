@@ -90,12 +90,14 @@ const SearchScreen = ({ navigation, route }: any) => {
           </View>
           <View style={styles.footerRow}>
             <View style={styles.priceInfo}>
-                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-                {item.measurementType === MeasurementType.WEIGHT && (
-                    <Text style={styles.unitText}>/kg</Text>
-                )}
+              {item.measurementType === MeasurementType.WEIGHT && (
+                <Text style={styles.unitText}>/ kg</Text>
+              )}
+              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             </View>
-            {(item.measurementType === MeasurementType.UNIT ? item.stockQuantity < 5 : item.stockWeightGrams < 5000) && (
+            {(item.measurementType === MeasurementType.UNIT
+              ? item.stockQuantity < 5
+              : item.stockWeightGrams < 5000) && (
               <Text style={styles.stockWarning}>
                 {t('store.low_stock') || 'Low Stock'}
               </Text>
@@ -129,8 +131,9 @@ const SearchScreen = ({ navigation, route }: any) => {
               style={styles.input}
               placeholder={
                 selectedCategory
-                  ? `${t('common.search')} ${t('search.in')} ${selectedCategory.name
-                  }`
+                  ? `${t('common.search')} ${t('search.in')} ${
+                      selectedCategory.name
+                    }`
                   : t('home.search_placeholder')
               }
               value={query}
@@ -327,8 +330,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceInfo: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   itemPrice: {
     fontSize: 16,
@@ -336,9 +339,9 @@ const styles = StyleSheet.create({
     color: theme.colors.accent,
   },
   unitText: {
-      fontSize: 10,
-      color: theme.colors.textMuted,
-      marginLeft: 2,
+    fontSize: 10,
+    color: theme.colors.textMuted,
+    marginLeft: 2,
   },
   stockWarning: {
     fontSize: 10,

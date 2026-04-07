@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   SectionList,
   TouchableOpacity,
   ActivityIndicator,
-  StatusBar,
   Dimensions,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
@@ -178,27 +177,30 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
       .filter(section => section.data.length > 0);
   }, [products, vendorCategories]);
 
-  const handleAddToCart = useCallback((product: any) => {
-    const item: any = {
-      ...product,
-      vendorId,
-      measurementType: product.measurementType,
-    };
+  const handleAddToCart = useCallback(
+    (product: any) => {
+      const item: any = {
+        ...product,
+        vendorId,
+        measurementType: product.measurementType,
+      };
 
-    if (product.measurementType === MeasurementType.WEIGHT) {
-      item.weightGrams = 500;
-      item.weight = 0.5;
-    } else {
-      item.quantity = 1;
-    }
+      if (product.measurementType === MeasurementType.WEIGHT) {
+        item.weightGrams = 500;
+        item.weight = 0.5;
+      } else {
+        item.quantity = 1;
+      }
 
-    addToCart(item);
-    Toast.show({
-      type: 'success',
-      text1: t('store.added_to_cart'),
-      position: 'bottom',
-    });
-  }, [vendorId, addToCart, t]);
+      addToCart(item);
+      Toast.show({
+        type: 'success',
+        text1: t('store.added_to_cart'),
+        position: 'bottom',
+      });
+    },
+    [vendorId, addToCart, t],
+  );
 
   const renderRow = useCallback(
     ({ item }: { item: any[] }) => (
@@ -221,12 +223,6 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        // translucent
-        backgroundColor="transparent"
-      />
-
       <View style={[styles.headerImageContainer, { height: 240 + insets.top }]}>
         <ImageWithPlaceholder
           uri={

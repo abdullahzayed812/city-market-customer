@@ -1,116 +1,26 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Image,
   StatusBar,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Trash2, ShoppingBag, ChevronLeft } from 'lucide-react-native';
-import { useCart } from '../app/CartContext';
+import { ChevronLeft } from 'lucide-react-native';
 import { theme } from '../theme';
-import { getBaseURL } from '../services/api/apiClient';
-import QuantitySelector from '../components/common/QuantitySelector';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MeasurementType } from '@city-market/shared';
+import { useCartLogic } from '../features/cart/hooks/useCartLogic';
+import { CartItem } from '../features/cart/components/CartItem';
+import { CartEmptyState } from '../features/cart/components/CartEmptyState';
 
 const CartScreen = ({ navigation }: any) => {
-  const { t } = useTranslation();
-  const { items, removeFromCart, updateQuantity, updateWeight, total } =
-    useCart();
-
-  const handleUpdateAmount = useCallback(
-    (item: any, increment: boolean) => {
-      if (item.measurementType === MeasurementType.WEIGHT) {
-        const currentWeight = item.weightGrams || 0;
-        const newWeight = increment ? currentWeight + 500 : currentWeight - 500;
-        if (newWeight > 0) {
-          updateWeight(item.id, newWeight);
-        }
-      } else {
-        const currentQty = item.quantity || 0;
-        const newQty = increment ? currentQty + 1 : currentQty - 1;
-        if (newQty > 0) {
-          updateQuantity(item.id, newQty);
-        }
-      }
-    },
-    [updateWeight, updateQuantity],
-  );
-
-  const renderCartItem = useCallback(
-    ({ item }: { item: any }) => (
-      <View style={styles.cartItem}>
-        <Image
-          source={{
-            uri: item.imageUrl
-              ? `${getBaseURL()}${item.imageUrl}`
-              : 'https://via.placeholder.com/100',
-          }}
-          style={styles.itemImage}
-        />
-        <View style={styles.itemDetails}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemName} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <TouchableOpacity
-              onPress={() => removeFromCart(item.id)}
-              style={styles.removeButton}
-            >
-              <Trash2 size={20} color={theme.colors.error} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.itemFooter}>
-            <View style={styles.priceInfo}>
-              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-              {item.measurementType === MeasurementType.WEIGHT && (
-                <Text style={styles.unitText}>/kg</Text>
-              )}
-            </View>
-            <QuantitySelector
-              quantity={
-                item.measurementType === MeasurementType.WEIGHT
-                  ? item.weightGrams
-                  : item.quantity
-              }
-              onIncrement={() => handleUpdateAmount(item, true)}
-              onDecrement={() => handleUpdateAmount(item, false)}
-              minQuantity={
-                item.measurementType === MeasurementType.WEIGHT ? 500 : 1
-              }
-              displayValue={
-                item.measurementType === MeasurementType.WEIGHT
-                  ? `${(item.weightGrams / 1000).toFixed(1)} kg`
-                  : undefined
-              }
-            />
-          </View>
-        </View>
-      </View>
-    ),
-    [removeFromCart, handleUpdateAmount],
-  );
+  const { items, total, removeFromCart, handleUpdateAmount, t } = useCartLogic();
 
   if (items.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centered}>
-          <View style={styles.emptyIconContainer}>
-            <ShoppingBag size={80} color={theme.colors.surface} />
-          </View>
-          <Text style={styles.emptyText}>{t('cart.empty')}</Text>
-          <TouchableOpacity
-            style={styles.shopButton}
-            onPress={() => navigation.navigate('Home')}
-          >
-            <Text style={styles.shopButtonText}>{t('home.title')}</Text>
-          </TouchableOpacity>
-        </View>
+        <CartEmptyState t={t} onShopPress={() => navigation.navigate('Home')} />
       </SafeAreaView>
     );
   }
@@ -132,7 +42,14 @@ const CartScreen = ({ navigation }: any) => {
 
         <FlatList
           data={items}
-          renderItem={renderCartItem}
+          renderItem={({ item }) => (
+            <CartItem
+              item={item}
+              onRemove={removeFromCart}
+              onUpdateAmount={handleUpdateAmount}
+              t={t}
+            />
+          )}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -168,12 +85,6 @@ const CartScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.white },
   container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
   header: {
     padding: theme.spacing.lg,
     flexDirection: 'row',
@@ -194,63 +105,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 20 },
-  cartItem: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.soft,
-  },
-  itemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.background,
-  },
-  itemDetails: {
-    flex: 1,
-    marginLeft: theme.spacing.md,
-    justifyContent: 'space-between',
-  } as any,
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  itemName: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
-    flex: 1,
-    marginRight: 8,
-  },
-  removeButton: {
-    padding: 4,
-  },
-  itemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  priceInfo: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  itemPrice: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.secondary,
-  },
-  unitText: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.textMuted,
-    marginLeft: 2,
-  },
   footer: {
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.white,
@@ -264,21 +118,21 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   summaryLabel: {
-    fontSize: theme.typography.sizes.md,
-    color: theme.colors.textMuted,
+    color: theme.colors.textSecondary,
+    fontSize: 14,
   },
   summaryValue: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
     color: theme.colors.primary,
+    fontWeight: '600',
+    fontSize: 14,
   },
   divider: {
     height: 1,
     backgroundColor: theme.colors.border,
-    marginVertical: 12,
+    marginVertical: theme.spacing.sm,
   },
   totalRow: {
     flexDirection: 'row',
@@ -286,52 +140,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 16,
+    fontWeight: 'bold',
     color: theme.colors.primary,
   },
   totalValue: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 20,
+    fontWeight: 'bold',
     color: theme.colors.secondary,
   },
   checkoutButton: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: 18,
+    height: 56,
     borderRadius: theme.radius.md,
+    justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.medium,
   },
   checkoutButtonText: {
     color: theme.colors.white,
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-  },
-  emptyIconContainer: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  emptyText: {
-    fontSize: theme.typography.sizes.lg,
-    color: theme.colors.textMuted,
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  shopButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 40,
-    paddingVertical: 14,
-    borderRadius: theme.radius.pill,
-  },
-  shopButtonText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
