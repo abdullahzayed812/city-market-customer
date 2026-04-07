@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StatusBar,
-  Keyboard,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import {
   Search,
   ChevronLeft,
@@ -21,48 +18,24 @@ import {
   FilterX,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CatalogService } from '../services/api/catalogService';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 import { MeasurementType } from '@city-market/shared';
+import { useSearch } from '../hooks/useSearch';
 
 const SearchScreen = ({ navigation, route }: any) => {
-  const { t } = useTranslation();
   const categoryId = route.params?.categoryId;
-  const [query, setQuery] = useState('');
-
   const {
-    data: productsData,
+    t,
+    query,
+    setQuery,
+    products,
     isLoading,
     refetch,
-  } = useQuery({
-    queryKey: ['search', query, categoryId],
-    queryFn: () =>
-      CatalogService.searchVendorProducts({
-        globalCategoryId: categoryId || undefined,
-        search: query.length > 2 ? query : undefined,
-      }),
-    enabled: !!categoryId || query.length > 2,
-  });
-
-  const products = useMemo(() => productsData?.data, [productsData]);
-
-  const { data: categories } = useQuery({
-    queryKey: ['global-categories'],
-    queryFn: CatalogService.getGlobalCategories,
-    enabled: !!categoryId,
-  });
-
-  const selectedCategory = useMemo(
-    () => categories?.find((c: any) => c.id === categoryId),
-    [categories, categoryId],
-  );
-
-  const clearSearch = () => {
-    setQuery('');
-    Keyboard.dismiss();
-  };
+    selectedCategory,
+    clearSearch,
+  } = useSearch(categoryId);
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
@@ -257,100 +230,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: 12,
+    paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.white,
-    marginBottom: 1,
   },
   badgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(79, 82, 64, 0.05)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
   },
   filterLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.primary,
-    opacity: 0.6,
+    fontSize: 13,
+    color: theme.colors.textMuted,
   },
   categoryName: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: 'bold',
     color: theme.colors.primary,
   },
   resetFilter: {
-    padding: 8,
-  },
-  list: { padding: theme.spacing.lg },
-  itemCard: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    borderRadius: 18,
-    padding: 12,
-    marginBottom: theme.spacing.md,
-    alignItems: 'center',
-    ...theme.shadows.soft,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.02)',
-  },
-  imageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 14,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.background,
-  },
-  itemImage: {
-    width: '100%',
-    height: '100%',
-  },
-  itemInfo: {
-    flex: 1,
-    marginLeft: 14,
-    justifyContent: 'space-between',
-    height: 70,
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.primary,
-    letterSpacing: -0.3,
-  },
-  itemCat: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: theme.colors.textMuted,
-    marginTop: 2,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceInfo: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  itemPrice: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.colors.accent,
-  },
-  unitText: {
-    fontSize: 10,
-    color: theme.colors.textMuted,
-    marginLeft: 2,
-  },
-  stockWarning: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.colors.error,
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    padding: 4,
   },
   loaderContainer: {
     flex: 1,
@@ -359,42 +256,101 @@ const styles = StyleSheet.create({
   },
   loaderText: {
     marginTop: 12,
-    color: theme.colors.primary,
-    fontWeight: '600',
+    color: theme.colors.textSecondary,
     fontSize: 14,
   },
+  list: {
+    padding: theme.spacing.lg,
+    paddingBottom: 40,
+  },
+  itemCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    marginBottom: theme.spacing.md,
+    overflow: 'hidden',
+    ...theme.shadows.soft,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  imageContainer: {
+    width: 100,
+    height: 100,
+    backgroundColor: theme.colors.background,
+  },
+  itemImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  itemInfo: {
+    flex: 1,
+    padding: 12,
+    justifyContent: 'space-between',
+  },
+  itemName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 2,
+  },
+  itemCat: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  priceInfo: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  unitText: {
+    fontSize: 10,
+    color: theme.colors.textMuted,
+    marginRight: 2,
+  },
+  itemPrice: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: theme.colors.accent,
+  },
+  stockWarning: {
+    fontSize: 10,
+    color: theme.colors.error,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
   emptyContainer: {
+    marginTop: 100,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 80,
-    paddingHorizontal: 40,
+    opacity: 0.6,
   },
   emptyText: {
-    marginTop: 20,
-    fontSize: 20,
-    fontWeight: '800',
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
     color: theme.colors.primary,
-    textAlign: 'center',
   },
   emptySubText: {
     marginTop: 8,
-    color: theme.colors.textMuted,
-    fontSize: 15,
+    fontSize: 14,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    paddingHorizontal: 40,
   },
   initialContainer: {
+    marginTop: 120,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 60,
+    opacity: 0.4,
   },
   initialText: {
     marginTop: 16,
-    color: theme.colors.textMuted,
     fontSize: 15,
+    color: theme.colors.textSecondary,
     fontWeight: '500',
-    textAlign: 'center',
-    maxWidth: '70%',
   },
 });
 

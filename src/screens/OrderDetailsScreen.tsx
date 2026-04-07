@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   Package,
@@ -19,113 +17,36 @@ import {
   Star,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrderService } from '../services/api/orderService';
 import { theme } from '../theme';
-import { useSocket } from '../app/SocketContext';
 import { VendorRatingModal } from '../components/VendorRatingModal';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
 import {
-  OrderWithItems,
   VendorOrder,
   VendorOrderItem,
-  CustomerOrderStatus,
   VendorOrderStatus,
-  EventType,
   OrderItemProposal,
 } from '@city-market/shared';
 import { styles } from './OrderDetailsScreen.styles';
+import { useOrderDetails } from '../features/orders/hooks/useOrderDetails';
 
 const OrderDetailsScreen = ({ route, navigation }: any) => {
   const { orderId } = route.params;
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const { socket } = useSocket();
-  const [ratingModalVisible, setRatingModalVisible] = React.useState(false);
-  const [selectedVendorForRating, setSelectedVendorForRating] =
-    React.useState<any>(null);
+  const {
+    orderData,
+    vendorOrders,
+    statusConfig,
+    date,
+    isLoading,
+    fetchedProposals,
+    ratingModalVisible,
+    setRatingModalVisible,
+    selectedVendorForRating,
+    handleRateVendor,
+    getStatusConfig,
+    t,
+  } = useOrderDetails(orderId);
 
-  const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
-    queryKey: ['order', orderId],
-    queryFn: () => OrderService.getOrderById(orderId),
-  });
-
-  const { data: fetchedProposals, isLoading: isLoadingProposals } = useQuery({
-    queryKey: ['order-proposals', orderId],
-    queryFn: () => OrderService.getOrderProposals(orderId),
-  });
-
-  const handleUpdate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-  }, [queryClient, orderId]);
-
-  const socketEvents = useMemo(
-    () => [
-      EventType.VENDOR_ORDER_PROPOSED,
-      EventType.ORDER_CREATED,
-      EventType.ORDER_CONFIRMED,
-      EventType.ORDER_CANCELLED,
-      EventType.ORDER_READY,
-      EventType.ORDER_PICKED_UP,
-      EventType.ORDER_ON_THE_WAY,
-      EventType.ORDER_DELIVERED,
-      EventType.PROPOSAL_ACCEPTED,
-      EventType.PROPOSAL_REJECTED,
-    ],
-    [],
-  );
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socketEvents.forEach(event => socket.on(event, handleUpdate));
-
-    return () => {
-      socketEvents.forEach(event => socket.off(event, handleUpdate));
-    };
-  }, [socket, handleUpdate, socketEvents]);
-
-  const getStatusConfig = useCallback(
-    (status: CustomerOrderStatus | VendorOrderStatus | undefined) => {
-      if (!status) {
-        return { color: theme.colors.textMuted };
-      }
-      switch (status) {
-        case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
-        case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
-        case VendorOrderStatus.PENDING:
-        case VendorOrderStatus.PROPOSAL_SENT:
-          return { color: '#FF9500' };
-        case CustomerOrderStatus.READY:
-        case CustomerOrderStatus.IN_DELIVERY:
-        case VendorOrderStatus.CONFIRMED:
-        case VendorOrderStatus.PICKED_UP:
-        case VendorOrderStatus.ON_THE_WAY:
-          return { color: theme.colors.primary };
-        case CustomerOrderStatus.COMPLETED:
-        case VendorOrderStatus.DELIVERED:
-          return { color: theme.colors.success };
-        case CustomerOrderStatus.CANCELLED:
-        case VendorOrderStatus.CANCELLED:
-          return { color: theme.colors.error };
-        default:
-          return { color: theme.colors.textMuted };
-      }
-    },
-    [],
-  );
-
-  const orderData = order?.order;
-  const vendorOrders = order?.vendorOrders || [];
-  const statusConfig = useMemo(
-    () => getStatusConfig(orderData?.status),
-    [orderData?.status, getStatusConfig],
-  );
-  const date = useMemo(
-    () => (orderData ? new Date(orderData.createdAt) : new Date()),
-    [orderData],
-  );
-
-  if (isLoading || isLoadingProposals) {
+  if (isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -289,13 +210,10 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 {vo.status === VendorOrderStatus.DELIVERED && (
                   <TouchableOpacity
                     style={styles.rateButton}
-                    onPress={() => {
-                      setSelectedVendorForRating({
-                        id: vo.vendorId,
-                        name: vo.vendorName || t('common.vendor'),
-                      });
-                      setRatingModalVisible(true);
-                    }}
+                    onPress={() => handleRateVendor({
+                      id: vo.vendorId,
+                      name: vo.vendorName || t('common.vendor'),
+                    })}
                   >
                     <Star size={16} color={theme.colors.white} />
                     <Text style={styles.rateButtonText}>

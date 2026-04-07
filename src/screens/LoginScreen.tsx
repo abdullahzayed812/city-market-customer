@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,57 +10,24 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
 } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import { Mail, Lock, ArrowRight, User } from 'lucide-react-native';
-import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../app/AuthContext';
-import { AuthService } from '../services/api/authService';
 import { theme } from '../theme';
-
-const { width } = Dimensions.get('window');
+import { useLogin } from '../hooks/useLogin';
 
 const LoginScreen = ({ navigation }: any) => {
-  const { t } = useTranslation();
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState('customer@citymarket.com');
-  const [password, setPassword] = useState('password123');
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Toast.show({
-        type: 'error',
-        text1: t('common.error'),
-        text2: 'Please fill all fields',
-        position: 'top',
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await AuthService.login({ email, password });
-      await signIn(data?.user, data.accessToken, data.refreshToken);
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome back!',
-        text2: `Signed in as ${data?.user?.name || 'Customer'}`,
-        position: 'bottom',
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: t('common.error'),
-        text2: 'Invalid credentials',
-        position: 'bottom',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    t,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    handleLogin,
+    handleForgotPassword,
+    navigateToRegister,
+  } = useLogin(navigation);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -118,7 +85,7 @@ const LoginScreen = ({ navigation }: any) => {
               </View>
               <TouchableOpacity 
                 style={styles.forgotPassword}
-                onPress={() => Toast.show({ type: 'info', text1: 'Feature coming soon' })}
+                onPress={handleForgotPassword}
               >
                 <Text style={styles.forgotPasswordText}>
                   {t('auth.forgot_password') || 'Forgot Password?'}
@@ -148,7 +115,7 @@ const LoginScreen = ({ navigation }: any) => {
             <Text style={styles.footerText}>
               {t('auth.no_account') || "Don't have an account?"}{' '}
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <TouchableOpacity onPress={navigateToRegister}>
               <Text style={styles.registerText}>{t('auth.register') || 'Sign Up'}</Text>
             </TouchableOpacity>
           </View>
@@ -178,7 +145,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: theme.colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
@@ -186,7 +153,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: theme.colors.textPrimary,
+    color: theme.colors.primary,
     marginBottom: theme.spacing.xs,
     letterSpacing: -0.5,
   },
@@ -207,7 +174,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.textPrimary,
+    color: theme.colors.primary,
     marginBottom: 8,
     marginLeft: 4,
   },
@@ -229,7 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: theme.colors.textPrimary,
+    color: theme.colors.primary,
     fontWeight: '500',
   },
   forgotPassword: {
@@ -265,8 +232,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingVertical: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
   },
   footerText: {
     fontSize: 15,
@@ -274,8 +240,8 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 15,
-    fontWeight: '700',
     color: theme.colors.primary,
+    fontWeight: 'bold',
   },
 });
 

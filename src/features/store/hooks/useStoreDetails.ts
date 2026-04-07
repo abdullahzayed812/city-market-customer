@@ -1,11 +1,11 @@
 import { useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { CatalogService } from '../../../services/api/catalogService';
 import { VendorService } from '../../../services/api/vendorService';
 import { useCart } from '../../../app/CartContext';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
 import { MeasurementType } from '@city-market/shared';
 
 export const useStoreDetails = (vendorId: string) => {
@@ -49,34 +49,39 @@ export const useStoreDetails = (vendorId: string) => {
       .filter(section => section.data.length > 0);
   }, [products, vendorCategories]);
 
-  const handleAddToCart = useCallback((product: any) => {
-    const item: any = {
-      ...product,
-      vendorId,
-      measurementType: product.measurementType,
-    };
+  const handleAddToCart = useCallback(
+    (product: any) => {
+      const item: any = {
+        ...product,
+        vendorId,
+        measurementType: product.measurementType,
+      };
 
-    if (product.measurementType === MeasurementType.WEIGHT) {
-      item.weightGrams = 500;
-      item.weight = 0.5;
-    } else {
-      item.quantity = 1;
-    }
+      if (product.measurementType === MeasurementType.WEIGHT) {
+        item.weightGrams = 500;
+        item.weight = 0.5;
+      } else {
+        item.quantity = 1;
+      }
 
-    addToCart(item);
-    Toast.show({
-      type: 'success',
-      text1: t('store.added_to_cart'),
-      position: 'bottom',
-    });
-  }, [vendorId, addToCart, t]);
+      addToCart(item);
+      Toast.show({
+        type: 'success',
+        text1: t('store.added_to_cart'),
+        position: 'bottom',
+      });
+    },
+    [vendorId, addToCart, t],
+  );
 
   return {
+    t,
     vendor,
+    vendorLoading,
+    productsLoading,
+    categoriesLoading,
     sections,
-    isLoading: vendorLoading || productsLoading || categoriesLoading,
     insets,
     handleAddToCart,
-    t,
   };
 };

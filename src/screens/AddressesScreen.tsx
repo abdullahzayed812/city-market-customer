@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,91 +13,25 @@ import {
   Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapPin, Plus, ChevronLeft, Trash2, Home, Briefcase, Navigation, Check } from 'lucide-react-native';
-import Toast from 'react-native-toast-message';
+import { MapPin, Plus, ChevronLeft, Trash2, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { UserService } from '../services/api/userService';
 import { theme } from '../theme';
+import { useAddresses } from '../hooks/useAddresses';
 
 const AddressesScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    label: '',
-    address: '',
-    isDefault: false,
-    latitude: undefined,
-    longitude: undefined,
-  });
-
-  const { data: addresses, isLoading } = useQuery({
-    queryKey: ['addresses'],
-    queryFn: UserService.getAddresses,
-  });
-
-  const addMutation = useMutation({
-    mutationFn: UserService.addAddress,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      setModalVisible(false);
-      setNewAddress({
-        label: '',
-        address: '',
-        isDefault: false,
-        latitude: undefined,
-        longitude: undefined,
-      });
-      Toast.show({
-        type: 'success',
-        text1: 'Address Added',
-        text2: 'Your new address has been saved.',
-        position: 'top',
-      });
-    },
-    onError: () => {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to add address.',
-        position: 'top',
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: UserService.deleteAddress,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      Toast.show({
-        type: 'success',
-        text1: 'Address Deleted',
-        position: 'top',
-      });
-    },
-  });
-
-  const handleAddAddress = () => {
-    if (!newAddress.label || !newAddress.address) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Label and address are required',
-        position: 'top',
-      });
-      return;
-    }
-
-    addMutation.mutate(newAddress);
-  };
-
-  const getAddressIcon = (label: string) => {
-    const l = label.toLowerCase();
-    if (l.includes('home')) return Home;
-    if (l.includes('work') || l.includes('office')) return Briefcase;
-    return Navigation;
-  };
+  const {
+    addresses,
+    isLoading,
+    modalVisible,
+    setModalVisible,
+    newAddress,
+    setNewAddress,
+    addMutation,
+    deleteMutation,
+    handleAddAddress,
+    getAddressIcon,
+  } = useAddresses();
 
   const renderAddressItem = ({ item }: { item: any }) => {
     const Icon = getAddressIcon(item.label);
@@ -246,7 +180,7 @@ const AddressesScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.white },
   container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     padding: theme.spacing.lg,
     flexDirection: 'row',
@@ -255,12 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     ...theme.shadows.soft,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   title: {
     fontSize: theme.typography.sizes.xl,
     fontWeight: theme.typography.weights.bold,
@@ -268,69 +197,44 @@ const styles = StyleSheet.create({
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
   addressCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
     flexDirection: 'row',
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    marginBottom: theme.spacing.sm,
     alignItems: 'center',
     ...theme.shadows.soft,
   },
   addressIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 22,
     backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
   },
   addressInfo: { flex: 1 },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
+  labelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   labelBadgeText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 14,
+    fontWeight: 'bold',
     color: theme.colors.primary,
+    marginRight: 8,
   },
   defaultBadge: {
     backgroundColor: theme.colors.primary + '15',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    marginLeft: 8,
   },
-  defaultText: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  addressText: {
-    fontSize: theme.typography.sizes.sm,
-    color: theme.colors.textMuted,
-    lineHeight: 18,
-  },
-  deleteButton: {
-    padding: 10,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: theme.colors.textMuted,
-  },
+  defaultText: { fontSize: 10, color: theme.colors.primary, fontWeight: '600' },
+  addressText: { fontSize: 13, color: theme.colors.textMuted },
+  deleteButton: { padding: 8 },
   fab: {
     position: 'absolute',
     bottom: 30,
-    right: 25,
+    right: 20,
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -339,92 +243,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...theme.shadows.medium,
   },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 100, opacity: 0.5 },
+  emptyText: { marginTop: 10, fontSize: 16, color: theme.colors.textSecondary },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
-  modalPosition: {
-    width: '100%',
-  },
+  modalPosition: { width: '100%' },
   modalContent: {
     backgroundColor: theme.colors.white,
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
-    padding: 30,
-    paddingBottom: Platform.OS === 'ios' ? 50 : 30,
+    padding: theme.spacing.lg,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 20,
+    fontWeight: 'bold',
     color: theme.colors.primary,
-    marginBottom: 25,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
+  inputGroup: { marginBottom: 15 },
   inputLabel: {
     fontSize: 14,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
-    marginBottom: 8,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    marginBottom: 5,
   },
   input: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.radius.md,
-    padding: 15,
-    fontSize: 16,
+    padding: 12,
     color: theme.colors.primary,
+    fontSize: 15,
   },
   defaultCheckbox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 25,
+    marginTop: 5,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.primary,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: theme.colors.primary,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+  checkboxActive: { backgroundColor: theme.colors.primary },
+  checkboxLabel: { fontSize: 15, color: theme.colors.primary },
+  modalButtons: { flexDirection: 'row', gap: 15 },
   modalButton: {
-    flex: 0.48,
-    height: 55,
+    flex: 1,
+    height: 50,
     borderRadius: theme.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cancelBtn: {
-    backgroundColor: theme.colors.background,
-  },
-  cancelBtnText: {
-    color: theme.colors.primary,
-    fontWeight: 'bold',
-  },
-  saveBtn: {
-    backgroundColor: theme.colors.primary,
-  },
-  saveBtnText: {
-    color: theme.colors.white,
-    fontWeight: 'bold',
-  },
+  cancelBtn: { backgroundColor: theme.colors.background },
+  cancelBtnText: { color: theme.colors.textSecondary, fontWeight: '600' },
+  saveBtn: { backgroundColor: theme.colors.primary },
+  saveBtnText: { color: theme.colors.white, fontWeight: 'bold' },
 });
 
 export default AddressesScreen;
