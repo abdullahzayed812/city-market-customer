@@ -39,6 +39,7 @@
     "gram": "جرام"
   },
   "auth": {
+    "login_title": "أهلاً بك مجدداً",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "first_name": "الاسم الأول",
@@ -47,6 +48,12 @@
     "phone": "رقم الهاتف",
     "login_button": "تسجيل الدخول",
     "register_button": "إنشاء حساب",
+    "forgot_password": "نسيت كلمة المرور؟",
+    "no_account": "ليس لديك حساب؟",
+    "register": "سجل الآن",
+    "server_select": "اختر بيئة الخادم",
+    "server_pc": "كمبيوتر (128)",
+    "server_laptop": "لابتوب (2)",
     "already_have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
     "dont_have_account": "ليس لديك حساب؟ إنشاء حساب",
     "login_subtitle": "قم بتسجيل الدخول للمتابعة إلى سيتي ماركت",
