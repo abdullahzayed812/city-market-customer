@@ -27,6 +27,7 @@ import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AddressesScreen from '../screens/AddressesScreen';
 import LanguageSettingsScreen from '../screens/LanguageSettingsScreen';
+import AllStoresScreen from '../screens/AllStoresScreen';
 
 import { useAuth } from '../app/AuthContext';
 import SearchScreen from '../screens/SearchScreen';
@@ -182,6 +183,11 @@ const RootNavigator = () => {
             <Stack.Screen
               name="LanguageSettings"
               component={LanguageSettingsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AllStores"
+              component={AllStoresScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

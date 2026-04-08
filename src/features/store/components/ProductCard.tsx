@@ -11,44 +11,47 @@ interface ProductCardProps {
   onAdd: (item: any) => void;
 }
 
-export const ProductCard = React.memo(({ item, onPress, onAdd }: ProductCardProps) => (
-  <View style={styles.productCardWrapper}>
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => onPress(item.id)}
-      activeOpacity={0.9}
-    >
-      <View style={styles.imageWrapper}>
-        <ImageWithPlaceholder
-          uri={item.imageUrl ? `${getBaseURL()}${item.imageUrl}` : null}
-          style={styles.productImage}
-        />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => onAdd(item)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.productDesc} numberOfLines={1}>
-          {item.description}
-        </Text>
-        <View style={styles.priceInfo}>
-          {item.measurementType === MeasurementType.WEIGHT && (
-            <Text style={styles.unitText}>/kg</Text>
-          )}
-          <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+export const ProductCard = React.memo(
+  ({ item, onPress, onAdd }: ProductCardProps) => (
+    <View style={styles.productCardWrapper}>
+      <TouchableOpacity
+        style={styles.productCard}
+        onPress={() => onPress(item.id)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.imageWrapper}>
+          <ImageWithPlaceholder
+            uri={item.imageUrl ? `${getBaseURL()}${item.imageUrl}` : null}
+            style={styles.productImage}
+          />
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => onAdd(item)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </TouchableOpacity>
-  </View>
-));
+
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={styles.productDesc} numberOfLines={1}>
+            {item.description?.slice(0, 25)}
+            {'...'}
+          </Text>
+          <View style={styles.priceInfo}>
+            {item.measurementType === MeasurementType.WEIGHT && (
+              <Text style={styles.unitText}>/kg</Text>
+            )}
+            <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  ),
+);
 
 const styles = StyleSheet.create({
   productCardWrapper: {

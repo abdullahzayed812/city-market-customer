@@ -86,7 +86,8 @@
   },
   "product": {
     "in_stock": "In Stock",
-    "quantity": "Quantity"
+    "quantity": "Quantity",
+    "weight": "Weight"
   },
   "cart": {
     "title": "Shopping Cart",

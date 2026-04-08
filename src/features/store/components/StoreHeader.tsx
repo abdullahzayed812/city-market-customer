@@ -10,63 +10,65 @@ interface StoreHeaderProps {
   insets: any;
 }
 
-export const StoreHeader = React.memo(({ t, vendor, navigation, insets }: StoreHeaderProps) => (
-  <View>
-    <View style={{ height: 200 + insets.top }}>
-      <TouchableOpacity
-        style={[styles.backButton, { top: insets.top + 10 }]}
-        onPress={() => navigation.goBack()}
-      >
-        <ChevronLeft color={theme.colors.white} size={24} />
-      </TouchableOpacity>
-    </View>
-
-    <View style={styles.infoCard}>
-      <View style={styles.titleRow}>
-        <Text style={styles.shopName}>{vendor?.shopName}</Text>
-        <View style={styles.ratingBadge}>
-          <Star
-            size={12}
-            color={theme.colors.primary}
-            fill={theme.colors.accent}
-          />
-          <Text style={styles.ratingValue}>
-            {vendor?.averageRating?.toFixed(1) || '0.0'}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.shopDescription}>{vendor?.shopDescription}</Text>
-
-      <View style={styles.divider} />
-
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
-          <MapPin size={14} color={theme.colors.accent} />
-          <Text style={styles.metaText} numberOfLines={1}>
-            {vendor?.address?.split(',')[0]}
-          </Text>
-        </View>
+export const StoreHeader = React.memo(
+  ({ t, vendor, navigation, insets }: StoreHeaderProps) => (
+    <View>
+      <View style={{ height: 220 + insets.top }}>
         <TouchableOpacity
-          style={styles.metaItem}
-          onPress={() =>
-            navigation.navigate('VendorReviews', { vendorId: vendor?.id })
-          }
+          style={[styles.backButton, { top: insets.top + 10 }]}
+          onPress={() => navigation.goBack()}
         >
-          <Star size={14} color={theme.colors.accent} />
-          <Text style={styles.metaText}>
-            {vendor?.totalRatings || 0} {t('store.reviews')}
-          </Text>
+          <ChevronLeft color={theme.colors.white} size={24} />
         </TouchableOpacity>
       </View>
+
+      <View style={styles.infoCard}>
+        <View style={styles.titleRow}>
+          <Text style={styles.shopName}>{vendor?.shopName}</Text>
+          <View style={styles.ratingBadge}>
+            <Star
+              size={12}
+              color={theme.colors.primary}
+              fill={theme.colors.accent}
+            />
+            <Text style={styles.ratingValue}>
+              {vendor?.averageRating?.toFixed(1) || '0.0'}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.shopDescription}>{vendor?.shopDescription}</Text>
+
+        <View style={styles.divider} />
+
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <MapPin size={14} color={theme.colors.accent} />
+            <Text style={styles.metaText} numberOfLines={1}>
+              {vendor?.address?.split(',')[0]}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.metaItem}
+            onPress={() =>
+              navigation.navigate('VendorReviews', { vendorId: vendor?.id })
+            }
+          >
+            <Star size={14} color={theme.colors.accent} />
+            <Text style={styles.metaText}>
+              {vendor?.totalRatings || 0} {t('store.reviews')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
-  </View>
-));
+  ),
+);
 
 const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
-    left: 20,
+    right: 20,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -78,7 +80,8 @@ const styles = StyleSheet.create({
   infoCard: {
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing.lg,
-    marginTop: -60,
+    marginTop: -theme.spacing.md,
+    marginBottom: theme.spacing.md,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     ...theme.shadows.medium,

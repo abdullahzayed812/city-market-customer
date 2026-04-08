@@ -5,7 +5,7 @@ import {
   StyleSheet,
   SectionList,
   ActivityIndicator,
-  Dimensions,
+  // Dimensions,
 } from 'react-native';
 import { theme } from '../theme';
 import { getBaseURL } from '../services/api/apiClient';
@@ -14,8 +14,8 @@ import { useStoreDetails } from '../features/store/hooks/useStoreDetails';
 import { StoreHeader } from '../features/store/components/StoreHeader';
 import { ProductRow } from '../features/store/components/ProductRow';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - theme.spacing.lg * 2 - theme.spacing.md) / 2;
+// const { width } = Dimensions.get('window');
+// const CARD_WIDTH = (width - theme.spacing.lg * 2 - theme.spacing.md) / 2;
 
 const StoreDetailsScreen = ({ route, navigation }: any) => {
   const { vendorId } = route.params;
@@ -28,6 +28,9 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     sections,
     insets,
     handleAddToCart,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useStoreDetails(vendorId);
 
   const renderRow = useCallback(
@@ -51,16 +54,6 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.headerImageContainer, { height: 240 + insets.top }]}>
-        <ImageWithPlaceholder
-          uri={
-            vendor?.storeImage ? `${getBaseURL()}${vendor.storeImage}` : null
-          }
-          style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
-        />
-        <View style={styles.imageOverlay} />
-      </View>
-
       <SectionList
         sections={sections}
         keyExtractor={(item, index) => item[0].id + index}
@@ -71,12 +64,32 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           </View>
         )}
         ListHeaderComponent={
-          <StoreHeader
-            t={t}
-            vendor={vendor}
-            navigation={navigation}
-            insets={insets}
-          />
+          <View>
+            <View
+              style={[
+                styles.headerImageContainer,
+                { height: 240 + insets.top },
+              ]}
+            >
+              <ImageWithPlaceholder
+                uri={
+                  vendor?.storeImage
+                    ? `${getBaseURL()}${vendor.storeImage}`
+                    : null
+                }
+                style={
+                  [StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any
+                }
+              />
+              <View style={styles.imageOverlay} />
+            </View>
+            <StoreHeader
+              t={t}
+              vendor={vendor}
+              navigation={navigation}
+              insets={insets}
+            />
+          </View>
         }
         stickySectionHeadersEnabled={true}
         contentContainerStyle={styles.listContent}
@@ -86,6 +99,19 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>{t('store.no_products')}</Text>
           </View>
+        }
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={{ marginVertical: 20 }}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            </View>
+          ) : null
         }
       />
     </View>

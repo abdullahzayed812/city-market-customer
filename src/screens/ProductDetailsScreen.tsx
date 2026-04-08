@@ -99,7 +99,7 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
             <View style={styles.quantitySection}>
               <Text style={styles.sectionTitle}>
                 {isWeight
-                  ? t('orders.weight') || 'Weight'
+                  ? t('product.weight') || 'Weight'
                   : t('product.quantity') || 'Quantity'}
               </Text>
               <QuantitySelector

@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { CatalogService } from '../../../services/api/catalogService';
@@ -18,9 +18,22 @@ export const useStoreDetails = (vendorId: string) => {
     queryFn: () => VendorService.getVendorById(vendorId),
   });
 
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ['products', vendorId],
-    queryFn: () => CatalogService.getVendorProductsByVendor(vendorId),
+    queryFn: ({ pageParam = 1 }) => CatalogService.getVendorProductsByVendor(vendorId, pageParam, 20),
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || typeof lastPage.total !== 'number') return undefined;
+      const { page, limit, total } = lastPage;
+      if (page * limit < total) return page + 1;
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 
   const { data: vendorCategories, isLoading: categoriesLoading } = useQuery({
@@ -28,7 +41,7 @@ export const useStoreDetails = (vendorId: string) => {
     queryFn: () => CatalogService.getVendorCategories(vendorId),
   });
 
-  const products = useMemo(() => productsData?.data || [], [productsData]);
+  const products = useMemo(() => productsData?.pages.flatMap(page => page?.data || []) || [], [productsData]);
 
   const sections = useMemo(() => {
     if (!products || !vendorCategories) return [];
@@ -83,5 +96,8 @@ export const useStoreDetails = (vendorId: string) => {
     sections,
     insets,
     handleAddToCart,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };

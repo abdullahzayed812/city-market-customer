@@ -35,6 +35,9 @@ const SearchScreen = ({ navigation, route }: any) => {
     refetch,
     selectedCategory,
     clearSearch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useSearch(categoryId);
 
   const renderItem = useCallback(
@@ -57,9 +60,20 @@ const SearchScreen = ({ navigation, route }: any) => {
             <Text style={styles.itemName} numberOfLines={1}>
               {item.name}
             </Text>
-            <Text style={styles.itemCat}>
-              {item.globalCategoryName || t('common.product')}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.itemCat}>
+                {item.globalCategoryName || t('common.product')}
+              </Text>
+              <Text style={[styles.itemCat, { marginHorizontal: 4 }]}>•</Text>
+              <Text
+                style={[
+                  styles.itemCat,
+                  { color: theme.colors.accent, fontWeight: '600' },
+                ]}
+              >
+                {item.vendorName}
+              </Text>
+            </View>
           </View>
           <View style={styles.footerRow}>
             <View style={styles.priceInfo}>
@@ -88,12 +102,6 @@ const SearchScreen = ({ navigation, route }: any) => {
       <View style={styles.container}>
         {/* Search Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <ChevronLeft size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
           <View style={styles.searchBarContainer}>
             <Search
               size={18}
@@ -125,6 +133,13 @@ const SearchScreen = ({ navigation, route }: any) => {
               </TouchableOpacity>
             )}
           </View>
+
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <ChevronLeft size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
 
         {/* Category Badge Header */}
@@ -176,6 +191,20 @@ const SearchScreen = ({ navigation, route }: any) => {
                   </Text>
                 </View>
               )
+            }
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={{ marginVertical: 20 }}>
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                  />
+                </View>
+              ) : null
             }
           />
         )}

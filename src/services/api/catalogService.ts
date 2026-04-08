@@ -38,9 +38,10 @@ export const CatalogService = {
     );
     return response.data?.data;
   },
-  getVendorProductsByVendor: async (vendorId: string) => {
-    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[] }>>(
+  getVendorProductsByVendor: async (vendorId: string, page: number = 1, limit: number = 20) => {
+    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[]; total: number; page: number; limit: number }>>(
       `/catalog/products/vendor/${vendorId}`,
+      { params: { page, limit } }
     );
     return response.data?.data;
   },
@@ -50,8 +51,8 @@ export const CatalogService = {
     );
     return response.data?.data;
   },
-  searchVendorProducts: async (filter: VendorProductFilter) => {
-    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[] }>>(
+  searchVendorProducts: async (filter: VendorProductFilter & { page?: number; limit?: number }) => {
+    const response = await apiClient.get<ApiResponse<{ data: VendorProduct[]; total: number; page: number; limit: number }>>(
       `/catalog/products/search`,
       { params: filter },
     );

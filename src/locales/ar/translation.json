@@ -86,7 +86,8 @@
   },
   "product": {
     "in_stock": "متوفر في المخزن",
-    "quantity": "الكمية"
+    "quantity": "الكمية",
+    "weight": "الوزن"
   },
   "cart": {
     "title": "سلة التسوق",

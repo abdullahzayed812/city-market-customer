@@ -14,4 +14,8 @@ export const VendorService = {
     const response = await apiClient.get<ApiResponse<Vendor>>(`/vendors/${id}`);
     return response.data?.data;
   },
+  getVendorsByIds: async (ids: string[]) => {
+    const response = await apiClient.post<ApiResponse<Vendor[]>>('/vendors/bulk', { ids });
+    return response.data?.data;
+  },
 };

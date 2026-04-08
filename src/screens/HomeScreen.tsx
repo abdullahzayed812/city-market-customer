@@ -71,11 +71,15 @@ const HomeScreen = ({ navigation }: any) => {
     navigation.navigate('StoreDetails', { vendorId: id });
   }, [navigation]);
 
+  const handleSeeAllPress = useCallback((type: string) => {
+    navigation.navigate('AllStores', { type });
+  }, [navigation]);
+
   const renderSection = ({ item }: { item: any }) => (
     <View style={styles.typeSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{t(`home.type_${item.type.toLowerCase()}`)}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => handleSeeAllPress(item.type)}>
           <Text style={styles.seeAll}>{t('common.see_all')}</Text>
         </TouchableOpacity>
       </View>

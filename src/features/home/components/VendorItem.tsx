@@ -1,5 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet, Dimensions } from 'react-native';
+import {
+  TouchableOpacity,
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 import { Star } from 'lucide-react-native';
 import { theme } from '../../../theme';
 import { getBaseURL } from '../../../services/api/apiClient';
@@ -16,69 +22,72 @@ interface VendorItemProps {
   item: any;
   onPress: (id: string) => void;
   t: any;
+  style?: any;
 }
 
-export const VendorItem = React.memo(({ item, onPress, t }: VendorItemProps) => (
-  <TouchableOpacity
-    style={styles.vendorCard}
-    onPress={() => onPress(item.id)}
-    activeOpacity={0.95}
-  >
-    <View style={styles.vendorImageContainer}>
-      <ImageWithPlaceholder
-        uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
-        style={styles.vendorImage}
-      />
-      <View
-        style={[
-          styles.statusBadge,
-          {
-            backgroundColor:
-              item.status === VendorStatus.OPEN
-                ? theme.colors.success
-                : theme.colors.error,
-          },
-        ]}
-      >
-        <View style={styles.statusDot} />
-        <Text style={styles.statusText}>
-          {item.status === VendorStatus.OPEN
-            ? t('home.open')
-            : t('home.closed')}
-        </Text>
-      </View>
-    </View>
-
-    <View style={styles.vendorInfo}>
-      <Text style={styles.vendorName} numberOfLines={1}>
-        {item.shopName}
-      </Text>
-      <View style={styles.vendorMeta}>
-        <View style={styles.ratingContainer}>
-          <Star
-            size={12}
-            color={theme.colors.accent}
-            fill={theme.colors.accent}
-          />
-          <Text style={styles.ratingText}>{item.averageRating}</Text>
+export const VendorItem = React.memo(
+  ({ item, onPress, t, style }: VendorItemProps) => (
+    <TouchableOpacity
+      style={[styles.vendorCard, style]}
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.95}
+    >
+      <View style={styles.vendorImageContainer}>
+        <ImageWithPlaceholder
+          uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
+          style={styles.vendorImage}
+        />
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+                item.status === VendorStatus.OPEN
+                  ? theme.colors.success
+                  : theme.colors.error,
+            },
+          ]}
+        >
+          <View style={styles.statusDot} />
+          <Text style={styles.statusText}>
+            {item.status === VendorStatus.OPEN
+              ? t('home.open')
+              : t('home.closed')}
+          </Text>
         </View>
-        <Text style={styles.vendorAddress} numberOfLines={1}>
-          {item.address?.split(',')[0]}
-        </Text>
       </View>
-    </View>
-  </TouchableOpacity>
-));
+
+      <View style={styles.vendorInfo}>
+        <Text style={styles.vendorName} numberOfLines={1}>
+          {item.shopName}
+        </Text>
+        <View style={styles.vendorMeta}>
+          <View style={styles.ratingContainer}>
+            <Star
+              size={12}
+              color={theme.colors.accent}
+              fill={theme.colors.accent}
+            />
+            <Text style={styles.ratingText}>{item.averageRating}</Text>
+          </View>
+          <Text style={styles.vendorAddress} numberOfLines={1}>
+            {item.address?.split(',')[0]}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ),
+);
 
 const styles = StyleSheet.create({
   vendorCard: {
     width: VENDOR_CARD_WIDTH,
     marginRight: theme.spacing.md,
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    ...theme.shadows.soft,
+    borderRadius: theme.radius.md,
     overflow: 'hidden',
     marginBottom: theme.spacing.xs,
+    ...theme.shadows.soft,
   },
   vendorImageContainer: {
     height: 120,

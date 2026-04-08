@@ -59,14 +59,14 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
       <View style={styles.container}>
         <View style={styles.header}>
+          <View style={{ width: 40 }} />
+          <Text style={styles.title}>{t('orders.details_title')}</Text>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.title}>{t('orders.details_title')}</Text>
-          <View style={{ width: 40 }} />
         </View>
 
         <ScrollView
@@ -97,7 +97,12 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                   { backgroundColor: statusConfig.color + '15' },
                 ]}
               >
-                <Text style={[styles.statusBadgeText, { color: statusConfig.color }]}>
+                <Text
+                  style={[
+                    styles.statusBadgeText,
+                    { color: statusConfig.color },
+                  ]}
+                >
                   {orderData?.status
                     ? t(`orders.status_${orderData.status.toLowerCase()}`)
                     : ''}
@@ -210,10 +215,12 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 {vo.status === VendorOrderStatus.DELIVERED && (
                   <TouchableOpacity
                     style={styles.rateButton}
-                    onPress={() => handleRateVendor({
-                      id: vo.vendorId,
-                      name: vo.vendorName || t('common.vendor'),
-                    })}
+                    onPress={() =>
+                      handleRateVendor({
+                        id: vo.vendorId,
+                        name: vo.vendorName || t('common.vendor'),
+                      })
+                    }
                   >
                     <Star size={16} color={theme.colors.white} />
                     <Text style={styles.rateButtonText}>
