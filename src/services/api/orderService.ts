@@ -15,6 +15,15 @@ export const OrderService = {
     );
     return response.data?.data;
   },
+  getDeliveryFee: async (lat: number, lng: number, vendorIds: string[]) => {
+    const response = await apiClient.get<ApiResponse<{ deliveryFee: number }>>(
+      '/orders/delivery-fee',
+      {
+        params: { lat, lng, vendorIds: vendorIds.join(',') },
+      },
+    );
+    return response.data?.data?.deliveryFee;
+  },
   getMyOrders: async () => {
     const response = await apiClient.get<ApiResponse<CustomerOrder[]>>(
       '/orders/customer-orders',

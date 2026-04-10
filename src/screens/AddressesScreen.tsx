@@ -17,6 +17,9 @@ import { MapPin, Plus, ChevronLeft, Trash2, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useAddresses } from '../hooks/useAddresses';
+import MapPickerModal from '../components/MapPickerModal';
+
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 const AddressesScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -32,6 +35,17 @@ const AddressesScreen = ({ navigation }: any) => {
     handleAddAddress,
     getAddressIcon,
   } = useAddresses();
+
+  const [mapVisible, setMapVisible] = React.useState(false);
+
+  const handleLocationSelected = (data: { address: string; latitude: number; longitude: number }) => {
+    setNewAddress({
+      ...newAddress,
+      address: data.address,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    });
+  };
 
   const renderAddressItem = ({ item }: { item: any }) => {
     const Icon = getAddressIcon(item.label);
@@ -137,6 +151,13 @@ const AddressesScreen = ({ navigation }: any) => {
                     onChangeText={text => setNewAddress({ ...newAddress, address: text })}
                     placeholderTextColor={theme.colors.textMuted}
                   />
+                  <TouchableOpacity
+                    style={styles.mapPickerButton}
+                    onPress={() => setMapVisible(true)}
+                  >
+                    <MapPin size={18} color={theme.colors.primary} />
+                    <Text style={styles.mapPickerButtonText}>Pick on Map</Text>
+                  </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -172,6 +193,13 @@ const AddressesScreen = ({ navigation }: any) => {
             </KeyboardAvoidingView>
           </View>
         </Modal>
+
+        <MapPickerModal
+          visible={mapVisible}
+          onClose={() => setMapVisible(false)}
+          onConfirm={handleLocationSelected}
+          googleApiKey={GOOGLE_MAPS_API_KEY}
+        />
       </View>
     </SafeAreaView>
   );
@@ -308,6 +336,21 @@ const styles = StyleSheet.create({
   cancelBtnText: { color: theme.colors.textSecondary, fontWeight: '600' },
   saveBtn: { backgroundColor: theme.colors.primary },
   saveBtnText: { color: theme.colors.white, fontWeight: 'bold' },
+  mapPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: theme.colors.primary + '10',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  mapPickerButtonText: {
+    marginLeft: 6,
+    color: theme.colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });
 
 export default AddressesScreen;

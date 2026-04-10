@@ -4,85 +4,104 @@ import { Minus, Plus } from 'lucide-react-native';
 import { theme } from '../../theme';
 
 interface QuantitySelectorProps {
-    quantity: number;
-    onIncrement: () => void;
-    onDecrement: () => void;
-    maxQuantity?: number;
-    minQuantity?: number;
-    displayValue?: string;
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  maxQuantity?: number;
+  minQuantity?: number;
+  displayValue?: string;
 }
 
 const QuantitySelector: React.FC<QuantitySelectorProps> = ({
-    quantity,
-    onIncrement,
-    onDecrement,
-    maxQuantity,
-    minQuantity = 1,
-    displayValue,
+  quantity,
+  onIncrement,
+  onDecrement,
+  maxQuantity,
+  minQuantity = 1,
+  displayValue,
 }) => {
-    return (
-        <View style={styles.container}>
-            <TouchableOpacity
-                style={[styles.button, quantity <= minQuantity && styles.disabledButton]}
-                onPress={onDecrement}
-                disabled={quantity <= minQuantity}
-            >
-                <Minus size={20} color={quantity <= minQuantity ? theme.colors.textMuted : theme.colors.primary} />
-            </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={[
+          styles.button,
+          quantity <= minQuantity && styles.disabledButton,
+        ]}
+        onPress={onDecrement}
+        disabled={quantity <= minQuantity}
+      >
+        <Minus
+          size={20}
+          color={
+            quantity <= minQuantity
+              ? theme.colors.textMuted
+              : theme.colors.primary
+          }
+        />
+      </TouchableOpacity>
 
-            <View style={styles.quantityContainer}>
-                <Text style={styles.quantityText}>{displayValue || quantity}</Text>
-            </View>
+      <View style={styles.quantityContainer}>
+        <Text style={styles.quantityText}>{displayValue || quantity}</Text>
+      </View>
 
-            <TouchableOpacity
-                style={[
-                    styles.button,
-                    maxQuantity !== undefined && quantity >= maxQuantity && styles.disabledButton,
-                ]}
-                onPress={onIncrement}
-                disabled={maxQuantity !== undefined && quantity >= maxQuantity}
-            >
-                <Plus size={20} color={maxQuantity !== undefined && quantity >= maxQuantity ? theme.colors.textMuted : theme.colors.primary} />
-            </TouchableOpacity>
-        </View>
-    );
+      <TouchableOpacity
+        style={[
+          styles.button,
+          maxQuantity !== undefined &&
+            quantity >= maxQuantity &&
+            styles.disabledButton,
+        ]}
+        onPress={onIncrement}
+        disabled={maxQuantity !== undefined && quantity >= maxQuantity}
+      >
+        <Plus
+          size={20}
+          color={
+            maxQuantity !== undefined && quantity >= maxQuantity
+              ? theme.colors.textMuted
+              : theme.colors.primary
+          }
+        />
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: theme.colors.white,
-        borderRadius: theme.radius.md,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        padding: 4,
-        flex: 1,
-        maxWidth: 140,
-        minWidth: 80,
-        justifyContent: 'space-between',
-    },
-    button: {
-        width: 32,
-        height: 32,
-        borderRadius: theme.radius.sm,
-        backgroundColor: theme.colors.background,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    disabledButton: {
-        opacity: 0.5,
-    },
-    quantityContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    quantityText: {
-        fontSize: theme.typography.sizes.md,
-        fontWeight: theme.typography.weights.bold,
-        color: theme.colors.primary,
-    },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: 2,
+    // flex: 1,
+    // maxWidth: 140,
+    // minWidth: 80,
+    justifyContent: 'space-between',
+  },
+  button: {
+    width: 32,
+    height: 32,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  quantityContainer: {
+    // flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityText: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.bold,
+    color: theme.colors.primary,
+  },
 });
 
 export default React.memo(QuantitySelector);

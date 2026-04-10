@@ -39,6 +39,20 @@ export const useCheckout = (navigation: any) => {
     },
   });
 
+  const address = addresses?.find((a: any) => a.id === selectedAddress);
+
+  const { data: dynamicDeliveryFee, isLoading: deliveryFeeLoading } = useQuery({
+    queryKey: ['delivery-fee', selectedAddress, items.map(i => i.id).join(',')],
+    queryFn: () => OrderService.getDeliveryFee(
+      address!.latitude as number,
+      address!.longitude as number,
+      Array.from(new Set(items.map(i => i.vendorId)))
+    ),
+    enabled: !!selectedAddress && !!address?.latitude && !!address?.longitude && items.length > 0,
+  });
+
+  const deliveryFee = dynamicDeliveryFee ?? 15.0;
+
   const handleConfirmOrder = useCallback(() => {
     if (!selectedAddress) {
       Toast.show({
@@ -82,7 +96,6 @@ export const useCheckout = (navigation: any) => {
     orderMutation.mutate(orderData);
   }, [selectedAddress, addresses, items, orderMutation, t]);
 
-  const deliveryFee = 15.0;
   const grandTotal = useMemo(() => total + deliveryFee, [total, deliveryFee]);
 
   return {
@@ -96,6 +109,7 @@ export const useCheckout = (navigation: any) => {
     orderMutation,
     handleConfirmOrder,
     deliveryFee,
+    deliveryFeeLoading,
     grandTotal,
   };
 };

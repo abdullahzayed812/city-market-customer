@@ -237,6 +237,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   quantitySection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },
   footer: {

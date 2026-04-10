@@ -30,6 +30,7 @@ const CheckoutScreen = ({ navigation }: any) => {
     orderMutation,
     handleConfirmOrder,
     deliveryFee,
+    deliveryFeeLoading,
     grandTotal,
   } = useCheckout(navigation);
 
@@ -163,9 +164,14 @@ const CheckoutScreen = ({ navigation }: any) => {
                 <Text style={styles.summaryLabel}>
                   {t('checkout.delivery_fee')}
                 </Text>
-                <Text style={styles.summaryValue}>
-                  ${deliveryFee.toFixed(2)}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {deliveryFeeLoading ? (
+                    <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginRight: 8 }} />
+                  ) : null}
+                  <Text style={styles.summaryValue}>
+                    ${deliveryFee.toFixed(2)}
+                  </Text>
+                </View>
               </View>
               <View style={styles.divider} />
               <View style={[styles.summaryRow, { marginTop: 8 }]}>

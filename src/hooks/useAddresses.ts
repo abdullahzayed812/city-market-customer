@@ -7,7 +7,13 @@ import { Home, Briefcase, Navigation } from 'lucide-react-native';
 export const useAddresses = () => {
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
-  const [newAddress, setNewAddress] = useState({
+  const [newAddress, setNewAddress] = useState<{
+    label: string,
+    address: string,
+    isDefault: boolean,
+    latitude: number | undefined,
+    longitude: number | undefined,
+  }>({
     label: '',
     address: '',
     isDefault: false,
