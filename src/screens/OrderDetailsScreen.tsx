@@ -46,6 +46,8 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     t,
   } = useOrderDetails(orderId);
 
+  // console.log({ vendorOrders, fetchedProposals });
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -180,9 +182,15 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                         <Text style={styles.itemName}>{item.productName}</Text>
                         <View style={styles.weightContainer}>
                           {item.quantity ? (
-                            <Text style={styles.itemQty}>
-                              {t('product.quantity')}: x{item.quantity}
-                            </Text>
+                            <>
+                              <Text style={styles.itemQty}>
+                                {t('product.quantity')}: x{item.quantity}
+                              </Text>
+                              <Text style={styles.itemQty}>
+                                {t('product.proposed_quantity')}: x
+                                {item.proposedQuantity}
+                              </Text>
+                            </>
                           ) : (
                             <>
                               <Text style={styles.itemQty}>

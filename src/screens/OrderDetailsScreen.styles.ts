@@ -187,13 +187,14 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
   reviewProposalsButton: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FF9500',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
-    marginTop: 20,
+    marginTop: 34,
   },
   reviewProposalsText: {
     color: theme.colors.white,

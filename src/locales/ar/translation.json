@@ -94,6 +94,7 @@
   "product": {
     "in_stock": "متوفر في المخزن",
     "quantity": "الكمية",
+    "proposed_quantity": "الكمية المقترحة",
     "weight": "الوزن"
   },
   "cart": {
@@ -168,7 +169,8 @@
     "cancel_entire_order_instead": "إلغاء الطلب بالكامل بدلاً من ذلك",
     "type_weight_adjustment": "تعديل الوزن",
     "requested_weight": "الوزن المطلوب",
-    "proposed_weight": "الوزن المقترح"
+    "proposed_weight": "الوزن المقترح",
+    "actual_quantity": "الكمية المطلوبة"
   },
   "profile": {
     "title": "الملف الشخصي",

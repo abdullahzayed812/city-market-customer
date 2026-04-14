@@ -236,7 +236,15 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
                   badgeColor={getStatusColor(proposal.status as ProposalStatus)}
                 />
 
-                {proposal.proposedQuantity !== undefined && (
+                {proposal.actualQuantity && (
+                  <InfoRow
+                    icon={<Layers size={16} color={theme.colors.textMuted} />}
+                    label={t('proposals.actual_quantity')}
+                    value={proposal?.actualQuantity?.toString()}
+                  />
+                )}
+
+                {proposal.proposedQuantity && (
                   <InfoRow
                     icon={<Layers size={16} color={theme.colors.textMuted} />}
                     label={t('proposals.proposed_quantity')}
@@ -244,8 +252,8 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
                   />
                 )}
 
-                {(proposal.requestedWeight !== undefined ||
-                  proposal.requestedWeightGrams !== undefined) && (
+                {(proposal.requestedWeight ||
+                  proposal.requestedWeightGrams) && (
                   <InfoRow
                     icon={<Scale size={16} color={theme.colors.textMuted} />}
                     label={t('proposals.requested_weight')}
@@ -256,8 +264,7 @@ const ReviewProposalsScreen = ({ route, navigation }: any) => {
                   />
                 )}
 
-                {(proposal.proposedWeight !== undefined ||
-                  proposal.proposedWeightGrams !== undefined) && (
+                {(proposal.proposedWeight || proposal.proposedWeightGrams) && (
                   <InfoRow
                     icon={<Scale size={16} color={theme.colors.textMuted} />}
                     label={t('proposals.proposed_weight')}

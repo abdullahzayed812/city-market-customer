@@ -94,6 +94,7 @@
   "product": {
     "in_stock": "In Stock",
     "quantity": "Quantity",
+    "proposed_quantity": "Proposed Quantity",
     "weight": "Weight"
   },
   "cart": {
@@ -169,7 +170,8 @@
     "cancel_shop_label": "Cancel Shop",
     "cancel_entire_order_label": "Cancel Entire Order",
     "cancel_entire_order_instead": "Cancel Entire Order Instead",
-    "type_weight_adjustment": "Weight Adjustment"
+    "type_weight_adjustment": "Weight Adjustment",
+    "actual_quantity": "Acual Quantity"
   },
   "profile": {
     "title": "Profile",
