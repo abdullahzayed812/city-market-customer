@@ -64,6 +64,15 @@ export const useStoreDetails = (vendorId: string) => {
 
   const handleAddToCart = useCallback(
     (product: any) => {
+      if (!product.isAvailable) {
+        Toast.show({
+          type: 'error',
+          text1: t('store.product_unavailable'),
+          position: 'bottom',
+        });
+        return;
+      }
+
       const item: any = {
         ...product,
         vendorId,

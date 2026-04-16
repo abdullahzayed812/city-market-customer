@@ -11,6 +11,7 @@ interface CartItem {
     vendorId: string;
     measurementType: MeasurementType;
     imageUrl?: string;
+    isAvailable?: boolean;
 }
 
 interface CartContextType {
@@ -29,6 +30,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [items, setItems] = useState<CartItem[]>([]);
 
     const addToCart = (item: CartItem) => {
+        if (item.isAvailable === false) {
+            console.warn('Attempted to add unavailable item to cart', item.id);
+            return;
+        }
         setItems((prev) => {
             const existing = prev.find((i) => i.id === item.id);
             if (existing) {

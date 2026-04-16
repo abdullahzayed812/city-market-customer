@@ -33,6 +33,8 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     t,
   } = useProductDetails(productId, navigation);
 
+  console.log(product);
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
