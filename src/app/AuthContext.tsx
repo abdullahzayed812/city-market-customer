@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setSignOutCallback } from '../services/api/apiClient';
 
 interface User {
   userId: string;
@@ -25,6 +26,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [userToken, setUserToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setSignOutCallback(() => {
+      setUserToken(null);
+      setUser(null);
+    });
+  }, []);
 
   useEffect(() => {
     const bootstrapAsync = async () => {

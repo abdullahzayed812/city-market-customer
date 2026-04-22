@@ -46,8 +46,6 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     t,
   } = useOrderDetails(orderId);
 
-  // console.log({ vendorOrders, fetchedProposals });
-
   if (isLoading) {
     return (
       <View style={styles.centered}>
