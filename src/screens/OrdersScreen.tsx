@@ -37,6 +37,7 @@ const OrdersScreen = ({ navigation }: any) => {
 
   const socketEvents = useMemo(
     () => [
+      EventType.ORDER_AWAITING_CUSTOMER_CONFIRMATION,
       EventType.VENDOR_ORDER_PROPOSED,
       EventType.ORDER_CREATED,
       EventType.ORDER_PREPARING,

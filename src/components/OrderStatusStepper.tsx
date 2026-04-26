@@ -43,13 +43,25 @@ export const OrderStatusStepper = ({
 
   if (!currentStatus) return null;
 
-  if (currentStatus === CustomerOrderStatus.CANCELLED) {
+  if (
+    currentStatus === CustomerOrderStatus.CANCELLED ||
+    currentStatus === CustomerOrderStatus.CANCELLED_BY_CUSTOMER
+  ) {
     return (
       <View style={styles.cancelledContainer}>
         <XCircle size={36} color={theme.colors.error} />
-        <Text style={styles.cancelledText}>{t('orders.status_cancelled')}</Text>
+        <Text style={styles.cancelledText}>
+          {currentStatus === CustomerOrderStatus.CANCELLED_BY_CUSTOMER
+            ? t('orders.status_cancelled_by_customer')
+            : t('orders.status_cancelled')}
+        </Text>
       </View>
     );
+  }
+
+  // AWAITING_CUSTOMER_CONFIRMATION is handled by the confirmation card in OrderDetailsScreen
+  if (currentStatus === CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION) {
+    return null;
   }
 
   const effectiveStatus =

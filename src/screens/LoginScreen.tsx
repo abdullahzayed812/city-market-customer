@@ -19,11 +19,13 @@ import { SERVERS, getServerIP, setServerIP } from '../utils/serverConfig';
 
 const LoginScreen = ({ navigation }: any) => {
   const [selectedServer, setSelectedServer] = useState(SERVERS.PC);
+  const [customIP, setCustomIP] = useState(SERVERS.PC);
 
   useEffect(() => {
     const loadServer = async () => {
       const ip = await getServerIP();
       setSelectedServer(ip);
+      setCustomIP(ip);
     };
     loadServer();
   }, []);
@@ -31,6 +33,12 @@ const LoginScreen = ({ navigation }: any) => {
   const handleServerChange = async (ip: string) => {
     await setServerIP(ip);
     setSelectedServer(ip);
+    setCustomIP(ip);
+  };
+
+  const handleApplyCustomIP = () => {
+    const trimmed = customIP.trim();
+    if (trimmed) handleServerChange(trimmed);
   };
 
   const {
@@ -106,6 +114,23 @@ const LoginScreen = ({ navigation }: any) => {
                 >
                   {t('auth.server_laptop') || 'Laptop (2)'}
                 </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.customIPRow}>
+              <TextInput
+                style={styles.customIPInput}
+                value={customIP}
+                onChangeText={setCustomIP}
+                placeholder="192.168.0.x"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="decimal-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                onSubmitEditing={handleApplyCustomIP}
+                returnKeyType="done"
+              />
+              <TouchableOpacity style={styles.customIPApply} onPress={handleApplyCustomIP}>
+                <Text style={styles.customIPApplyText}>Apply</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -265,6 +290,36 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   activeServerButtonText: {
+    color: theme.colors.white,
+  },
+  customIPRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  customIPInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+  },
+  customIPApply: {
+    height: 40,
+    paddingHorizontal: 14,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customIPApplyText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: theme.colors.white,
   },
   formContainer: {

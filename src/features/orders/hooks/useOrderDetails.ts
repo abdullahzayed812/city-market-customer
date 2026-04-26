@@ -16,8 +16,11 @@ export const useOrderDetails = (orderId: string) => {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
-  const [selectedVendorForRating, setSelectedVendorForRating] =
-    useState<any>(null);
+  const [selectedVendorForRating, setSelectedVendorForRating] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
     queryKey: ['order', orderId],
@@ -36,6 +39,7 @@ export const useOrderDetails = (orderId: string) => {
 
   const socketEvents = useMemo(
     () => [
+      EventType.ORDER_AWAITING_CUSTOMER_CONFIRMATION,
       EventType.VENDOR_ORDER_PROPOSED,
       EventType.ORDER_CREATED,
       EventType.ORDER_CONFIRMED,
@@ -66,6 +70,7 @@ export const useOrderDetails = (orderId: string) => {
         return { color: theme.colors.textMuted };
       }
       switch (status) {
+        case CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION:
         case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
         case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
         case VendorOrderStatus.PENDING:
@@ -81,6 +86,7 @@ export const useOrderDetails = (orderId: string) => {
         case VendorOrderStatus.DELIVERED:
           return { color: theme.colors.success };
         case CustomerOrderStatus.CANCELLED:
+        case CustomerOrderStatus.CANCELLED_BY_CUSTOMER:
         case VendorOrderStatus.CANCELLED:
           return { color: theme.colors.error };
         default:
@@ -106,6 +112,31 @@ export const useOrderDetails = (orderId: string) => {
     setRatingModalVisible(true);
   };
 
+  const handleConfirmOrder = () => setConfirmModalVisible(true);
+  const handleCancelOrder = () => setCancelModalVisible(true);
+
+  const executeConfirmOrder = async () => {
+    setIsConfirming(true);
+    try {
+      await OrderService.confirmOrder(orderId);
+      setConfirmModalVisible(false);
+      handleUpdate();
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  const executeCancelOrder = async () => {
+    setIsCancelling(true);
+    try {
+      await OrderService.cancelOrderBeforeConfirmation(orderId);
+      setCancelModalVisible(false);
+      handleUpdate();
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   return {
     orderData,
     vendorOrders,
@@ -118,6 +149,16 @@ export const useOrderDetails = (orderId: string) => {
     selectedVendorForRating,
     handleRateVendor,
     getStatusConfig,
+    handleConfirmOrder,
+    handleCancelOrder,
+    executeConfirmOrder,
+    executeCancelOrder,
+    isConfirming,
+    isCancelling,
+    confirmModalVisible,
+    setConfirmModalVisible,
+    cancelModalVisible,
+    setCancelModalVisible,
     t,
   };
 };

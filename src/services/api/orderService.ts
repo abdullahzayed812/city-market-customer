@@ -42,8 +42,19 @@ export const OrderService = {
     );
     return response.data?.data;
   },
+  confirmOrder: async (id: string) => {
+    const response = await apiClient.post<ApiResponse<null>>(
+      `/orders/customer-orders/${id}/confirm`,
+    );
+    return response.data?.data;
+  },
+  cancelOrderBeforeConfirmation: async (id: string) => {
+    const response = await apiClient.post<ApiResponse<null>>(
+      `/orders/customer-orders/${id}/cancel`,
+    );
+    return response.data?.data;
+  },
   cancelOrder: async (id: string) => {
-    // Corrected to use PUT /orders/:id/status with CustomerOrderStatus.CANCELLED
     const response = await apiClient.put<ApiResponse<null>>(
       `/orders/${id}/status`,
       { status: CustomerOrderStatus.CANCELLED },
