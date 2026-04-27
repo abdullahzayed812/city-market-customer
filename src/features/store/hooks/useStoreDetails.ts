@@ -23,11 +23,12 @@ export const useStoreDetails = (vendorId: string) => {
     isLoading: productsLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['products', vendorId],
-    queryFn: ({ pageParam = 1 }) => CatalogService.getVendorProductsByVendor(vendorId, pageParam, 20),
-    getNextPageParam: (lastPage) => {
+    queryFn: ({ pageParam = 1 }) =>
+      CatalogService.getVendorProductsByVendor(vendorId, pageParam, 20),
+    getNextPageParam: lastPage => {
       if (!lastPage || typeof lastPage.total !== 'number') return undefined;
       const { page, limit, total } = lastPage;
       if (page * limit < total) return page + 1;
@@ -41,7 +42,10 @@ export const useStoreDetails = (vendorId: string) => {
     queryFn: () => CatalogService.getVendorCategories(vendorId),
   });
 
-  const products = useMemo(() => productsData?.pages.flatMap(page => page?.data || []) || [], [productsData]);
+  const products = useMemo(
+    () => productsData?.pages.flatMap(page => page?.data || []) || [],
+    [productsData],
+  );
 
   const sections = useMemo(() => {
     if (!products || !vendorCategories) return [];
@@ -87,11 +91,11 @@ export const useStoreDetails = (vendorId: string) => {
       }
 
       addToCart(item);
-      Toast.show({
-        type: 'success',
-        text1: t('store.added_to_cart'),
-        position: 'bottom',
-      });
+      // Toast.show({
+      //   type: 'success',
+      //   text1: t('store.added_to_cart'),
+      //   position: 'bottom',
+      // });
     },
     [vendorId, addToCart, t],
   );

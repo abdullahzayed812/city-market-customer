@@ -12,6 +12,11 @@ export const useCheckout = (navigation: any) => {
   const { items, total, clearCart } = useCart();
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
 
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: UserService.getProfile,
+  });
+
   const { data: addresses, isLoading: addressesLoading } = useQuery({
     queryKey: ['addresses'],
     queryFn: UserService.getAddresses,
@@ -111,5 +116,6 @@ export const useCheckout = (navigation: any) => {
     deliveryFee,
     deliveryFeeLoading,
     grandTotal,
+    hasPenalty: profile?.hasPenalty === true,
   };
 };

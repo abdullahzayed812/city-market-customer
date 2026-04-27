@@ -14,6 +14,7 @@ import {
   Check,
   Plus,
   CreditCard,
+  Ban,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -32,6 +33,7 @@ const CheckoutScreen = ({ navigation }: any) => {
     deliveryFee,
     deliveryFeeLoading,
     grandTotal,
+    hasPenalty,
   } = useCheckout(navigation);
 
   if (addressesLoading) {
@@ -127,27 +129,37 @@ const CheckoutScreen = ({ navigation }: any) => {
             )}
           </View>
 
-          {/* Payment Method (Mock) */}
+          {/* Payment Method */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t('checkout.payment_method')}
             </Text>
-            <View style={styles.paymentCard}>
-              <View style={styles.paymentIconContainer}>
-                <CreditCard size={22} color={theme.colors.primary} />
+            {hasPenalty ? (
+              <View style={styles.penaltyBanner}>
+                <Ban size={22} color="#DC2626" />
+                <View style={styles.penaltyTextContainer}>
+                  <Text style={styles.penaltyTitle}>{t('checkout.cod_blocked_title')}</Text>
+                  <Text style={styles.penaltyDesc}>{t('checkout.cod_blocked_desc')}</Text>
+                </View>
               </View>
-              <View style={styles.paymentInfo}>
-                <Text style={styles.paymentLabel}>
-                  {t('checkout.cash_on_delivery')}
-                </Text>
-                <Text style={styles.paymentDesc}>
-                  {t('checkout.cash_description')}
-                </Text>
+            ) : (
+              <View style={styles.paymentCard}>
+                <View style={styles.paymentIconContainer}>
+                  <CreditCard size={22} color={theme.colors.primary} />
+                </View>
+                <View style={styles.paymentInfo}>
+                  <Text style={styles.paymentLabel}>
+                    {t('checkout.cash_on_delivery')}
+                  </Text>
+                  <Text style={styles.paymentDesc}>
+                    {t('checkout.cash_description')}
+                  </Text>
+                </View>
+                <View style={styles.radioActive}>
+                  <View style={styles.radioInner} />
+                </View>
               </View>
-              <View style={styles.radioActive}>
-                <View style={styles.radioInner} />
-              </View>
-            </View>
+            )}
           </View>
 
           {/* Order Summary */}
@@ -190,10 +202,10 @@ const CheckoutScreen = ({ navigation }: any) => {
           <TouchableOpacity
             style={[
               styles.confirmButton,
-              orderMutation.isPending && styles.disabledButton,
+              (orderMutation.isPending || hasPenalty) && styles.disabledButton,
             ]}
             onPress={handleConfirmOrder}
-            disabled={orderMutation.isPending}
+            disabled={orderMutation.isPending || hasPenalty}
           >
             {orderMutation.isPending ? (
               <ActivityIndicator color={theme.colors.white} />
@@ -325,6 +337,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.primary,
     fontWeight: '600',
+  },
+  penaltyBanner: {
+    flexDirection: 'row',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  penaltyTextContainer: {
+    flex: 1,
+  },
+  penaltyTitle: {
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.bold,
+    color: '#DC2626',
+    marginBottom: 2,
+  },
+  penaltyDesc: {
+    fontSize: theme.typography.sizes.sm,
+    color: '#991B1B',
   },
   paymentCard: {
     flexDirection: 'row',

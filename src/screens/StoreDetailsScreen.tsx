@@ -5,17 +5,16 @@ import {
   StyleSheet,
   SectionList,
   ActivityIndicator,
-  // Dimensions,
+  TouchableOpacity,
 } from 'react-native';
+import { ShoppingCart } from 'lucide-react-native';
 import { theme } from '../theme';
-import { getBaseURL } from '../services/api/apiClient';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 import { useStoreDetails } from '../features/store/hooks/useStoreDetails';
 import { StoreHeader } from '../features/store/components/StoreHeader';
 import { ProductRow } from '../features/store/components/ProductRow';
-
-// const { width } = Dimensions.get('window');
-// const CARD_WIDTH = (width - theme.spacing.lg * 2 - theme.spacing.md) / 2;
+import { useCart } from '../app/CartContext';
+import { getApiBaseURL } from '../utils/serverConfig';
 
 const StoreDetailsScreen = ({ route, navigation }: any) => {
   const { vendorId } = route.params;
@@ -32,6 +31,12 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     hasNextPage,
     isFetchingNextPage,
   } = useStoreDetails(vendorId);
+
+  const { itemCount, total } = useCart();
+
+  const handleCartPress = useCallback(() => {
+    navigation.navigate('Main', { screen: 'Cart' });
+  }, [navigation]);
 
   const renderRow = useCallback(
     ({ item }: { item: any[] }) => (
@@ -74,7 +79,7 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
               <ImageWithPlaceholder
                 uri={
                   vendor?.storeImage
-                    ? `${getBaseURL()}${vendor.storeImage}`
+                    ? `${getApiBaseURL()}${vendor.storeImage}`
                     : null
                 }
                 style={
@@ -92,7 +97,10 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           </View>
         }
         stickySectionHeadersEnabled={true}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          itemCount > 0 && styles.listContentWithCart,
+        ]}
         showsVerticalScrollIndicator={false}
         style={{ paddingTop: 0 }}
         ListEmptyComponent={
@@ -114,6 +122,24 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
           ) : null
         }
       />
+
+      {itemCount > 0 && (
+        <TouchableOpacity
+          style={styles.floatingCart}
+          onPress={handleCartPress}
+          activeOpacity={0.9}
+        >
+          <View style={styles.floatingCartInner}>
+            <View style={styles.floatingCartBadge}>
+              <Text style={styles.floatingCartBadgeText}>
+                {itemCount > 99 ? '99+' : itemCount}
+              </Text>
+            </View>
+            <ShoppingCart size={22} color={theme.colors.white} />
+            <Text style={styles.floatingCartTotal}>${total.toFixed(2)}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -141,6 +167,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 40,
   },
+  listContentWithCart: {
+    paddingBottom: 100,
+  },
   sectionHeader: {
     backgroundColor: theme.colors.background,
     paddingHorizontal: 20,
@@ -160,6 +189,43 @@ const styles = StyleSheet.create({
   emptyText: {
     color: theme.colors.textMuted,
     fontSize: 16,
+  },
+  floatingCart: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    right: 24,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
+    ...theme.shadows.medium,
+  },
+  floatingCartInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  floatingCartBadge: {
+    backgroundColor: theme.colors.accent,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  floatingCartBadgeText: {
+    color: theme.colors.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  floatingCartTotal: {
+    flex: 1,
+    textAlign: 'right',
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

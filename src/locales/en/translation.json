@@ -114,6 +114,8 @@
     "payment_method": "Payment Method",
     "cash_on_delivery": "Cash on Delivery",
     "cash_description": "Pay when you receive your order",
+    "cod_blocked_title": "Cash on Delivery Unavailable",
+    "cod_blocked_desc": "Your account has a restriction. Cash on delivery is currently unavailable.",
     "order_summary": "Order Summary",
     "grand_total": "Grand Total",
     "select_address": "Please select a delivery address",

@@ -1,9 +1,13 @@
 import apiClient from './apiClient';
-import { ApiResponse, Customer, UpdateCustomerDto, Address, CreateAddressDto } from '@city-market/shared';
+import { ApiResponse, Customer, UpdateCustomerDto, Address, CreateAddressDto, RegisterDeviceDto } from '@city-market/shared';
 
 export const UserService = {
   getProfile: async () => {
     const response = await apiClient.get<ApiResponse<Customer>>('/users/customers/me');
+    return response.data?.data;
+  },
+  registerDevice: async (dto: RegisterDeviceDto) => {
+    const response = await apiClient.patch<ApiResponse<null>>('/users/customers/me/device', dto);
     return response.data?.data;
   },
   updateProfile: async (profileData: UpdateCustomerDto) => {

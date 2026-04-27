@@ -15,8 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHomeData } from '../features/home/hooks/useHomeData';
 import { CategoryItem } from '../features/home/components/CategoryItem';
 import { VendorItem } from '../features/home/components/VendorItem';
+import { useCart } from '../app/CartContext';
 
-const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress }: any) => (
+const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress, itemCount, onCartPress }: any) => (
   <View style={styles.headerContainer}>
     <View style={styles.headerBar}>
       <View style={styles.locationContainer}>
@@ -26,11 +27,13 @@ const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress }: a
           <MapPin size={14} color={theme.colors.accent} style={{ marginLeft: 4 }} />
         </View>
       </View>
-      <TouchableOpacity style={styles.cartButton}>
+      <TouchableOpacity style={styles.cartButton} onPress={onCartPress}>
         <ShoppingCart color={theme.colors.primary} size={22} />
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>0</Text>
-        </View>
+        {itemCount > 0 && (
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     </View>
 
@@ -62,6 +65,7 @@ const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress }: a
 const HomeScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const { categories, groupedVendors, isLoading } = useHomeData();
+  const { itemCount } = useCart();
 
   const handleCategoryPress = useCallback((id: string) => {
     navigation.navigate('Search', { categoryId: id });
@@ -73,6 +77,10 @@ const HomeScreen = ({ navigation }: any) => {
 
   const handleSeeAllPress = useCallback((type: string) => {
     navigation.navigate('AllStores', { type });
+  }, [navigation]);
+
+  const handleCartPress = useCallback(() => {
+    navigation.navigate('Cart');
   }, [navigation]);
 
   const renderSection = ({ item }: { item: any }) => (
@@ -117,6 +125,8 @@ const HomeScreen = ({ navigation }: any) => {
             navigation={navigation}
             categories={categories}
             onCategoryPress={handleCategoryPress}
+            itemCount={itemCount}
+            onCartPress={handleCartPress}
           />
         }
         contentContainerStyle={styles.scrollContent}
@@ -153,14 +163,15 @@ const styles = StyleSheet.create({
   },
   cartBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 6,
+    right: 6,
     backgroundColor: theme.colors.accent,
-    width: 16,
+    minWidth: 16,
     height: 16,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 3,
   },
   cartBadgeText: { color: theme.colors.white, fontSize: 10, fontWeight: 'bold' },
   searchContainer: {

@@ -114,6 +114,8 @@
     "payment_method": "طريقة الدفع",
     "cash_on_delivery": "الدفع عند الاستلام",
     "cash_description": "ادفع عند استلام طلبك",
+    "cod_blocked_title": "الدفع عند الاستلام غير متاح",
+    "cod_blocked_desc": "حسابك عليه قيود. الدفع عند الاستلام غير متاح حالياً.",
     "order_summary": "ملخص الطلب",
     "grand_total": "المجموع الإجمالي",
     "select_address": "يرجى اختيار عنوان التوصيل",

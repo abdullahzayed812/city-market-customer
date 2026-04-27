@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import uuid from 'react-native-uuid';
 import { setSignOutCallback } from '../services/api/apiClient';
+import { UserService } from '../services/api/userService';
 
 interface User {
   userId: string;
@@ -19,6 +22,15 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getOrCreateDeviceId = async (): Promise<string> => {
+  let deviceId = await AsyncStorage.getItem('device_id');
+  if (!deviceId) {
+    deviceId = uuid.v4() as string;
+    await AsyncStorage.setItem('device_id', deviceId);
+  }
+  return deviceId;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -68,6 +80,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setUserToken(token);
         setUser(userData);
+
+        // Register device info in background (fire and forget)
+        getOrCreateDeviceId().then(deviceId => {
+          UserService.registerDevice({
+            deviceId,
+            platform: Platform.OS as 'ios' | 'android',
+          }).catch(() => {});
+        }).catch(() => {});
       } else {
         throw new Error('Invalid token received');
       }
