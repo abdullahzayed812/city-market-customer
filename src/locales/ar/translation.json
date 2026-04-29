@@ -132,6 +132,7 @@
     "no_orders": "لا توجد طلبات",
     "payment_summary": "ملخص الدفع",
     "total_amount": "المبلغ الإجمالي",
+    "status_draft": "مسودة",
     "status_awaiting_customer_confirmation": "في انتظار تأكيدك",
     "status_cancelled_by_customer": "ملغي بواسطتك",
     "status_pending_vendor_confirmation": "في انتظار تأكيد المتجر",

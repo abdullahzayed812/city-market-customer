@@ -16,6 +16,7 @@ export const useHomeData = () => {
 
   const groupedVendors = useMemo(() => {
     if (!vendors) return [];
+
     const groups: Record<string, any[]> = {};
     vendors.forEach((v: any) => {
       const type = v.type || 'Other';

@@ -132,6 +132,7 @@
     "no_orders": "No orders found",
     "payment_summary": "Payment Summary",
     "total_amount": "Total Amount",
+    "status_draft": "Draft",
     "status_awaiting_customer_confirmation": "Awaiting Your Confirmation",
     "status_cancelled_by_customer": "Cancelled by You",
     "status_pending_vendor_confirmation": "Pending Vendor Confirmation",

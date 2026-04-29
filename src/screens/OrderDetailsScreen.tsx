@@ -61,6 +61,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
   } = useOrderDetails(orderId);
 
   const [countdown, setCountdown] = useState('');
+  const [isCountdownExpired, setIsCountdownExpired] = useState(false);
 
   useEffect(() => {
     if (
@@ -72,14 +73,19 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       : null;
     if (!expiry) return;
 
-    const tick = () => {
+    const tick = (intervalRef: ReturnType<typeof setInterval>) => {
       const diff = Math.max(0, expiry.getTime() - Date.now());
       const minutes = Math.floor(diff / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
       setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      if (diff === 0) {
+        setIsCountdownExpired(true);
+        clearInterval(intervalRef);
+      }
     };
-    tick();
-    const interval = setInterval(tick, 1000);
+
+    const interval = setInterval(() => tick(interval), 1000);
+    tick(interval);
     return () => clearInterval(interval);
   }, [orderData?.status, orderData?.confirmationExpiry]);
 
@@ -161,32 +167,37 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                     {t('orders.confirmation_expires_in')}: {countdown}
                   </Text>
                 ) : null}
-                <TouchableOpacity
-                  style={[
-                    styles.confirmButton,
-                    isConfirming && styles.buttonDisabled,
-                  ]}
-                  onPress={handleConfirmOrder}
-                  disabled={isConfirming || isCancelling}
-                >
-                  <CheckCircle size={18} color={theme.colors.white} />
-                  <Text style={styles.confirmButtonText}>
-                    {t('orders.confirm_order_button')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.cancelConfirmButton,
-                    isCancelling && styles.buttonDisabled,
-                  ]}
-                  onPress={handleCancelOrder}
-                  disabled={isConfirming || isCancelling}
-                >
-                  <XCircle size={18} color={theme.colors.error} />
-                  <Text style={styles.cancelConfirmButtonText}>
-                    {t('orders.cancel_order_button')}
-                  </Text>
-                </TouchableOpacity>
+
+                {!isCountdownExpired && (
+                  <>
+                    <TouchableOpacity
+                      style={[
+                        styles.confirmButton,
+                        isConfirming && styles.buttonDisabled,
+                      ]}
+                      onPress={handleConfirmOrder}
+                      disabled={isConfirming || isCancelling}
+                    >
+                      <CheckCircle size={18} color={theme.colors.white} />
+                      <Text style={styles.confirmButtonText}>
+                        {t('orders.confirm_order_button')}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.cancelConfirmButton,
+                        isCancelling && styles.buttonDisabled,
+                      ]}
+                      onPress={handleCancelOrder}
+                      disabled={isConfirming || isCancelling}
+                    >
+                      <XCircle size={18} color={theme.colors.error} />
+                      <Text style={styles.cancelConfirmButtonText}>
+                        {t('orders.cancel_order_button')}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </View>
             ) : (
               <View style={styles.stepperWrapper}>

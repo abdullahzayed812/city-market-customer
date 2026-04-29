@@ -70,14 +70,20 @@ export const useOrderDetails = (orderId: string) => {
         return { color: theme.colors.textMuted };
       }
       switch (status) {
+        case CustomerOrderStatus.DRAFT:
+        case VendorOrderStatus.DRAFT:
+          return { color: theme.colors.textMuted };
         case CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION:
         case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
         case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
         case VendorOrderStatus.PENDING:
         case VendorOrderStatus.PROPOSAL_SENT:
           return { color: '#FF9500' };
+        case CustomerOrderStatus.PREPARING:
         case CustomerOrderStatus.READY:
+        case CustomerOrderStatus.PICKED_UP:
         case CustomerOrderStatus.IN_DELIVERY:
+        case VendorOrderStatus.PREPARING:
         case VendorOrderStatus.CONFIRMED:
         case VendorOrderStatus.PICKED_UP:
         case VendorOrderStatus.ON_THE_WAY:
