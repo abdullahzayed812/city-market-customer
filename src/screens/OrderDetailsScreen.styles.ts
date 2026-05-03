@@ -290,4 +290,41 @@ export const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
+  cancellationBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fef2f2',
+    borderRadius: theme.radius.lg,
+    padding: 14,
+    marginTop: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  cancellationLabel: {
+    fontSize: 12,
+    color: '#991b1b',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  cancellationText: {
+    fontSize: 14,
+    color: '#dc2626',
+  },
+  vendorCancellationBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fef2f2',
+    borderRadius: theme.radius.md,
+    padding: 10,
+    marginTop: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  vendorCancellationText: {
+    fontSize: 13,
+    color: '#dc2626',
+    flex: 1,
+  },
 });

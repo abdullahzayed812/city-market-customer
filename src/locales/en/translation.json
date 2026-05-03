@@ -159,7 +159,8 @@
     "confirm_order_title": "Confirm Order",
     "confirm_order_message": "Are you sure you want to confirm this order?",
     "cancel_order_title": "Cancel Order",
-    "cancel_order_message": "Are you sure you want to cancel this order?"
+    "cancel_order_message": "Are you sure you want to cancel this order?",
+    "cancellation_reason": "Cancellation Reason"
   },
   "proposals": {
     "title": "Review Proposals",

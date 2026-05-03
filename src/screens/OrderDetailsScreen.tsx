@@ -17,6 +17,7 @@ import {
   Star,
   CheckCircle,
   XCircle,
+  Ban,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -218,6 +219,20 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 </Text>
               </TouchableOpacity>
             )}
+
+            {orderData?.cancellationReason && (
+              <View style={styles.cancellationBanner}>
+                <Ban size={18} color="#dc2626" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cancellationLabel}>
+                    {t('orders.cancellation_reason')}
+                  </Text>
+                  <Text style={styles.cancellationText}>
+                    {orderData.cancellationReason}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Multi-Vendor Items Sections */}
@@ -309,6 +324,18 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                     </View>
                   ))}
                 </View>
+                {vo.cancellationReason && (
+                  <View style={styles.vendorCancellationBox}>
+                    <XCircle size={15} color="#dc2626" />
+                    <Text style={styles.vendorCancellationText}>
+                      <Text style={{ fontWeight: '600' }}>
+                        {t('orders.cancellation_reason')}:{' '}
+                      </Text>
+                      {vo.cancellationReason}
+                    </Text>
+                  </View>
+                )}
+
                 {vo.status === VendorOrderStatus.DELIVERED && (
                   <TouchableOpacity
                     style={styles.rateButton}

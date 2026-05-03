@@ -159,7 +159,8 @@
     "confirm_order_title": "تأكيد الطلب",
     "confirm_order_message": "هل أنت متأكد أنك تريد تأكيد هذا الطلب؟",
     "cancel_order_title": "إلغاء الطلب",
-    "cancel_order_message": "هل أنت متأكد أنك تريد إلغاء هذا الطلب؟"
+    "cancel_order_message": "هل أنت متأكد أنك تريد إلغاء هذا الطلب؟",
+    "cancellation_reason": "سبب الإلغاء"
   },
   "proposals": {
     "title": "مراجعة العروض",
