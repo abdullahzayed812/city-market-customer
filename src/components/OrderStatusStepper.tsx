@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Package,
@@ -73,6 +73,19 @@ export const OrderStatusStepper = ({
     step => step.status === effectiveStatus,
   );
 
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.18, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [pulseAnim]);
+
   const renderNode = (index: number) => {
     const step = STATUS_STEPS[index];
     const isCompleted =
@@ -85,21 +98,31 @@ export const OrderStatusStepper = ({
 
     return (
       <View key={step.status} style={styles.nodeContainer}>
-        <View
-          style={[
-            styles.node,
-            isCompleted && styles.nodeCompleted,
-            isActive && styles.nodeActive,
-          ]}
-        >
-          <Icon size={26} color={iconColor} />
-          {isActive &&
-            currentStatus === CustomerOrderStatus.WAITING_CUSTOMER_DECISION && (
+        {isActive ? (
+          <Animated.View
+            style={[
+              styles.node,
+              styles.nodeActive,
+              { transform: [{ scale: pulseAnim }] },
+            ]}
+          >
+            <Icon size={24} color={iconColor} />
+            {currentStatus === CustomerOrderStatus.WAITING_CUSTOMER_DECISION && (
               <View style={styles.alertBadge}>
                 <Text style={styles.alertText}>!</Text>
               </View>
             )}
-        </View>
+          </Animated.View>
+        ) : (
+          <View
+            style={[
+              styles.node,
+              isCompleted && styles.nodeCompleted,
+            ]}
+          >
+            <Icon size={24} color={iconColor} />
+          </View>
+        )}
         <Text
           style={[
             styles.label,

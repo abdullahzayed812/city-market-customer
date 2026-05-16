@@ -1,60 +1,107 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ShoppingBag } from 'lucide-react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { ShoppingCart } from 'lucide-react-native';
 import { theme } from '../../../theme';
+import { useAnimatedPress } from '../../../hooks/useAnimatedPress';
+import { TouchableOpacity } from 'react-native';
 
 interface CartEmptyStateProps {
   t: any;
   onShopPress: () => void;
 }
 
-export const CartEmptyState = ({ t, onShopPress }: CartEmptyStateProps) => (
-  <View style={styles.centered}>
-    <View style={styles.emptyIconContainer}>
-      <ShoppingBag size={80} color={theme.colors.surface} />
-    </View>
-    <Text style={styles.emptyText}>{t('cart.empty')}</Text>
-    <TouchableOpacity
-      style={styles.shopButton}
-      onPress={onShopPress}
+export const CartEmptyState = ({ t, onShopPress }: CartEmptyStateProps) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const iconBounce = useRef(new Animated.Value(0)).current;
+  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.95);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 14, bounciness: 8 }),
+    ]).start(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(iconBounce, { toValue: -10, duration: 700, useNativeDriver: true }),
+          Animated.timing(iconBounce, { toValue: 0, duration: 700, useNativeDriver: true }),
+        ]),
+      ).start();
+    });
+  }, [fadeAnim, slideAnim, iconBounce]);
+
+  return (
+    <Animated.View
+      style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
     >
-      <Text style={styles.shopButtonText}>{t('home.title')}</Text>
-    </TouchableOpacity>
-  </View>
-);
+      <View style={styles.iconCircle}>
+        <Animated.View style={{ transform: [{ translateY: iconBounce }] }}>
+          <ShoppingCart size={56} color={theme.colors.primary} strokeWidth={1.5} />
+        </Animated.View>
+      </View>
+
+      <Text style={styles.title}>{t('cart.empty')}</Text>
+      <Text style={styles.subtitle}>
+        {t('cart.empty_subtitle') || 'Browse stores and add items to get started'}
+      </Text>
+
+      <TouchableOpacity
+        onPress={onShopPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+      >
+        <Animated.View style={[styles.button, { transform: [{ scale: scaleValue }] }]}>
+          <Text style={styles.buttonText}>{t('home.title')}</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    paddingHorizontal: theme.spacing.xl,
   },
-  emptyIconContainer: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: theme.colors.background,
+  iconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: theme.colors.primaryXLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
   },
-  emptyText: {
-    fontSize: theme.typography.sizes.lg,
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    fontSize: 14,
     color: theme.colors.textMuted,
     textAlign: 'center',
+    lineHeight: 20,
     marginBottom: theme.spacing.xl,
+    maxWidth: '80%',
   },
-  shopButton: {
+  button: {
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: theme.radius.md,
-    ...theme.shadows.soft,
+    paddingHorizontal: 36,
+    paddingVertical: 15,
+    borderRadius: theme.radius.xl,
+    ...theme.shadows.medium,
   },
-  shopButtonText: {
+  buttonText: {
     color: theme.colors.white,
-    fontWeight: 'bold',
+    fontWeight: '700',
     fontSize: 16,
+    letterSpacing: -0.2,
   },
 });

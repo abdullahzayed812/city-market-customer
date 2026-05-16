@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -15,7 +16,6 @@ import {
   Clock,
   AlertCircle,
   Star,
-  CheckCircle,
   XCircle,
   Ban,
 } from 'lucide-react-native';
@@ -23,12 +23,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { VendorRatingModal } from '../components/VendorRatingModal';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
-import CustomModal from '../components/common/CustomModal';
 import {
   VendorOrder,
   VendorOrderItem,
   VendorOrderStatus,
-  CustomerOrderStatus,
   OrderItemProposal,
 } from '@city-market/shared';
 import { styles } from './OrderDetailsScreen.styles';
@@ -42,53 +40,17 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     statusConfig,
     date,
     isLoading,
+    refetch,
+    isRefetching,
     fetchedProposals,
     ratingModalVisible,
     setRatingModalVisible,
     selectedVendorForRating,
     handleRateVendor,
     getStatusConfig,
-    handleConfirmOrder,
-    handleCancelOrder,
-    executeConfirmOrder,
-    executeCancelOrder,
-    isConfirming,
-    isCancelling,
-    confirmModalVisible,
-    setConfirmModalVisible,
-    cancelModalVisible,
-    setCancelModalVisible,
+
     t,
   } = useOrderDetails(orderId);
-
-  const [countdown, setCountdown] = useState('');
-  const [isCountdownExpired, setIsCountdownExpired] = useState(false);
-
-  useEffect(() => {
-    if (
-      orderData?.status !== CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION
-    )
-      return;
-    const expiry = orderData?.confirmationExpiry
-      ? new Date(orderData.confirmationExpiry)
-      : null;
-    if (!expiry) return;
-
-    const tick = (intervalRef: ReturnType<typeof setInterval>) => {
-      const diff = Math.max(0, expiry.getTime() - Date.now());
-      const minutes = Math.floor(diff / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-      setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      if (diff === 0) {
-        setIsCountdownExpired(true);
-        clearInterval(intervalRef);
-      }
-    };
-
-    const interval = setInterval(() => tick(interval), 1000);
-    tick(interval);
-    return () => clearInterval(interval);
-  }, [orderData?.status, orderData?.confirmationExpiry]);
 
   if (isLoading) {
     return (
@@ -103,19 +65,26 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
       <View style={styles.container}>
         <View style={styles.header}>
-          <View style={{ width: 40 }} />
-          <Text style={styles.title}>{t('orders.details_title')}</Text>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <ChevronLeft size={24} color={theme.colors.primary} />
+            <ChevronLeft size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
+          <Text style={styles.title}>{t('orders.details_title')}</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={theme.colors.primary}
+            />
+          }
         >
           {/* Status Section */}
           <View style={styles.statusSection}>
@@ -154,57 +123,9 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
               </View>
             </View>
 
-            {orderData?.status ===
-            CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION ? (
-              <View style={styles.confirmationCard}>
-                <Text style={styles.confirmationTitle}>
-                  {t('orders.confirmation_required_title')}
-                </Text>
-                <Text style={styles.confirmationBody}>
-                  {t('orders.confirmation_required_body')}
-                </Text>
-                {countdown ? (
-                  <Text style={styles.countdownText}>
-                    {t('orders.confirmation_expires_in')}: {countdown}
-                  </Text>
-                ) : null}
-
-                {!isCountdownExpired && (
-                  <>
-                    <TouchableOpacity
-                      style={[
-                        styles.confirmButton,
-                        isConfirming && styles.buttonDisabled,
-                      ]}
-                      onPress={handleConfirmOrder}
-                      disabled={isConfirming || isCancelling}
-                    >
-                      <CheckCircle size={18} color={theme.colors.white} />
-                      <Text style={styles.confirmButtonText}>
-                        {t('orders.confirm_order_button')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.cancelConfirmButton,
-                        isCancelling && styles.buttonDisabled,
-                      ]}
-                      onPress={handleCancelOrder}
-                      disabled={isConfirming || isCancelling}
-                    >
-                      <XCircle size={18} color={theme.colors.error} />
-                      <Text style={styles.cancelConfirmButtonText}>
-                        {t('orders.cancel_order_button')}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            ) : (
-              <View style={styles.stepperWrapper}>
-                <OrderStatusStepper currentStatus={orderData?.status} />
-              </View>
-            )}
+            <View style={styles.stepperWrapper}>
+              <OrderStatusStepper currentStatus={orderData?.status} />
+            </View>
 
             {fetchedProposals.length > 0 && (
               <TouchableOpacity
@@ -410,29 +331,6 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             orderId={orderId}
           />
         )}
-
-        <CustomModal
-          visible={confirmModalVisible}
-          onClose={() => setConfirmModalVisible(false)}
-          title={t('orders.confirm_order_title')}
-          message={t('orders.confirm_order_message')}
-          confirmLabel={t('orders.confirm_order_button')}
-          cancelLabel={t('common.cancel')}
-          onConfirm={executeConfirmOrder}
-          loading={isConfirming}
-        />
-
-        <CustomModal
-          visible={cancelModalVisible}
-          onClose={() => setCancelModalVisible(false)}
-          title={t('orders.cancel_order_title')}
-          message={t('orders.cancel_order_message')}
-          confirmLabel={t('orders.cancel_order_button')}
-          cancelLabel={t('common.no')}
-          onConfirm={executeCancelOrder}
-          confirmColor={theme.colors.error}
-          loading={isCancelling}
-        />
       </View>
     </SafeAreaView>
   );

@@ -1,23 +1,93 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   StatusBar,
   TouchableOpacity,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, MapPin, Search } from 'lucide-react-native';
+import { ShoppingCart, MapPin, Search, Zap } from 'lucide-react-native';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHomeData } from '../features/home/hooks/useHomeData';
 import { CategoryItem } from '../features/home/components/CategoryItem';
 import { VendorItem } from '../features/home/components/VendorItem';
 import { useCart } from '../app/CartContext';
+import { HomeScreenSkeleton } from '../components/common/SkeletonLoader';
 
-const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress, itemCount, onCartPress }: any) => (
+const { width } = Dimensions.get('window');
+
+const PromoBanner = React.memo(() => {
+  const { t } = useTranslation();
+  const scaleAnim = useRef(new Animated.Value(0.97)).current;
+
+  React.useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0.97, duration: 1200, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [scaleAnim]);
+
+  return (
+    <Animated.View style={[styles.promoBanner, { transform: [{ scale: scaleAnim }] }]}>
+      <View style={styles.promoContent}>
+        <View style={styles.promoLeft}>
+          <Text style={styles.promoTag}>{t('home.promo_tag')}</Text>
+          <Text style={styles.promoTitle}>{t('home.promo_title')}</Text>
+          <Text style={styles.promoSubtitle}>{t('home.promo_subtitle')}</Text>
+        </View>
+        <View style={styles.promoRight}>
+          <Zap size={48} color="rgba(255,255,255,0.3)" />
+        </View>
+      </View>
+    </Animated.View>
+  );
+});
+
+const CartButton = React.memo(({ itemCount, onPress }: { itemCount: number; onPress: () => void }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const prevCount = useRef(itemCount);
+
+  React.useEffect(() => {
+    if (itemCount !== prevCount.current) {
+      prevCount.current = itemCount;
+      Animated.sequence([
+        Animated.spring(scaleAnim, { toValue: 1.25, useNativeDriver: true, speed: 30, bounciness: 12 }),
+        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
+      ]).start();
+    }
+  }, [itemCount, scaleAnim]);
+
+  return (
+    <TouchableOpacity style={styles.cartButton} onPress={onPress} activeOpacity={0.8}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <ShoppingCart color={theme.colors.primary} size={22} />
+      </Animated.View>
+      {itemCount > 0 && (
+        <View style={styles.cartBadge}>
+          <Text style={styles.cartBadgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+});
+
+const HomeHeader = React.memo(({
+  t,
+  navigation,
+  categories,
+  onCategoryPress,
+  itemCount,
+  onCartPress,
+}: any) => (
   <View style={styles.headerContainer}>
     <View style={styles.headerBar}>
       <View style={styles.locationContainer}>
@@ -27,29 +97,22 @@ const HomeHeader = React.memo(({ t, navigation, categories, onCategoryPress, ite
           <MapPin size={14} color={theme.colors.accent} style={{ marginLeft: 4 }} />
         </View>
       </View>
-      <TouchableOpacity style={styles.cartButton} onPress={onCartPress}>
-        <ShoppingCart color={theme.colors.primary} size={22} />
-        {itemCount > 0 && (
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      <CartButton itemCount={itemCount} onPress={onCartPress} />
     </View>
 
     <TouchableOpacity
       style={styles.searchContainer}
       onPress={() => navigation.navigate('Search')}
-      activeOpacity={0.9}
+      activeOpacity={0.85}
     >
-      <Search color={theme.colors.primary} size={20} />
+      <Search color={theme.colors.primary} size={18} />
       <Text style={styles.searchPlaceholder}>{t('home.search_placeholder')}</Text>
     </TouchableOpacity>
 
+    <PromoBanner />
+
     <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
-      </View>
+      <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -67,48 +130,53 @@ const HomeScreen = ({ navigation }: any) => {
   const { categories, groupedVendors, isLoading } = useHomeData();
   const { itemCount } = useCart();
 
-  const handleCategoryPress = useCallback((id: string) => {
-    navigation.navigate('Search', { categoryId: id });
-  }, [navigation]);
+  const handleCategoryPress = useCallback(
+    (id: string) => navigation.navigate('Search', { categoryId: id }),
+    [navigation],
+  );
 
-  const handleVendorPress = useCallback((id: string) => {
-    navigation.navigate('StoreDetails', { vendorId: id });
-  }, [navigation]);
+  const handleVendorPress = useCallback(
+    (id: string) => navigation.navigate('StoreDetails', { vendorId: id }),
+    [navigation],
+  );
 
-  const handleSeeAllPress = useCallback((type: string) => {
-    navigation.navigate('AllStores', { type });
-  }, [navigation]);
+  const handleSeeAllPress = useCallback(
+    (type: string) => navigation.navigate('AllStores', { type }),
+    [navigation],
+  );
 
-  const handleCartPress = useCallback(() => {
-    navigation.navigate('Cart');
-  }, [navigation]);
+  const handleCartPress = useCallback(() => navigation.navigate('Cart'), [navigation]);
 
-  const renderSection = ({ item }: { item: any }) => (
-    <View style={styles.typeSection}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{t(`home.type_${item.type.toLowerCase()}`)}</Text>
-        <TouchableOpacity onPress={() => handleSeeAllPress(item.type)}>
-          <Text style={styles.seeAll}>{t('common.see_all')}</Text>
-        </TouchableOpacity>
+  const renderSection = useCallback(
+    ({ item }: { item: any }) => (
+      <View style={styles.typeSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t(`home.type_${item.type.toLowerCase()}`)}</Text>
+          <TouchableOpacity onPress={() => handleSeeAllPress(item.type)} activeOpacity={0.7}>
+            <Text style={styles.seeAll}>{t('common.see_all')}</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={item.items}
+          renderItem={({ item: vendor }) => (
+            <VendorItem item={vendor} onPress={handleVendorPress} t={t} />
+          )}
+          keyExtractor={v => v.id}
+          contentContainerStyle={styles.vendorsHorizontalList}
+        />
       </View>
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={item.items}
-        renderItem={({ item: vendor }) => (
-          <VendorItem item={vendor} onPress={handleVendorPress} t={t} />
-        )}
-        keyExtractor={v => v.id}
-        contentContainerStyle={styles.vendorsHorizontalList}
-      />
-    </View>
+    ),
+    [t, handleSeeAllPress, handleVendorPress],
   );
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+        <HomeScreenSkeleton />
+      </SafeAreaView>
     );
   }
 
@@ -137,9 +205,13 @@ const HomeScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerContainer: { paddingBottom: theme.spacing.md },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  headerContainer: {
+    paddingBottom: theme.spacing.sm,
+  },
   headerBar: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
@@ -148,32 +220,54 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  locationContainer: { flex: 1 },
-  welcomeText: { fontSize: 12, color: theme.colors.primary, opacity: 0.7, fontWeight: '500' },
-  logoRow: { flexDirection: 'row', alignItems: 'center' },
-  brandName: { fontSize: 20, fontWeight: 'bold', color: theme.colors.primary },
+  locationContainer: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  brandName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.primary,
+    letterSpacing: -0.5,
+  },
   cartButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: theme.colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.soft,
+    ...theme.shadows.medium,
   },
   cartBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 5,
+    right: 5,
     backgroundColor: theme.colors.accent,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: theme.colors.white,
   },
-  cartBadgeText: { color: theme.colors.white, fontSize: 10, fontWeight: 'bold' },
+  cartBadgeText: {
+    color: theme.colors.white,
+    fontSize: 9,
+    fontWeight: '800',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -181,12 +275,59 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
     height: 50,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     ...theme.shadows.soft,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
-  searchPlaceholder: { marginLeft: theme.spacing.sm, color: theme.colors.textSecondary, fontSize: 14 },
-  section: { marginTop: theme.spacing.xs },
+  searchPlaceholder: {
+    color: theme.colors.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  promoBanner: {
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    borderRadius: theme.radius.xl,
+    backgroundColor: theme.colors.primary,
+    overflow: 'hidden',
+    ...theme.shadows.medium,
+  },
+  promoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+  },
+  promoLeft: {
+    flex: 1,
+  },
+  promoRight: {
+    opacity: 0.8,
+  },
+  promoTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  promoTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.white,
+    letterSpacing: -0.5,
+    marginBottom: 2,
+  },
+  promoSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+  },
+  section: {
+    marginBottom: theme.spacing.sm,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -194,12 +335,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.md,
   },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: theme.colors.primary },
-  categoriesList: { paddingHorizontal: theme.spacing.lg },
-  scrollContent: { paddingBottom: theme.spacing.xl },
-  typeSection: { marginBottom: theme.spacing.lg },
-  seeAll: { fontSize: 14, color: theme.colors.secondary, fontWeight: '600' },
-  vendorsHorizontalList: { paddingHorizontal: theme.spacing.lg },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.2,
+  },
+  seeAll: {
+    fontSize: 13,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  categoriesList: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.xs,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xl,
+  },
+  typeSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  vendorsHorizontalList: {
+    paddingHorizontal: theme.spacing.lg,
+  },
 });
 
 export default HomeScreen;

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../app/AuthContext';
 import { AuthService } from '../services/api/authService';
+import { UserService } from '../services/api/userService';
 
 export const useRegister = (navigation: any) => {
   const { t } = useTranslation();
@@ -10,18 +11,19 @@ export const useRegister = (navigation: any) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    phone: '',
     email: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    const { email, password, firstName, lastName } = formData;
-    if (!email || !password || !firstName || !lastName) {
+    const { email, password, firstName, lastName, phone } = formData;
+    if (!email || !password || !firstName || !lastName || !phone) {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Please fill all fields',
+        text2: t('auth.fill_all_fields') || 'Please fill all fields',
         position: 'top',
       });
       return;
@@ -29,30 +31,34 @@ export const useRegister = (navigation: any) => {
 
     setLoading(true);
     try {
-      const data = await AuthService.register(formData); 
-      
-      if (data?.token && data?.user) {
-          await signIn(data.user, data.token, data.refreshToken);
-          Toast.show({
-            type: 'success',
-            text1: 'Registration Successful',
-            text2: `Welcome, ${firstName}!`,
-            position: 'bottom',
-          });
-      } else {
-          Toast.show({
-            type: 'success',
-            text1: 'Registration Successful',
-            text2: 'Please log in.',
-            position: 'bottom',
-          });
-          navigation.navigate('Login');
+      const data = await AuthService.register({ email, password, role: 'customer' });
+
+      if (data?.accessToken && data?.user) {
+        await signIn(data.user, data.accessToken, data.refreshToken);
+        await UserService.createCustomer({
+          fullName: `${firstName} ${lastName}`,
+          phone,
+        });
+        Toast.show({
+          type: 'success',
+          text1: t('auth.register_success') || 'Registration Successful',
+          text2: `${t('auth.welcome') || 'Welcome'}, ${firstName}!`,
+          position: 'bottom',
+        });
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          navigation.navigate('Main');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Registration failed. Please try again.',
+        text2:
+          error?.response?.data?.message ||
+          t('auth.register_failed') ||
+          'Registration failed. Please try again.',
         position: 'bottom',
       });
     } finally {

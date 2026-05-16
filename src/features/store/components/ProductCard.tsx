@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { Plus } from 'lucide-react-native';
 import { theme } from '../../../theme';
-import { getBaseURL } from '../../../services/api/apiClient';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 import { MeasurementType } from '@city-market/shared';
 
@@ -11,150 +11,162 @@ interface ProductCardProps {
   onAdd: (item: any) => void;
 }
 
-export const ProductCard = React.memo(
-  ({ item, onPress, onAdd }: ProductCardProps) => {
-    const isAvailable = item.isAvailable;
+export const ProductCard = React.memo(({ item, onPress, onAdd }: ProductCardProps) => {
+  const isAvailable = item.isAvailable;
+  const cardScale = useRef(new Animated.Value(1)).current;
+  const addScale = useRef(new Animated.Value(1)).current;
 
-    return (
-      <View style={[styles.productCardWrapper, !isAvailable && styles.disabled]}>
-        <TouchableOpacity
-          style={styles.productCard}
-          onPress={() => onPress(item.id)}
-          activeOpacity={0.9}
-          disabled={!isAvailable}
-        >
+  const handlePressIn = useCallback(() => {
+    if (!isAvailable) return;
+    Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 2 }).start();
+  }, [cardScale, isAvailable]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 4 }).start();
+  }, [cardScale]);
+
+  const handleAdd = useCallback(() => {
+    if (!isAvailable) return;
+    Animated.sequence([
+      Animated.spring(addScale, { toValue: 1.3, useNativeDriver: true, speed: 50, bounciness: 12 }),
+      Animated.spring(addScale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 6 }),
+    ]).start();
+    onAdd(item);
+  }, [addScale, isAvailable, item, onAdd]);
+
+  return (
+    <View style={[styles.wrapper, !isAvailable && styles.disabled]}>
+      <TouchableOpacity
+        onPress={() => isAvailable && onPress(item.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+        disabled={!isAvailable}
+      >
+        <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
           <View style={styles.imageWrapper}>
-            <ImageWithPlaceholder
-              uri={item.imageUrl ? `${getBaseURL()}${item.imageUrl}` : null}
-              style={styles.productImage}
-            />
+            <ImageWithPlaceholder uri={item.imageUrl || null} style={styles.image} />
             {!isAvailable && (
-              <View style={styles.outOfStockBadge}>
+              <View style={styles.outOfStockOverlay}>
                 <Text style={styles.outOfStockText}>Out of Stock</Text>
               </View>
             )}
             <TouchableOpacity
-              style={[styles.addButton, !isAvailable && styles.disabledButton]}
-              onPress={() => isAvailable && onAdd(item)}
-              activeOpacity={0.8}
+              style={styles.addButtonWrapper}
+              onPress={handleAdd}
               disabled={!isAvailable}
+              activeOpacity={0.8}
             >
-              <Text style={styles.addButtonText}>+</Text>
+              <Animated.View
+                style={[
+                  styles.addButton,
+                  !isAvailable && styles.addButtonDisabled,
+                  { transform: [{ scale: addScale }] },
+                ]}
+              >
+                <Plus size={16} color={theme.colors.white} strokeWidth={3} />
+              </Animated.View>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.productInfo}>
-            <Text style={styles.productName} numberOfLines={1}>
+          <View style={styles.info}>
+            <Text style={styles.name} numberOfLines={2}>
               {item.name}
             </Text>
-            <Text style={styles.productDesc} numberOfLines={1}>
-              {item.description?.slice(0, 25)}
-              {'...'}
-            </Text>
-            <View style={styles.priceInfo}>
+            <View style={styles.priceRow}>
+              <Text style={styles.price}>${item.price.toFixed(2)}</Text>
               {item.measurementType === MeasurementType.WEIGHT && (
-                <Text style={styles.unitText}>/kg</Text>
+                <Text style={styles.unit}>/kg</Text>
               )}
-              <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
             </View>
           </View>
-        </TouchableOpacity>
-      </View>
-    );
-  },
-);
+        </Animated.View>
+      </TouchableOpacity>
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
-  productCardWrapper: {
+  wrapper: {
     flex: 1,
     padding: theme.spacing.xs,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.55,
   },
-  outOfStockBadge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  outOfStockText: {
-    color: theme.colors.error,
-    fontWeight: 'bold',
-    fontSize: 12,
-    textTransform: 'uppercase',
-    backgroundColor: 'white',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  disabledButton: {
-    backgroundColor: theme.colors.textMuted,
-  },
-  productCard: {
+  card: {
     backgroundColor: theme.colors.white,
     borderRadius: theme.radius.lg,
-    ...theme.shadows.soft,
     overflow: 'hidden',
+    ...theme.shadows.soft,
   },
   imageWrapper: {
-    height: 120,
+    height: 118,
     width: '100%',
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.borderLight,
   },
-  productImage: {
+  image: {
     height: '100%',
     width: '100%',
   },
-  addButton: {
+  outOfStockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  outOfStockText: {
+    color: theme.colors.error,
+    fontWeight: '800',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    backgroundColor: theme.colors.white,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  addButtonWrapper: {
     position: 'absolute',
     right: 8,
     bottom: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  },
+  addButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.soft,
   },
-  addButtonText: {
-    color: theme.colors.white,
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: -2,
+  addButtonDisabled: {
+    backgroundColor: theme.colors.textMuted,
   },
-  productInfo: {
-    padding: theme.spacing.sm,
+  info: {
+    padding: 10,
+    paddingTop: 8,
   },
-  productName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 2,
+  name: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    marginBottom: 5,
+    lineHeight: 17,
   },
-  productDesc: {
-    fontSize: 11,
-    color: theme.colors.textSecondary,
-    marginBottom: 6,
-  },
-  priceInfo: {
+  priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    gap: 2,
   },
-  productPrice: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.secondary,
+  price: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: theme.colors.primary,
   },
-  unitText: {
+  unit: {
     fontSize: 10,
     color: theme.colors.textMuted,
-    marginRight: 2,
+    fontWeight: '500',
   },
 });

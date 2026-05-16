@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +19,10 @@ import {
   LogOut,
   ChevronRight,
   Phone,
-  Settings,
+  HelpCircle,
+  Shield,
+  LogIn,
+  UserPlus,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,34 +30,80 @@ import { useAuth } from '../app/AuthContext';
 import { UserService } from '../services/api/userService';
 import { AuthService } from '../services/api/authService';
 import { theme } from '../theme';
+import { useAnimatedPress } from '../hooks/useAnimatedPress';
 
-const ProfileMenuItem = ({
+const MenuItem = ({
   icon: Icon,
   label,
   value,
   onPress,
   isLast = false,
   color = theme.colors.primary,
-}: any) => (
-  <TouchableOpacity
-    style={[styles.menuItem, isLast && { borderBottomWidth: 0 }]}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <View style={[styles.menuIconContainer, { backgroundColor: color + '10' }]}>
-      <Icon size={20} color={color} />
+  destructive = false,
+}: any) => {
+  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.98);
+  const iconBg = destructive ? theme.colors.errorLight : color + '15';
+  const labelColor = destructive ? theme.colors.error : theme.colors.textPrimary;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.menuItem,
+          !isLast && styles.menuItemBorder,
+          { transform: [{ scale: scaleValue }] },
+        ]}
+      >
+        <View style={[styles.menuIcon, { backgroundColor: iconBg }]}>
+          <Icon size={19} color={destructive ? theme.colors.error : color} />
+        </View>
+        <View style={styles.menuTextGroup}>
+          <Text style={[styles.menuLabel, { color: labelColor }]}>{label}</Text>
+          {value && <Text style={styles.menuValue}>{value}</Text>}
+        </View>
+        <ChevronRight size={18} color={theme.colors.border} />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+const GuestView = ({ navigation, t }: { navigation: any; t: any }) => {
+  const { scaleValue: ls, onPressIn: li, onPressOut: lo } = useAnimatedPress(0.96);
+  const { scaleValue: rs, onPressIn: ri, onPressOut: ro } = useAnimatedPress(0.96);
+
+  return (
+    <View style={styles.guestContainer}>
+      <View style={styles.guestAvatarCircle}>
+        <User size={40} color={theme.colors.primary} strokeWidth={1.5} />
+      </View>
+      <Text style={styles.guestTitle}>{t('auth.login_required_title') || 'Login Required'}</Text>
+      <Text style={styles.guestMessage}>
+        {t('auth.login_to_view_profile') || 'Login to view and manage your profile'}
+      </Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Login')} onPressIn={li} onPressOut={lo} activeOpacity={1} style={{ width: '100%', marginBottom: theme.spacing.sm }}>
+        <Animated.View style={[styles.guestLoginBtn, { transform: [{ scale: ls }] }]}>
+          <LogIn size={18} color={theme.colors.white} />
+          <Text style={styles.guestLoginBtnText}>{t('common.login') || 'Login'}</Text>
+        </Animated.View>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')} onPressIn={ri} onPressOut={ro} activeOpacity={1} style={{ width: '100%' }}>
+        <Animated.View style={[styles.guestRegBtn, { transform: [{ scale: rs }] }]}>
+          <UserPlus size={18} color={theme.colors.primary} />
+          <Text style={styles.guestRegBtnText}>{t('common.register') || 'Register'}</Text>
+        </Animated.View>
+      </TouchableOpacity>
     </View>
-    <View style={styles.menuContent}>
-      <Text style={styles.menuLabel}>{label}</Text>
-      {value && <Text style={styles.menuValueText}>{value}</Text>}
-    </View>
-    <ChevronRight size={20} color={theme.colors.border} />
-  </TouchableOpacity>
-);
+  );
+};
 
 const ProfileScreen = ({ navigation }: any) => {
   const { t, i18n } = useTranslation();
-  const { signOut } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -61,16 +111,41 @@ const ProfileScreen = ({ navigation }: any) => {
   });
 
   const handleLogout = async () => {
-    try {
-      const refreshToken = await AsyncStorage.getItem('refresh_token');
-      if (refreshToken) {
-        await AuthService.logout(refreshToken);
-      }
-      await signOut();
-    } catch (error) {
-      Alert.alert(t('common.error'), t('common.logout_failed'));
-    }
+    Alert.alert(
+      t('common.logout'),
+      t('common.logout_confirm') || 'Are you sure you want to logout?',
+      [
+        { text: t('common.cancel') || 'Cancel', style: 'cancel' },
+        {
+          text: t('common.logout'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const refreshToken = await AsyncStorage.getItem('refresh_token');
+              if (refreshToken) await AuthService.logout(refreshToken);
+              await signOut();
+            } catch {
+              Alert.alert(t('common.error'), t('common.logout_failed'));
+            }
+          },
+        },
+      ],
+    );
   };
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>{t('profile.title')}</Text>
+          </View>
+          <GuestView navigation={navigation} t={t} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -80,103 +155,89 @@ const ProfileScreen = ({ navigation }: any) => {
     );
   }
 
+  const initials = profile?.fullName?.charAt(0)?.toUpperCase() ?? '?';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
+        {/* Hero Header */}
+        <View style={styles.heroSection}>
+          <View style={styles.avatarWrapper}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {profile?.fullName?.charAt(0)}
-              </Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Settings size={16} color={theme.colors.white} />
-            </TouchableOpacity>
+            <View style={styles.avatarRing} />
           </View>
-          <Text style={styles.name}>{profile?.fullName}</Text>
+          <Text style={styles.heroName}>{profile?.fullName}</Text>
           {profile?.phone && (
-            <View style={styles.emailContainer}>
-              <Phone size={14} color={theme.colors.textMuted} />
-              <Text style={styles.email}>{profile?.phone}</Text>
+            <View style={styles.heroPhone}>
+              <Phone size={13} color={theme.colors.textMuted} />
+              <Text style={styles.heroPhoneText}>{profile.phone}</Text>
             </View>
           )}
         </View>
 
-        {/* Quick Info Group */}
-        <View style={styles.infoGroup}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoCol}>
-              <Text style={styles.infoLabel}>{t('auth.full_name')}</Text>
-              <Text style={styles.infoValue}>
-                {profile?.fullName || t('common.not_set')}
-              </Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoCol}>
-              <Text style={styles.infoLabel}>{t('auth.phone')}</Text>
-              <Text style={styles.infoValue}>
-                {profile?.phone || t('common.not_set')}
-              </Text>
-            </View>
+        {/* Stats card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{profile?.fullName?.split(' ').length ?? 1}</Text>
+            <Text style={styles.statLabel}>{t('auth.full_name')}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{profile?.phone ? '✓' : '—'}</Text>
+            <Text style={styles.statLabel}>{t('auth.phone')}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
+              {i18n.language === 'ar' ? 'ع' : 'En'}
+            </Text>
+            <Text style={styles.statLabel}>{t('profile.language')}</Text>
           </View>
         </View>
 
-        {/* Settings Menu */}
+        {/* Account Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.account_settings')}
-          </Text>
+          <Text style={styles.sectionTitle}>{t('profile.account_settings')}</Text>
           <View style={styles.menuCard}>
-            <ProfileMenuItem
+            <MenuItem
               icon={MapPin}
               label={t('profile.addresses')}
               onPress={() => navigation.navigate('Addresses')}
             />
-            <ProfileMenuItem
+            <MenuItem
               icon={Globe}
               label={t('profile.language')}
               value={i18n.language === 'ar' ? 'العربية' : 'English'}
               onPress={() => navigation.navigate('LanguageSettings')}
-              isLast={true}
+              isLast
             />
           </View>
         </View>
 
-        {/* Support Section (Mock) */}
+        {/* Support */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
           <View style={styles.menuCard}>
-            <ProfileMenuItem
-              icon={Settings}
-              label={t('common.help_center')}
-              onPress={() => {}}
-            />
-            <ProfileMenuItem
-              icon={User}
-              label={t('common.account_privacy')}
-              onPress={() => {}}
-              isLast={true}
-            />
+            <MenuItem icon={HelpCircle} label={t('common.help_center')} onPress={() => {}} />
+            <MenuItem icon={Shield} label={t('common.account_privacy')} onPress={() => {}} isLast />
           </View>
         </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <View
-            style={[
-              styles.menuIconContainer,
-              { backgroundColor: theme.colors.error + '10' },
-            ]}
-          >
-            <LogOut size={20} color={theme.colors.error} />
+        {/* Logout */}
+        <View style={[styles.section, { marginBottom: 48 }]}>
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon={LogOut}
+              label={t('common.logout')}
+              onPress={handleLogout}
+              destructive
+              isLast
+            />
           </View>
-          <Text style={styles.logoutText}>{t('common.logout')}</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -185,103 +246,120 @@ const ProfileScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.white },
   container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  profileHeader: {
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.white,
-    paddingTop: 40,
-    paddingBottom: 30,
-    alignItems: 'center',
-    borderBottomLeftRadius: theme.radius.xl,
-    borderBottomRightRadius: theme.radius.xl,
-    ...theme.shadows.soft,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
-  avatarContainer: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.4,
+  },
+  heroSection: {
+    backgroundColor: theme.colors.white,
+    paddingTop: 32,
+    paddingBottom: 28,
+    alignItems: 'center',
+  },
+  avatarWrapper: {
     position: 'relative',
-    marginBottom: theme.spacing.md,
+    marginBottom: 14,
+  },
+  avatarRing: {
+    position: 'absolute',
+    inset: -4,
+    borderRadius: 58,
+    borderWidth: 2,
+    borderColor: theme.colors.primaryLight,
+    borderStyle: 'dashed',
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.medium,
   },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.secondary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderColor: theme.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+  avatarText: {
+    color: theme.colors.white,
+    fontSize: 36,
+    fontWeight: '800',
   },
-  avatarText: { color: theme.colors.white, fontSize: 40, fontWeight: 'bold' },
-  name: { fontSize: 24, fontWeight: 'bold', color: theme.colors.primary },
-  emailContainer: {
+  heroName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.4,
+    marginBottom: 5,
+  },
+  heroPhone: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    gap: 5,
   },
-  email: { fontSize: 14, color: theme.colors.textMuted, marginLeft: 6 },
-  infoGroup: {
+  heroPhoneText: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    fontWeight: '500',
+  },
+  statsCard: {
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing.lg,
-    marginTop: -20,
-    borderRadius: theme.radius.lg,
+    marginTop: -16,
+    borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
-    ...theme.shadows.medium,
-  },
-  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    ...theme.shadows.medium,
+    marginBottom: theme.spacing.md,
   },
-  infoCol: {
+  statItem: {
     flex: 1,
     alignItems: 'center',
   },
-  infoDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: theme.colors.border,
+  statValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: 3,
   },
-  infoLabel: {
-    fontSize: 10,
+  statLabel: {
+    fontSize: 11,
     color: theme.colors.textMuted,
+    fontWeight: '500',
     textTransform: 'uppercase',
-    marginBottom: 4,
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: theme.colors.border,
   },
   section: {
     paddingHorizontal: theme.spacing.lg,
-    marginTop: 30,
+    marginBottom: theme.spacing.md,
   },
   sectionTitle: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.bold,
+    fontSize: 12,
+    fontWeight: '700',
     color: theme.colors.textMuted,
-    marginBottom: theme.spacing.md,
     textTransform: 'uppercase',
     letterSpacing: 1,
+    marginBottom: 10,
+    marginLeft: 4,
   },
   menuCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.xl,
     overflow: 'hidden',
     ...theme.shadows.soft,
   },
@@ -289,44 +367,93 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: theme.spacing.md,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.background,
+    gap: theme.spacing.md,
   },
-  menuIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderLight,
+  },
+  menuIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
   },
-  menuContent: {
+  menuTextGroup: {
     flex: 1,
   },
   menuLabel: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    color: theme.colors.primary,
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
-  menuValueText: {
-    fontSize: theme.typography.sizes.sm,
+  menuValue: {
+    fontSize: 13,
     color: theme.colors.textMuted,
-    marginTop: 2,
+    marginTop: 1,
+    fontWeight: '500',
   },
-  logoutButton: {
-    flexDirection: 'row',
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    marginHorizontal: theme.spacing.lg,
-    marginTop: 40,
-    padding: theme.spacing.md,
+    padding: theme.spacing.xl,
+  },
+  guestAvatarCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: theme.colors.primaryXLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  guestTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+    letterSpacing: -0.4,
+  },
+  guestMessage: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: theme.spacing.xl,
+  },
+  guestLoginBtn: {
+    height: 52,
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
     ...theme.shadows.soft,
   },
-  logoutText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.error,
+  guestLoginBtnText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  guestRegBtn: {
+    height: 52,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radius.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+  },
+  guestRegBtnText: {
+    color: theme.colors.primary,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

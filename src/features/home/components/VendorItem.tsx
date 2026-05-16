@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   TouchableOpacity,
   View,
   Text,
   StyleSheet,
   Dimensions,
+  Animated,
 } from 'react-native';
-import { Star } from 'lucide-react-native';
+import { Star, Clock } from 'lucide-react-native';
 import { theme } from '../../../theme';
-import { getBaseURL } from '../../../services/api/apiClient';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 
 const { width } = Dimensions.get('window');
-const VENDOR_CARD_WIDTH = width * 0.44;
+const VENDOR_CARD_WIDTH = width * 0.46;
 
 enum VendorStatus {
   OPEN = 'OPEN',
@@ -25,129 +25,150 @@ interface VendorItemProps {
   style?: any;
 }
 
-export const VendorItem = React.memo(
-  ({ item, onPress, t, style }: VendorItemProps) => (
-    <TouchableOpacity
-      style={[styles.vendorCard, style]}
-      onPress={() => onPress(item.id)}
-      activeOpacity={0.95}
-    >
-      <View style={styles.vendorImageContainer}>
-        <ImageWithPlaceholder
-          uri={item.storeImage ? `${getBaseURL()}${item.storeImage}` : null}
-          style={styles.vendorImage}
-        />
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor:
-                item.status === VendorStatus.OPEN
-                  ? theme.colors.success
-                  : theme.colors.error,
-            },
-          ]}
-        >
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>
-            {item.status === VendorStatus.OPEN
-              ? t('home.open')
-              : t('home.closed')}
-          </Text>
-        </View>
-      </View>
+export const VendorItem = React.memo(({ item, onPress, t, style }: VendorItemProps) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const isOpen = item.status === VendorStatus.OPEN;
 
-      <View style={styles.vendorInfo}>
-        <Text style={styles.vendorName} numberOfLines={1}>
-          {item.shopName}
-        </Text>
-        <View style={styles.vendorMeta}>
-          <View style={styles.ratingContainer}>
-            <Star
-              size={12}
-              color={theme.colors.accent}
-              fill={theme.colors.accent}
-            />
-            <Text style={styles.ratingText}>{item.averageRating}</Text>
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 2,
+    }).start();
+  }, [scale]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 4,
+    }).start();
+  }, [scale]);
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(item.id)}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View style={[styles.vendorCard, style, { transform: [{ scale }] }]}>
+        <View style={styles.imageContainer}>
+          <ImageWithPlaceholder uri={item.storeImage || null} style={styles.vendorImage} />
+          <View style={styles.imageGradient} />
+          <View style={[styles.statusBadge, { backgroundColor: isOpen ? theme.colors.success : theme.colors.error }]}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>
+              {isOpen ? t('home.open') : t('home.closed')}
+            </Text>
           </View>
-          <Text style={styles.vendorAddress} numberOfLines={1}>
-            {item.address?.split(',')[0]}
-          </Text>
+          {item.averageRating > 0 && (
+            <View style={styles.ratingOverlay}>
+              <Star size={10} color={theme.colors.accent} fill={theme.colors.accent} />
+              <Text style={styles.ratingOverlayText}>{item.averageRating}</Text>
+            </View>
+          )}
         </View>
-      </View>
+
+        <View style={styles.infoContainer}>
+          <Text style={styles.vendorName} numberOfLines={1}>
+            {item.shopName}
+          </Text>
+          <View style={styles.metaRow}>
+            <Clock size={11} color={theme.colors.textMuted} />
+            <Text style={styles.metaText} numberOfLines={1}>
+              {item.address?.split(',')[0]}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
-  ),
-);
+  );
+});
 
 const styles = StyleSheet.create({
   vendorCard: {
     width: VENDOR_CARD_WIDTH,
     marginRight: theme.spacing.md,
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
     marginBottom: theme.spacing.xs,
-    ...theme.shadows.soft,
+    ...theme.shadows.medium,
   },
-  vendorImageContainer: {
-    height: 120,
+  imageContainer: {
+    height: 130,
     width: '100%',
+    backgroundColor: theme.colors.border,
   },
   vendorImage: {
     height: '100%',
     width: '100%',
   },
+  imageGradient: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
   statusBadge: {
     position: 'absolute',
     top: 8,
-    right: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    left: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
   statusDot: {
-    width: 6,
-    height: 6,
+    width: 5,
+    height: 5,
     borderRadius: 3,
     backgroundColor: theme.colors.white,
-    marginRight: 4,
+    marginRight: 3,
   },
   statusText: {
     color: theme.colors.white,
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  vendorInfo: {
-    padding: theme.spacing.sm,
+  ratingOverlay: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 3,
+  },
+  ratingOverlayText: {
+    color: theme.colors.white,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  infoContainer: {
+    padding: 10,
   },
   vendorName: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
     marginBottom: 4,
+    letterSpacing: -0.2,
   },
-  vendorMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ratingContainer: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
-  ratingText: {
+  metaText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-    marginLeft: 2,
-  },
-  vendorAddress: {
-    fontSize: 11,
-    color: theme.colors.textSecondary,
+    color: theme.colors.textMuted,
     flex: 1,
-    textAlign: 'right',
-    marginLeft: 8,
+    fontWeight: '500',
   },
 });

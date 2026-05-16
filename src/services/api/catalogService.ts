@@ -38,10 +38,10 @@ export const CatalogService = {
     );
     return response.data?.data;
   },
-  getVendorProductsByVendor: async (vendorId: string, page: number = 1, limit: number = 20) => {
+  getVendorProductsByVendor: async (vendorId: string, page: number = 1, limit: number = 20, vendorCategoryId?: string) => {
     const response = await apiClient.get<ApiResponse<{ data: VendorProduct[]; total: number; page: number; limit: number }>>(
       `/catalog/products/vendor/${vendorId}`,
-      { params: { page, limit } }
+      { params: { page, limit, ...(vendorCategoryId ? { vendorCategoryId } : {}) } }
     );
     return response.data?.data;
   },

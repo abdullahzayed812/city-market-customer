@@ -16,21 +16,33 @@ export const useOrderDetails = (orderId: string) => {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
-  const [selectedVendorForRating, setSelectedVendorForRating] = useState<any>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [selectedVendorForRating, setSelectedVendorForRating] =
+    useState<any>(null);
 
-  const { data: order, isLoading } = useQuery<OrderWithItems | undefined>({
+  const {
+    data: order,
+    isLoading,
+    refetch: refetchOrder,
+    isRefetching: isRefetchingOrder,
+  } = useQuery<OrderWithItems | undefined>({
     queryKey: ['order', orderId],
     queryFn: () => OrderService.getOrderById(orderId),
   });
 
-  const { data: fetchedProposals = [], isLoading: isLoadingProposals } = useQuery({
+  const {
+    data: fetchedProposals = [],
+    isLoading: isLoadingProposals,
+    refetch: refetchProposals,
+    isRefetching: isRefetchingProposals,
+  } = useQuery({
     queryKey: ['order-proposals', orderId],
     queryFn: () => OrderService.getOrderProposals(orderId),
   });
+
+  const refetch = useCallback(() => {
+    refetchOrder();
+    refetchProposals();
+  }, [refetchOrder, refetchProposals]);
 
   const handleUpdate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -39,7 +51,7 @@ export const useOrderDetails = (orderId: string) => {
 
   const socketEvents = useMemo(
     () => [
-      EventType.ORDER_AWAITING_CUSTOMER_CONFIRMATION,
+      // EventType.ORDER_AWAITING_CUSTOMER_CONFIRMATION,
       EventType.VENDOR_ORDER_PROPOSED,
       EventType.ORDER_CREATED,
       EventType.ORDER_CONFIRMED,
@@ -118,53 +130,20 @@ export const useOrderDetails = (orderId: string) => {
     setRatingModalVisible(true);
   };
 
-  const handleConfirmOrder = () => setConfirmModalVisible(true);
-  const handleCancelOrder = () => setCancelModalVisible(true);
-
-  const executeConfirmOrder = async () => {
-    setIsConfirming(true);
-    try {
-      await OrderService.confirmOrder(orderId);
-      setConfirmModalVisible(false);
-      handleUpdate();
-    } finally {
-      setIsConfirming(false);
-    }
-  };
-
-  const executeCancelOrder = async () => {
-    setIsCancelling(true);
-    try {
-      await OrderService.cancelOrderBeforeConfirmation(orderId);
-      setCancelModalVisible(false);
-      handleUpdate();
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
   return {
     orderData,
     vendorOrders,
     statusConfig,
     date,
     isLoading: isLoading || isLoadingProposals,
+    refetch,
+    isRefetching: isRefetchingOrder || isRefetchingProposals,
     fetchedProposals,
     ratingModalVisible,
     setRatingModalVisible,
     selectedVendorForRating,
     handleRateVendor,
     getStatusConfig,
-    handleConfirmOrder,
-    handleCancelOrder,
-    executeConfirmOrder,
-    executeCancelOrder,
-    isConfirming,
-    isCancelling,
-    confirmModalVisible,
-    setConfirmModalVisible,
-    cancelModalVisible,
-    setCancelModalVisible,
     t,
   };
 };

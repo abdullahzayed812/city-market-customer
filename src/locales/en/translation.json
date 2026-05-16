@@ -36,7 +36,10 @@
     "no_results": "No results found",
     "minutes": "min",
     "kg": "kg",
-    "gram": "g"
+    "gram": "g",
+    "free": "Free",
+    "vendor": "Vendor",
+    "logout_confirm": "Are you sure you want to logout?"
   },
   "auth": {
     "login_title": "Welcome Back",
@@ -57,7 +60,15 @@
     "already_have_account": "Already have an account? Login",
     "dont_have_account": "Don't have an account? Register",
     "login_subtitle": "Sign in to continue to CityMarket",
-    "register_subtitle": "Create an account to start shopping"
+    "register_subtitle": "Create an account to start shopping",
+    "login_required_title": "Login Required",
+    "login_required_message": "Please login or create an account to place your order",
+    "login_to_view_orders": "Login to view and track your orders",
+    "login_to_view_profile": "Login to view and manage your profile",
+    "fill_all_fields": "Please fill all fields",
+    "register_success": "Registration Successful",
+    "register_failed": "Registration failed. Please try again.",
+    "welcome": "Welcome"
   },
   "home": {
     "title": "Home",
@@ -68,6 +79,9 @@
     "closed": "Closed",
     "welcome": "Welcome to",
     "brand": "CityMarket",
+    "promo_tag": "Limited Offer",
+    "promo_title": "Free Delivery",
+    "promo_subtitle": "On your first order",
     "type_supermarket": "Supermarket",
     "type_pharmacy": "Pharmacy",
     "type_butcher": "Butcher",
@@ -89,7 +103,14 @@
     "info": "Store Info",
     "reviews": "Reviews",
     "no_reviews": "No reviews yet for this store",
-    "view_reviews": "View all reviews"
+    "view_reviews": "View all reviews",
+    "no_products": "No products available",
+    "product_unavailable": "This product is currently unavailable",
+    "load_more": "Load more",
+    "categories": "Categories",
+    "no_categories": "No categories available",
+    "low_stock": "Low Stock",
+    "no_comment": "No comment"
   },
   "product": {
     "in_stock": "In Stock",
@@ -100,6 +121,7 @@
   "cart": {
     "title": "Shopping Cart",
     "empty": "Your cart is empty",
+    "empty_subtitle": "Browse stores and add items to get started",
     "total": "Total",
     "subtotal": "Subtotal",
     "checkout": "Checkout",
@@ -130,6 +152,7 @@
     "track": "Track Order",
     "details_title": "Order Details",
     "no_orders": "No orders found",
+    "no_orders_hint": "Your order history will appear here",
     "payment_summary": "Payment Summary",
     "total_amount": "Total Amount",
     "status_draft": "Draft",
@@ -207,6 +230,7 @@
   },
   "addresses": {
     "no_addresses": "No addresses saved",
+    "add_hint": "Add a delivery address to continue",
     "add_new": "Add New Address",
     "address_added": "Address Added",
     "address_saved": "Your new address has been saved",
@@ -216,6 +240,7 @@
     "placeholder_address": "Enter full address"
   },
   "rating": {
+    "rate_vendor": "Rate your experience with",
     "rate_vendor_title": "Rate Vendor",
     "rate_experience": "Rate Experience",
     "select_stars": "Please select at least one star",

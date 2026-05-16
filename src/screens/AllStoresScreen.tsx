@@ -49,17 +49,17 @@ const AllStoresScreen = ({ route, navigation }: any) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.navigate('Search')}
-          style={styles.searchButton}
-        >
-          <Search size={22} color={theme.colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <ArrowLeft size={24} color={theme.colors.primary} />
+          <ArrowLeft size={24} color={theme.colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{title}</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Search')}
+          style={styles.searchButton}
+        >
+          <Search size={22} color={theme.colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -98,26 +98,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.white,
-    ...theme.shadows.soft,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   backButton: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
     flex: 1,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   searchButton: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   listContent: {
     padding: theme.spacing.lg,

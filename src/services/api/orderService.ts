@@ -4,7 +4,6 @@ import {
   CreateOrderDto,
   CustomerOrder,
   OrderWithItems,
-  CustomerOrderStatus,
 } from '@city-market/shared';
 
 export const OrderService = {
@@ -24,11 +23,11 @@ export const OrderService = {
     );
     return response.data?.data?.deliveryFee;
   },
-  getMyOrders: async () => {
-    const response = await apiClient.get<ApiResponse<CustomerOrder[]>>(
-      '/orders/customer-orders',
-    ); // Corrected endpoint
-    return response.data?.data;
+  getMyOrders: async (page: number) => {
+    const response = await apiClient.get<
+      ApiResponse<{ items: CustomerOrder[]; hasNextPage: boolean }>
+    >('/orders/customer-orders', { params: { page, limit: 20 } });
+    return response.data.data!;
   },
   getOrderById: async (id: string) => {
     const response = await apiClient.get<ApiResponse<OrderWithItems>>(
@@ -39,25 +38,6 @@ export const OrderService = {
   getOrderProposals: async (id: string) => {
     const response = await apiClient.get<ApiResponse<any>>(
       `/orders/customer-orders/${id}/proposals`,
-    );
-    return response.data?.data;
-  },
-  confirmOrder: async (id: string) => {
-    const response = await apiClient.post<ApiResponse<null>>(
-      `/orders/customer-orders/${id}/confirm`,
-    );
-    return response.data?.data;
-  },
-  cancelOrderBeforeConfirmation: async (id: string) => {
-    const response = await apiClient.post<ApiResponse<null>>(
-      `/orders/customer-orders/${id}/cancel`,
-    );
-    return response.data?.data;
-  },
-  cancelOrder: async (id: string) => {
-    const response = await apiClient.put<ApiResponse<null>>(
-      `/orders/${id}/status`,
-      { status: CustomerOrderStatus.CANCELLED },
     );
     return response.data?.data;
   },

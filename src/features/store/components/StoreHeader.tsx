@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronLeft, Star, MapPin } from 'lucide-react-native';
+import { ChevronLeft, Star, MapPin, MessageSquare } from 'lucide-react-native';
 import { theme } from '../../../theme';
 
 interface StoreHeaderProps {
@@ -10,78 +10,72 @@ interface StoreHeaderProps {
   insets: any;
 }
 
-export const StoreHeader = React.memo(
-  ({ t, vendor, navigation, insets }: StoreHeaderProps) => (
-    <View>
-      <View style={{ height: 220 + insets.top }}>
+export const StoreHeader = React.memo(({ t, vendor, navigation, insets }: StoreHeaderProps) => (
+  <View>
+    {/* Spacer that matches hero height */}
+    <View style={{ height: 220 + insets.top }}>
+      <TouchableOpacity
+        style={[styles.backButton, { top: insets.top + 12 }]}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.8}
+      >
+        <ChevronLeft color={theme.colors.white} size={24} />
+      </TouchableOpacity>
+    </View>
+
+    <View style={styles.infoCard}>
+      <View style={styles.titleRow}>
+        <Text style={styles.shopName} numberOfLines={1}>{vendor?.shopName}</Text>
+        <View style={styles.ratingBadge}>
+          <Star size={12} color={theme.colors.accent} fill={theme.colors.accent} />
+          <Text style={styles.ratingValue}>{vendor?.averageRating?.toFixed(1) ?? '0.0'}</Text>
+        </View>
+      </View>
+
+      {vendor?.shopDescription ? (
+        <Text style={styles.description} numberOfLines={2}>{vendor.shopDescription}</Text>
+      ) : null}
+
+      <View style={styles.divider} />
+
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <MapPin size={13} color={theme.colors.textMuted} />
+          <Text style={styles.metaText} numberOfLines={1}>
+            {vendor?.address?.split(',')[0]}
+          </Text>
+        </View>
         <TouchableOpacity
-          style={[styles.backButton, { top: insets.top + 10 }]}
-          onPress={() => navigation.goBack()}
+          style={styles.reviewsBtn}
+          onPress={() => navigation.navigate('VendorReviews', { vendorId: vendor?.id })}
         >
-          <ChevronLeft color={theme.colors.white} size={24} />
+          <MessageSquare size={13} color={theme.colors.primary} />
+          <Text style={styles.reviewsBtnText}>
+            {vendor?.totalRatings ?? 0} {t('store.reviews')}
+          </Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.infoCard}>
-        <View style={styles.titleRow}>
-          <Text style={styles.shopName}>{vendor?.shopName}</Text>
-          <View style={styles.ratingBadge}>
-            <Star
-              size={12}
-              color={theme.colors.primary}
-              fill={theme.colors.accent}
-            />
-            <Text style={styles.ratingValue}>
-              {vendor?.averageRating?.toFixed(1) || '0.0'}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={styles.shopDescription}>{vendor?.shopDescription}</Text>
-
-        <View style={styles.divider} />
-
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <MapPin size={14} color={theme.colors.accent} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              {vendor?.address?.split(',')[0]}
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={styles.metaItem}
-            onPress={() =>
-              navigation.navigate('VendorReviews', { vendorId: vendor?.id })
-            }
-          >
-            <Star size={14} color={theme.colors.accent} />
-            <Text style={styles.metaText}>
-              {vendor?.totalRatings || 0} {t('store.reviews')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </View>
-  ),
-);
+  </View>
+));
 
 const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
-    right: 20,
+    left: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
   infoCard: {
     backgroundColor: theme.colors.white,
-    marginHorizontal: theme.spacing.lg,
-    marginTop: -theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    marginHorizontal: 16,
+    marginTop: -20,
+    marginBottom: 8,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     ...theme.shadows.medium,
@@ -90,38 +84,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 6,
   },
   shopName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
     flex: 1,
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.4,
+    marginRight: 10,
   },
   ratingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 8,
+    gap: 4,
+    backgroundColor: theme.colors.accentLight,
+    paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: theme.radius.pill,
   },
   ratingValue: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginLeft: 4,
+    fontWeight: '700',
+    color: '#92400E',
   },
-  shopDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: 20,
+  description: {
+    fontSize: 13,
+    color: theme.colors.textMuted,
+    lineHeight: 19,
+    marginBottom: 14,
+    fontWeight: '400',
   },
   divider: {
     height: 1,
     backgroundColor: theme.colors.border,
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   metaRow: {
     flexDirection: 'row',
@@ -131,12 +128,27 @@ const styles = StyleSheet.create({
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
     flex: 1,
   },
   metaText: {
-    fontSize: 13,
-    color: theme.colors.primary,
-    marginLeft: 6,
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    flex: 1,
     fontWeight: '500',
+  },
+  reviewsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: theme.colors.primaryXLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: theme.radius.pill,
+  },
+  reviewsBtnText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontWeight: '700',
   },
 });

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Image, View, StyleSheet, ImageStyle, ViewStyle } from 'react-native';
-import { Package } from 'lucide-react-native';
+import { Image, View, StyleSheet, ImageStyle, ViewStyle, Animated } from 'react-native';
+import { ImageOff } from 'lucide-react-native';
 import { theme } from '../../theme';
+import { useShimmer } from '../../hooks/useShimmer';
 
 interface Props {
   uri: string | null | undefined;
@@ -10,38 +11,51 @@ interface Props {
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
 }
 
-const ImageWithPlaceholder = ({
-  uri,
-  style,
-  placeholderStyle,
-  resizeMode = 'cover',
-}: Props) => {
+const ShimmerView = ({ style }: { style?: any }) => {
+  const { opacity } = useShimmer();
+  return <Animated.View style={[styles.shimmer, style, { opacity }]} />;
+};
+
+const ImageWithPlaceholder = ({ uri, style, placeholderStyle, resizeMode = 'cover' }: Props) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
   if (!uri || hasError) {
     return (
       <View style={[styles.placeholder, style, placeholderStyle]}>
-        <Package size={24} color={theme.colors.textMuted} />
+        <ImageOff size={22} color={theme.colors.border} />
       </View>
     );
   }
 
   return (
-    <Image
-      source={{ uri }}
-      style={style}
-      resizeMode={resizeMode}
-      onError={() => setHasError(true)}
-    />
+    <View style={[style as any]}>
+      {isLoading && <ShimmerView style={StyleSheet.absoluteFill} />}
+      <Image
+        source={{ uri }}
+        style={[style, isLoading && styles.hidden]}
+        resizeMode={resizeMode}
+        onLoad={() => setIsLoading(false)}
+        onError={() => { setHasError(true); setIsLoading(false); }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   placeholder: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: theme.colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  shimmer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: theme.colors.border,
+    zIndex: 1,
+  },
+  hidden: {
+    opacity: 0,
+  },
 });
 
-export default ImageWithPlaceholder;
+export default React.memo(ImageWithPlaceholder);

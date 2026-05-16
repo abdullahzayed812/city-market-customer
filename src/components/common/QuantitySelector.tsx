@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Minus, Plus } from 'lucide-react-native';
 import { theme } from '../../theme';
 
@@ -12,6 +12,47 @@ interface QuantitySelectorProps {
   displayValue?: string;
 }
 
+const AnimatedIconButton = ({
+  onPress,
+  disabled,
+  children,
+}: {
+  onPress: () => void;
+  disabled: boolean;
+  children: React.ReactNode;
+}) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    if (disabled) return;
+    Animated.spring(scale, { toValue: 0.82, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+  }, [scale, disabled]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 6 }).start();
+  }, [scale]);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.button,
+          disabled && styles.buttonDisabled,
+          { transform: [{ scale }] },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   quantity,
   onIncrement,
@@ -20,49 +61,22 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   minQuantity = 1,
   displayValue,
 }) => {
+  const isDecrDisabled = quantity <= minQuantity;
+  const isIncrDisabled = maxQuantity !== undefined && quantity >= maxQuantity;
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={[
-          styles.button,
-          quantity <= minQuantity && styles.disabledButton,
-        ]}
-        onPress={onDecrement}
-        disabled={quantity <= minQuantity}
-      >
-        <Minus
-          size={20}
-          color={
-            quantity <= minQuantity
-              ? theme.colors.textMuted
-              : theme.colors.primary
-          }
-        />
-      </TouchableOpacity>
+      <AnimatedIconButton onPress={onDecrement} disabled={isDecrDisabled}>
+        <Minus size={16} color={isDecrDisabled ? theme.colors.textMuted : theme.colors.primary} strokeWidth={2.5} />
+      </AnimatedIconButton>
 
-      <View style={styles.quantityContainer}>
-        <Text style={styles.quantityText}>{displayValue || quantity}</Text>
+      <View style={styles.valueContainer}>
+        <Text style={styles.valueText}>{displayValue ?? quantity}</Text>
       </View>
 
-      <TouchableOpacity
-        style={[
-          styles.button,
-          maxQuantity !== undefined &&
-            quantity >= maxQuantity &&
-            styles.disabledButton,
-        ]}
-        onPress={onIncrement}
-        disabled={maxQuantity !== undefined && quantity >= maxQuantity}
-      >
-        <Plus
-          size={20}
-          color={
-            maxQuantity !== undefined && quantity >= maxQuantity
-              ? theme.colors.textMuted
-              : theme.colors.primary
-          }
-        />
-      </TouchableOpacity>
+      <AnimatedIconButton onPress={onIncrement} disabled={isIncrDisabled}>
+        <Plus size={16} color={isIncrDisabled ? theme.colors.textMuted : theme.colors.primary} strokeWidth={2.5} />
+      </AnimatedIconButton>
     </View>
   );
 };
@@ -71,35 +85,34 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.primaryXLight,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: 2,
-    // flex: 1,
-    // maxWidth: 140,
-    // minWidth: 80,
-    justifyContent: 'space-between',
+    padding: 3,
+    gap: 2,
   },
   button: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.background,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: theme.colors.white,
     justifyContent: 'center',
     alignItems: 'center',
+    ...theme.shadows.soft,
   },
-  disabledButton: {
-    opacity: 0.5,
+  buttonDisabled: {
+    backgroundColor: theme.colors.borderLight,
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  quantityContainer: {
-    // flex: 1,
+  valueContainer: {
+    minWidth: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 2,
   },
-  quantityText: {
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.bold,
+  valueText: {
+    fontSize: 14,
+    fontWeight: '800',
     color: theme.colors.primary,
   },
 });

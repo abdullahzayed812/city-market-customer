@@ -1,18 +1,27 @@
 export const colors = {
-    primary: '#10B981',      // Vibrant Emerald
-    primaryDark: '#059669',  // Emerald-600
-    primaryLight: '#D1FAE5', // Emerald-100
-    secondary: '#4B5563',    // Slate-600
-    background: '#F9FAFB',   // Gray-50
-    surface: '#FFFFFF',      // White
-    textPrimary: '#111827',  // Gray-900 (High contrast text)
-    textSecondary: '#4B5563',// Slate-600
-    textMuted: '#9CA3AF',    // Gray-400
-    accent: '#F59E0B',       // Amber-500
-    white: '#FFFFFF',
-    black: '#000000',
-    error: '#EF4444',
-    success: '#10B981',
-    cardBackground: '#FFFFFF',
-    border: '#E5E7EB',       // Gray-200
+  primary: '#10B981',
+  primaryDark: '#059669',
+  primaryLight: '#D1FAE5',
+  primaryXLight: '#ECFDF5',
+  secondary: '#4B5563',
+  background: '#F3F4F6',
+  surface: '#FFFFFF',
+  textPrimary: '#111827',
+  textSecondary: '#4B5563',
+  textMuted: '#9CA3AF',
+  accent: '#F59E0B',
+  accentLight: '#FEF3C7',
+  white: '#FFFFFF',
+  black: '#000000',
+  error: '#EF4444',
+  errorLight: '#FEF2F2',
+  success: '#10B981',
+  successLight: '#ECFDF5',
+  warning: '#F59E0B',
+  warningLight: '#FFFBEB',
+  cardBackground: '#FFFFFF',
+  border: '#E5E7EB',
+  borderLight: '#F3F4F6',
+  overlay: 'rgba(0,0,0,0.45)',
+  overlayLight: 'rgba(0,0,0,0.2)',
 };

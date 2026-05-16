@@ -330,11 +330,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: theme.colors.primary,
-    marginBottom: 8,
-    marginLeft: 4,
+    color: theme.colors.textSecondary,
+    marginBottom: 6,
+    marginLeft: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   inputField: {
     flexDirection: 'row',
@@ -353,8 +355,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 16,
-    color: theme.colors.primary,
+    fontSize: 15,
+    color: theme.colors.textPrimary,
     fontWeight: '500',
   },
   forgotPassword: {

@@ -18,6 +18,7 @@ import {
   UserPlus,
   ChevronLeft,
   ArrowRight,
+  Phone,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -109,6 +110,27 @@ const RegisterScreen = ({ navigation }: any) => {
                     placeholderTextColor={theme.colors.textMuted}
                   />
                 </View>
+              </View>
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>
+                {t('auth.phone') || 'Phone Number'}
+              </Text>
+              <View style={styles.inputField}>
+                <Phone
+                  size={20}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="+966 5X XXX XXXX"
+                  value={formData.phone}
+                  onChangeText={text => updateFormData('phone', text)}
+                  keyboardType="phone-pad"
+                  placeholderTextColor={theme.colors.textMuted}
+                />
               </View>
             </View>
 
@@ -256,11 +278,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: theme.colors.primary,
-    marginBottom: 8,
-    marginLeft: 4,
+    color: theme.colors.textSecondary,
+    marginBottom: 6,
+    marginLeft: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   inputField: {
     flexDirection: 'row',
@@ -279,8 +303,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 16,
-    color: theme.colors.primary,
+    fontSize: 15,
+    color: theme.colors.textPrimary,
     fontWeight: '500',
   },
   registerButton: {

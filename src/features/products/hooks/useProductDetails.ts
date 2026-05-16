@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { CatalogService } from '../../../services/api/catalogService';
 import { useCart } from '../../../app/CartContext';
-import { getBaseURL } from '../../../services/api/apiClient';
 import Toast from 'react-native-toast-message';
 import { MeasurementType } from '@city-market/shared';
 
@@ -69,9 +68,7 @@ export const useProductDetails = (productId: string, navigation: any) => {
     navigation.goBack();
   }, [product, isWeight, amount, addToCart, t, navigation]);
 
-  const imageUrl = useMemo(() => product?.imageUrl
-    ? `${getBaseURL()}${product.imageUrl}`
-    : 'https://via.placeholder.com/400', [product?.imageUrl]);
+  const imageUrl = useMemo(() => product?.imageUrl || 'https://via.placeholder.com/400', [product?.imageUrl]);
 
   const stockAvailable = useMemo(() => {
       if (!product) return false;

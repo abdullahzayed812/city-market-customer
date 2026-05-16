@@ -1,17 +1,27 @@
-import React from 'react';
-import { Image, StyleSheet, Dimensions, StatusBar } from 'react-native';
-import { colors } from '../theme';
+import React, { useRef, useEffect } from 'react';
+import { StyleSheet, Dimensions, StatusBar, Animated } from 'react-native';
 import { View } from 'react-native';
+import { colors } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 
 const SplashScreen = () => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor={colors.background} />
-      <Image
+      <StatusBar backgroundColor={colors.background} barStyle="dark-content" />
+      <Animated.Image
         source={require('../../assets/images/splash.png')}
-        style={styles.backgroundImage}
+        style={[styles.backgroundImage, { opacity: fadeAnim }]}
         resizeMode="cover"
       />
     </View>
@@ -24,13 +34,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   backgroundImage: {
-    width: width,
-    height: height,
+    width,
+    height,
     position: 'absolute',
-  },
-  icon: {
-    width: 150,
-    height: 150,
   },
 });
 

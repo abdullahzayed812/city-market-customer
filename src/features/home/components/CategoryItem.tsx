@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import { Animated, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../../theme';
-import { getBaseURL } from '../../../services/api/apiClient';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 
 interface CategoryItemProps {
@@ -9,52 +8,79 @@ interface CategoryItemProps {
   onPress: (id: string) => void;
 }
 
-export const CategoryItem = React.memo(({ item, onPress }: CategoryItemProps) => (
-  <TouchableOpacity
-    style={styles.categoryCard}
-    onPress={() => onPress(item.id)}
-    activeOpacity={0.7}
-  >
-    <View
-      style={[
-        styles.categoryIconContainer,
-        { backgroundColor: (item.color || theme.colors.surface) + '33' },
-      ]}
+export const CategoryItem = React.memo(({ item, onPress }: CategoryItemProps) => {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scale, {
+      toValue: 0.88,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 4,
+    }).start();
+  }, [scale]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  }, [scale]);
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(item.id)}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      style={styles.wrapper}
     >
-      <ImageWithPlaceholder
-        uri={item.iconUrl ? `${getBaseURL()}${item.iconUrl}` : null}
-        style={styles.categoryIcon}
-        resizeMode="contain"
-      />
-    </View>
-    <Text style={styles.categoryName} numberOfLines={1}>
-      {item.name}
-    </Text>
-  </TouchableOpacity>
-));
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: (item.color || theme.colors.primary) + '18' },
+          ]}
+        >
+          <ImageWithPlaceholder
+            uri={item.iconUrl || null}
+            style={styles.icon}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.name} numberOfLines={1}>
+          {item.name}
+        </Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+});
 
 const styles = StyleSheet.create({
-  categoryCard: {
+  wrapper: {
     alignItems: 'center',
     marginRight: theme.spacing.md,
-    width: 70,
+    width: 72,
   },
-  categoryIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 6,
   },
-  categoryIcon: {
-    width: 34,
-    height: 34,
+  icon: {
+    width: 36,
+    height: 36,
   },
-  categoryName: {
-    fontSize: 12,
-    color: theme.colors.primary,
-    fontWeight: '500',
+  name: {
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    fontWeight: '600',
     textAlign: 'center',
+    lineHeight: 15,
   },
 });

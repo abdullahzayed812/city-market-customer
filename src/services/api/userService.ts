@@ -2,6 +2,10 @@ import apiClient from './apiClient';
 import { ApiResponse, Customer, UpdateCustomerDto, Address, CreateAddressDto, RegisterDeviceDto } from '@city-market/shared';
 
 export const UserService = {
+  createCustomer: async (dto: { fullName: string; phone?: string }) => {
+    const response = await apiClient.post<ApiResponse<Customer>>('/users/customers', dto);
+    return response.data?.data;
+  },
   getProfile: async () => {
     const response = await apiClient.get<ApiResponse<Customer>>('/users/customers/me');
     return response.data?.data;

@@ -32,6 +32,11 @@ export const useLogin = (navigation: any) => {
         text2: `Signed in as ${data?.user?.name || 'Customer'}`,
         position: 'bottom',
       });
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Main');
+      }
     } catch (error) {
       Toast.show({
         type: 'error',

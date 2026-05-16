@@ -3,18 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
+  FlatList,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { ShoppingCart } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { theme } from '../theme';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 import { useStoreDetails } from '../features/store/hooks/useStoreDetails';
 import { StoreHeader } from '../features/store/components/StoreHeader';
-import { ProductRow } from '../features/store/components/ProductRow';
 import { useCart } from '../app/CartContext';
 import { getApiBaseURL } from '../utils/serverConfig';
+import FloatingCartBar from '../components/common/FloatingCartBar';
 
 const StoreDetailsScreen = ({ route, navigation }: any) => {
   const { vendorId } = route.params;
@@ -22,14 +22,9 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     t,
     vendor,
     vendorLoading,
-    productsLoading,
     categoriesLoading,
-    sections,
+    vendorCategories,
     insets,
-    handleAddToCart,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
   } = useStoreDetails(vendorId);
 
   const { itemCount, total } = useCart();
@@ -38,18 +33,14 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     navigation.navigate('Main', { screen: 'Cart' });
   }, [navigation]);
 
-  const renderRow = useCallback(
-    ({ item }: { item: any[] }) => (
-      <ProductRow
-        items={item}
-        navigation={navigation}
-        onAdd={handleAddToCart}
-      />
-    ),
-    [navigation, handleAddToCart],
+  const handleCategoryPress = useCallback(
+    (categoryId: string, categoryName: string) => {
+      navigation.navigate('CategoryProducts', { vendorId, categoryId, categoryName });
+    },
+    [navigation, vendorId],
   );
 
-  if (vendorLoading || productsLoading || categoriesLoading) {
+  if (vendorLoading || categoriesLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -59,87 +50,46 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <SectionList
-        sections={sections}
-        keyExtractor={(item, index) => item[0].id + index}
-        renderItem={renderRow}
-        renderSectionHeader={({ section: { title } }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-          </View>
-        )}
+      <FlatList
+        data={vendorCategories}
+        keyExtractor={item => item.id}
         ListHeaderComponent={
           <View>
-            <View
-              style={[
-                styles.headerImageContainer,
-                { height: 240 + insets.top },
-              ]}
-            >
+            <View style={[styles.heroContainer, { height: 240 + insets.top }]}>
               <ImageWithPlaceholder
-                uri={
-                  vendor?.storeImage
-                    ? `${getApiBaseURL()}${vendor.storeImage}`
-                    : null
-                }
-                style={
-                  [StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any
-                }
+                uri={vendor?.storeImage ? `${getApiBaseURL()}${vendor.storeImage}` : null}
+                style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
               />
-              <View style={styles.imageOverlay} />
+              <View style={styles.heroOverlay} />
             </View>
-            <StoreHeader
-              t={t}
-              vendor={vendor}
-              navigation={navigation}
-              insets={insets}
-            />
+            <StoreHeader t={t} vendor={vendor} navigation={navigation} insets={insets} />
+            <Text style={styles.categorySectionLabel}>{t('store.categories')}</Text>
           </View>
         }
-        stickySectionHeadersEnabled={true}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.categoryCard}
+            activeOpacity={0.8}
+            onPress={() => handleCategoryPress(item.id, item.name)}
+          >
+            <View style={[styles.categoryColorDot, { backgroundColor: item.color || theme.colors.primary }]} />
+            <Text style={styles.categoryName}>{item.name}</Text>
+            <ChevronRight size={18} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>{t('store.no_categories')}</Text>
+          </View>
+        }
         contentContainerStyle={[
           styles.listContent,
           itemCount > 0 && styles.listContentWithCart,
         ]}
         showsVerticalScrollIndicator={false}
-        style={{ paddingTop: 0 }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('store.no_products')}</Text>
-          </View>
-        }
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View style={{ marginVertical: 20 }}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-            </View>
-          ) : null
-        }
       />
 
-      {itemCount > 0 && (
-        <TouchableOpacity
-          style={styles.floatingCart}
-          onPress={handleCartPress}
-          activeOpacity={0.9}
-        >
-          <View style={styles.floatingCartInner}>
-            <View style={styles.floatingCartBadge}>
-              <Text style={styles.floatingCartBadgeText}>
-                {itemCount > 99 ? '99+' : itemCount}
-              </Text>
-            </View>
-            <ShoppingCart size={22} color={theme.colors.white} />
-            <Text style={styles.floatingCartTotal}>${total.toFixed(2)}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
+      <FloatingCartBar itemCount={itemCount} total={total} onPress={handleCartPress} />
     </View>
   );
 };
@@ -155,32 +105,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
-  headerImageContainer: {
+  heroContainer: {
     width: '100%',
     position: 'absolute',
     top: 0,
   },
-  imageOverlay: {
+  heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  categorySectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 10,
+  },
+  categoryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: theme.radius.lg,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    ...theme.shadows.soft,
+    gap: 14,
+  },
+  categoryColorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  categoryName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.2,
   },
   listContent: {
     paddingBottom: 40,
   },
   listContentWithCart: {
     paddingBottom: 100,
-  },
-  sectionHeader: {
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: theme.colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   emptyContainer: {
     paddingVertical: 50,
@@ -189,43 +161,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: theme.colors.textMuted,
     fontSize: 16,
-  },
-  floatingCart: {
-    position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    ...theme.shadows.medium,
-  },
-  floatingCartInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  floatingCartBadge: {
-    backgroundColor: theme.colors.accent,
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  floatingCartBadgeText: {
-    color: theme.colors.white,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  floatingCartTotal: {
-    flex: 1,
-    textAlign: 'right',
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
 });
 

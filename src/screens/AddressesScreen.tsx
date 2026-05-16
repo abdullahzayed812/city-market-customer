@@ -103,8 +103,11 @@ const AddressesScreen = ({ navigation }: any) => {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <MapPin size={64} color={theme.colors.surface} />
-              <Text style={styles.emptyText}>No addresses saved</Text>
+              <View style={styles.emptyIconCircle}>
+                <MapPin size={40} color={theme.colors.primary} strokeWidth={1.5} />
+              </View>
+              <Text style={styles.emptyTitle}>No Addresses Yet</Text>
+              <Text style={styles.emptyText}>Tap the + button to add a delivery address</Text>
             </View>
           }
         />
@@ -210,37 +213,47 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.white,
-    ...theme.shadows.soft,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-    color: theme.colors.primary,
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.3,
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
   addressCard: {
     flexDirection: 'row',
     backgroundColor: theme.colors.white,
     padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     marginBottom: theme.spacing.sm,
     alignItems: 'center',
     ...theme.shadows.soft,
+    gap: theme.spacing.md,
   },
   addressIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.background,
+    borderRadius: 14,
+    backgroundColor: theme.colors.primaryXLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
   },
   addressInfo: { flex: 1 },
   labelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
@@ -261,18 +274,34 @@ const styles = StyleSheet.create({
   deleteButton: { padding: 8 },
   fab: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 28,
     right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.medium,
+    ...theme.shadows.strong,
   },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 100, opacity: 0.5 },
-  emptyText: { marginTop: 10, fontSize: 16, color: theme.colors.textSecondary },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 80 },
+  emptyIconCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: theme.colors.primaryXLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginBottom: 6,
+    letterSpacing: -0.3,
+  },
+  emptyText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', paddingHorizontal: 40 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
