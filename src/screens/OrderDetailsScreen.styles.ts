@@ -346,4 +346,39 @@ export const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
+  countdownBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: theme.radius.lg,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  countdownBannerUrgent: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#fca5a5',
+  },
+  countdownBannerTitle: {
+    fontSize: 12,
+    color: '#92400e',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  countdownBannerTitleUrgent: {
+    color: '#991b1b',
+  },
+  countdownBannerTimer: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#b45309',
+    fontVariant: ['tabular-nums'],
+  },
+  countdownBannerTimerUrgent: {
+    color: '#dc2626',
+  },
 });

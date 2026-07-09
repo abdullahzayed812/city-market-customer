@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,36 +11,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Mail, Lock, ArrowRight, User, Server } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, User, Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useLogin } from '../hooks/useLogin';
-import { SERVERS, getServerIP, setServerIP } from '../utils/serverConfig';
 
 const LoginScreen = ({ navigation }: any) => {
-  const [selectedServer, setSelectedServer] = useState(SERVERS.PC);
-  const [customIP, setCustomIP] = useState(SERVERS.PC);
-
-  useEffect(() => {
-    const loadServer = async () => {
-      const ip = await getServerIP();
-      setSelectedServer(ip);
-      setCustomIP(ip);
-    };
-    loadServer();
-  }, []);
-
-  const handleServerChange = async (ip: string) => {
-    await setServerIP(ip);
-    setSelectedServer(ip);
-    setCustomIP(ip);
-  };
-
-  const handleApplyCustomIP = () => {
-    const trimmed = customIP.trim();
-    if (trimmed) handleServerChange(trimmed);
-  };
-
   const {
     t,
     email,
@@ -52,6 +28,7 @@ const LoginScreen = ({ navigation }: any) => {
     handleForgotPassword,
     navigateToRegister,
   } = useLogin(navigation);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -74,65 +51,6 @@ const LoginScreen = ({ navigation }: any) => {
             <Text style={styles.subtitle}>
               {t('auth.login_subtitle') || 'Sign in to access your account and orders.'}
             </Text>
-          </View>
-
-          {/* Server Selection Section */}
-          <View style={styles.serverSelectionContainer}>
-            <View style={styles.serverLabelContainer}>
-              <Server size={16} color={theme.colors.primary} style={{ marginRight: 6 }} />
-              <Text style={styles.serverLabel}>{t('auth.server_select') || 'Select Server Environment'}</Text>
-            </View>
-            <View style={styles.serverButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.serverButton,
-                  selectedServer === SERVERS.PC && styles.activeServerButton,
-                ]}
-                onPress={() => handleServerChange(SERVERS.PC)}
-              >
-                <Text
-                  style={[
-                    styles.serverButtonText,
-                    selectedServer === SERVERS.PC && styles.activeServerButtonText,
-                  ]}
-                >
-                  {t('auth.server_pc') || 'PC (128)'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.serverButton,
-                  selectedServer === SERVERS.LAPTOP && styles.activeServerButton,
-                ]}
-                onPress={() => handleServerChange(SERVERS.LAPTOP)}
-              >
-                <Text
-                  style={[
-                    styles.serverButtonText,
-                    selectedServer === SERVERS.LAPTOP && styles.activeServerButtonText,
-                  ]}
-                >
-                  {t('auth.server_laptop') || 'Laptop (2)'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.customIPRow}>
-              <TextInput
-                style={styles.customIPInput}
-                value={customIP}
-                onChangeText={setCustomIP}
-                placeholder="192.168.0.x"
-                placeholderTextColor={theme.colors.textMuted}
-                keyboardType="decimal-pad"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onSubmitEditing={handleApplyCustomIP}
-                returnKeyType="done"
-              />
-              <TouchableOpacity style={styles.customIPApply} onPress={handleApplyCustomIP}>
-                <Text style={styles.customIPApplyText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           {/* Form Section */}
@@ -162,11 +80,21 @@ const LoginScreen = ({ navigation }: any) => {
                   placeholder="••••••••"
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   placeholderTextColor={theme.colors.textMuted}
                 />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(v => !v)}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={theme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={theme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.forgotPassword}
                 onPress={handleForgotPassword}
               >
@@ -246,81 +174,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: '80%',
-  },
-  serverSelectionContainer: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    ...theme.shadows.soft,
-  },
-  serverLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  serverLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.colors.primary,
-  },
-  serverButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  serverButton: {
-    flex: 1,
-    height: 44,
-    borderRadius: theme.radius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  activeServerButton: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  serverButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-  },
-  activeServerButtonText: {
-    color: theme.colors.white,
-  },
-  customIPRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 8,
-  },
-  customIPInput: {
-    flex: 1,
-    height: 40,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    color: theme.colors.textPrimary,
-  },
-  customIPApply: {
-    height: 40,
-    paddingHorizontal: 14,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  customIPApplyText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.white,
   },
   formContainer: {
     width: '100%',

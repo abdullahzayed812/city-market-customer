@@ -20,6 +20,7 @@ import {
   LogIn,
   UserPlus,
   ShoppingBag,
+  Timer,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
@@ -32,6 +33,7 @@ import {
   EventType,
 } from '@city-market/shared';
 import { useAnimatedPress } from '../hooks/useAnimatedPress';
+import { useSlaCountdown } from '../hooks/useSlaCountdown';
 
 const STATUS_COLORS: Record<string, string> = {
   [CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION]: '#F59E0B',
@@ -46,6 +48,8 @@ const OrderCard = React.memo(({ item, onPress, t }: { item: CustomerOrder; onPre
   const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.98);
   const date = new Date(item.createdAt);
   const statusColor = STATUS_COLORS[item.status] ?? theme.colors.textMuted;
+  const isWaiting = item.status === CustomerOrderStatus.WAITING_CUSTOMER_DECISION;
+  const countdown = useSlaCountdown(isWaiting ? (item as any).customerDecisionDeadline : null);
 
   return (
     <TouchableOpacity
@@ -69,6 +73,18 @@ const OrderCard = React.memo(({ item, onPress, t }: { item: CustomerOrder; onPre
             </Text>
           </View>
         </View>
+
+        {isWaiting && countdown.remainingSeconds > 0 && !countdown.isExpired && (
+          <View style={[
+            styles.countdownRow,
+            countdown.isWarning && { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
+          ]}>
+            <Timer size={13} color={countdown.isWarning ? '#dc2626' : '#b45309'} />
+            <Text style={[styles.countdownText, countdown.isWarning && { color: '#dc2626' }]}>
+              {t('orders.decide_before', 'Decide before')}: {countdown.formattedTime}
+            </Text>
+          </View>
+        )}
 
         <View style={styles.divider} />
 
@@ -302,6 +318,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
+  },
+  countdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  countdownText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#b45309',
+    fontVariant: ['tabular-nums'],
   },
   divider: {
     height: 1,

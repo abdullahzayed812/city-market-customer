@@ -1,16 +1,14 @@
 import React, { useRef, useCallback } from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 
 export const navigationRef = createNavigationContainerRef();
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import {
-  Home,
-  ShoppingCart,
-  ClipboardList,
-  User,
-} from 'lucide-react-native';
+import { Home, ShoppingCart, ClipboardList, User } from 'lucide-react-native';
 import {
   TouchableOpacity,
   Platform,
@@ -59,7 +57,13 @@ interface TabBarButtonProps {
   badge?: number;
 }
 
-const TabBarButton = ({ onPress, label, icon: Icon, focused, badge }: TabBarButtonProps) => {
+const TabBarButton = ({
+  onPress,
+  label,
+  icon: Icon,
+  focused,
+  badge,
+}: TabBarButtonProps) => {
   const scaleAnim = useRef(new Animated.Value(focused ? 1 : 0.85)).current;
   const colorAnim = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
@@ -105,7 +109,9 @@ const TabBarButton = ({ onPress, label, icon: Icon, focused, badge }: TabBarButt
         </Animated.View>
         {badge !== undefined && badge > 0 && (
           <View style={tabStyles.badge}>
-            <Text style={tabStyles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+            <Text style={tabStyles.badgeText}>
+              {badge > 99 ? '99+' : badge}
+            </Text>
           </View>
         )}
       </Animated.View>
@@ -224,18 +230,36 @@ const MainTabNavigator = () => {
       tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('home.title') }} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ title: t('cart.title') }} />
-      <Tab.Screen name="Orders" component={OrdersScreen} options={{ title: t('orders.title') }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile.title') }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: t('home.title') }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{ title: t('cart.title') }}
+      />
+      <Tab.Screen
+        name="Orders"
+        component={OrdersScreen}
+        options={{ title: t('orders.title') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: t('profile.title') }}
+      />
     </Tab.Navigator>
   );
 };
 
 const RootNavigator = () => {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const [showSplash, setShowSplash] = React.useState(true);
-  const [termsAccepted, setTermsAccepted] = React.useState<boolean | null>(null);
+  const [termsAccepted, setTermsAccepted] = React.useState<boolean | null>(
+    null,
+  );
 
   React.useEffect(() => {
     const timer = setTimeout(() => setShowSplash(false), 2000);
@@ -263,24 +287,43 @@ const RootNavigator = () => {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator
-        initialRouteName="Main"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="Main" component={MainTabNavigator} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="StoreDetails" component={StoreDetailsScreen} />
-        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} />
-        <Stack.Screen name="Addresses" component={AddressesScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} />
-        <Stack.Screen name="AllStores" component={AllStoresScreen} />
-        <Stack.Screen name="ReviewProposals" component={ReviewProposalsScreen} />
-        <Stack.Screen name="VendorReviews" component={VendorReviewsScreen} />
-        <Stack.Screen name="CategoryProducts" component={CategoryProductsScreen} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isAuthenticated ? (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Main" component={MainTabNavigator} />
+            <Stack.Screen name="StoreDetails" component={StoreDetailsScreen} />
+            <Stack.Screen
+              name="ProductDetails"
+              component={ProductDetailsScreen}
+            />
+            <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="Addresses" component={AddressesScreen} />
+            <Stack.Screen name="Search" component={SearchScreen} />
+            <Stack.Screen
+              name="LanguageSettings"
+              component={LanguageSettingsScreen}
+            />
+            <Stack.Screen name="AllStores" component={AllStoresScreen} />
+            <Stack.Screen
+              name="ReviewProposals"
+              component={ReviewProposalsScreen}
+            />
+            <Stack.Screen
+              name="VendorReviews"
+              component={VendorReviewsScreen}
+            />
+            <Stack.Screen
+              name="CategoryProducts"
+              component={CategoryProductsScreen}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

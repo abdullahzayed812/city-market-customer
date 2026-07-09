@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import uuid from 'react-native-uuid';
 import { setSignOutCallback } from '../services/api/apiClient';
+import { AuthService } from '../services/api/authService';
 import { UserService } from '../services/api/userService';
+import { SecureStorage } from '../services/secureStorage';
+import { getDeviceId } from '../utils/deviceId';
 
 interface User {
   userId: string;
@@ -19,18 +21,10 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (user: any, token: string, refreshToken: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signOutAllDevices: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const getOrCreateDeviceId = async (): Promise<string> => {
-  let deviceId = await AsyncStorage.getItem('device_id');
-  if (!deviceId) {
-    deviceId = uuid.v4() as string;
-    await AsyncStorage.setItem('device_id', deviceId);
-  }
-  return deviceId;
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -49,9 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const token = await AsyncStorage.getItem('auth_token');
+        const token = await SecureStorage.getAccessToken();
         const userData = await AsyncStorage.getItem('user');
-        
+
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setUserToken(token);
@@ -67,6 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     bootstrapAsync();
   }, []);
 
+  const clearLocalState = async () => {
+    await SecureStorage.clearAll();
+    await AsyncStorage.removeItem('user');
+    setUserToken(null);
+    setUser(null);
+  };
+
   const authContext = useMemo(() => ({
     userToken,
     user,
@@ -75,14 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signIn: async (userData: any, token: string, refreshToken: string) => {
       if (userData && token) {
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('auth_token', token);
-        await AsyncStorage.setItem('refresh_token', refreshToken);
+        await SecureStorage.setAccessToken(token);
+        await SecureStorage.setRefreshToken(refreshToken);
 
         setUserToken(token);
         setUser(userData);
 
         // Register device info in background (fire and forget)
-        getOrCreateDeviceId().then(deviceId => {
+        getDeviceId().then(deviceId => {
           UserService.registerDevice({
             deviceId,
             platform: Platform.OS as 'ios' | 'android',
@@ -93,9 +94,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     },
     signOut: async () => {
-      await AsyncStorage.multiRemove(['auth_token', 'refresh_token', 'user']);
-      setUserToken(null);
-      setUser(null);
+      try {
+        await AuthService.logout();
+      } catch {
+        // ignore — we still clear local state
+      }
+      await clearLocalState();
+    },
+    signOutAllDevices: async () => {
+      try {
+        await AuthService.logoutAll();
+      } catch {
+        // ignore — we still clear local state
+      }
+      await clearLocalState();
     },
   }), [userToken, user, isLoading]);
 

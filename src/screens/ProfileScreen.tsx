@@ -24,11 +24,9 @@ import {
   LogIn,
   UserPlus,
 } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../app/AuthContext';
 import { UserService } from '../services/api/userService';
-import { AuthService } from '../services/api/authService';
 import { theme } from '../theme';
 import { useAnimatedPress } from '../hooks/useAnimatedPress';
 
@@ -103,7 +101,7 @@ const GuestView = ({ navigation, t }: { navigation: any; t: any }) => {
 
 const ProfileScreen = ({ navigation }: any) => {
   const { t, i18n } = useTranslation();
-  const { signOut, isAuthenticated } = useAuth();
+  const { signOut, signOutAllDevices, isAuthenticated } = useAuth();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
@@ -121,9 +119,28 @@ const ProfileScreen = ({ navigation }: any) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const refreshToken = await AsyncStorage.getItem('refresh_token');
-              if (refreshToken) await AuthService.logout(refreshToken);
               await signOut();
+            } catch {
+              Alert.alert(t('common.error'), t('common.logout_failed'));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleLogoutAllDevices = async () => {
+    Alert.alert(
+      t('common.logout_all_devices'),
+      t('common.logout_confirm') || 'Are you sure you want to logout?',
+      [
+        { text: t('common.cancel') || 'Cancel', style: 'cancel' },
+        {
+          text: t('common.logout_all_devices'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOutAllDevices();
             } catch {
               Alert.alert(t('common.error'), t('common.logout_failed'));
             }
@@ -233,6 +250,12 @@ const ProfileScreen = ({ navigation }: any) => {
               icon={LogOut}
               label={t('common.logout')}
               onPress={handleLogout}
+              destructive
+            />
+            <MenuItem
+              icon={LogOut}
+              label={t('common.logout_all_devices')}
+              onPress={handleLogoutAllDevices}
               destructive
               isLast
             />

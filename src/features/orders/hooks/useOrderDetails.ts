@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '../../../app/SocketContext';
 import { OrderService } from '../../../services/api/orderService';
+import { useSlaCountdown } from '../../../hooks/useSlaCountdown';
 import { theme } from '../../../theme';
 import {
   OrderWithItems,
@@ -62,6 +63,9 @@ export const useOrderDetails = (orderId: string) => {
       EventType.ORDER_DELIVERED,
       EventType.PROPOSAL_ACCEPTED,
       EventType.PROPOSAL_REJECTED,
+      EventType.SLA_TIMER_STARTED,
+      EventType.SLA_VENDOR_CONFIRMATION_EXPIRED,
+      EventType.SLA_CUSTOMER_DECISION_EXPIRED,
     ],
     [],
   );
@@ -125,6 +129,16 @@ export const useOrderDetails = (orderId: string) => {
     [orderData],
   );
 
+  const customerDecisionDeadline = useMemo(() => {
+    if (orderData?.status !== CustomerOrderStatus.WAITING_CUSTOMER_DECISION) return null;
+    const voWithDeadline = vendorOrders.find(
+      (vo: any) => vo.status === VendorOrderStatus.PROPOSAL_SENT && vo.customerDecisionDeadline,
+    );
+    return voWithDeadline?.customerDecisionDeadline ?? null;
+  }, [orderData?.status, vendorOrders]);
+
+  const customerDecisionCountdown = useSlaCountdown(customerDecisionDeadline);
+
   const handleRateVendor = (vendor: any) => {
     setSelectedVendorForRating(vendor);
     setRatingModalVisible(true);
@@ -144,6 +158,7 @@ export const useOrderDetails = (orderId: string) => {
     selectedVendorForRating,
     handleRateVendor,
     getStatusConfig,
+    customerDecisionCountdown,
     t,
   };
 };

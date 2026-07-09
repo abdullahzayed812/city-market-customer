@@ -18,6 +18,7 @@ import {
   Star,
   XCircle,
   Ban,
+  Timer,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -48,7 +49,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     selectedVendorForRating,
     handleRateVendor,
     getStatusConfig,
-
+    customerDecisionCountdown,
     t,
   } = useOrderDetails(orderId);
 
@@ -150,6 +151,29 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                   </Text>
                   <Text style={styles.cancellationText}>
                     {orderData.cancellationReason}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {customerDecisionCountdown.remainingSeconds > 0 && !customerDecisionCountdown.isExpired && (
+              <View style={[
+                styles.countdownBanner,
+                customerDecisionCountdown.isWarning && styles.countdownBannerUrgent,
+              ]}>
+                <Timer size={18} color={customerDecisionCountdown.isWarning ? '#dc2626' : '#b45309'} />
+                <View>
+                  <Text style={[
+                    styles.countdownBannerTitle,
+                    customerDecisionCountdown.isWarning && styles.countdownBannerTitleUrgent,
+                  ]}>
+                    {t('orders.decide_before', 'Decide before')}
+                  </Text>
+                  <Text style={[
+                    styles.countdownBannerTimer,
+                    customerDecisionCountdown.isWarning && styles.countdownBannerTimerUrgent,
+                  ]}>
+                    {customerDecisionCountdown.formattedTime}
                   </Text>
                 </View>
               </View>

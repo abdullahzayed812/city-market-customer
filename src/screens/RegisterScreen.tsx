@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import {
   ChevronLeft,
   ArrowRight,
   Phone,
+  Eye,
+  EyeOff,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
@@ -33,6 +35,7 @@ const RegisterScreen = ({ navigation }: any) => {
     handleRegister,
     navigateToLogin,
   } = useRegister(navigation);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -171,9 +174,19 @@ const RegisterScreen = ({ navigation }: any) => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChangeText={text => updateFormData('password', text)}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   placeholderTextColor={theme.colors.textMuted}
                 />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(v => !v)}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={theme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={theme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
 
