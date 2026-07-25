@@ -34,6 +34,8 @@ const RegisterScreen = ({ navigation }: any) => {
     loading,
     handleRegister,
     navigateToLogin,
+    needsProfileCompletion,
+    phoneError,
   } = useRegister(navigation);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -75,6 +77,15 @@ const RegisterScreen = ({ navigation }: any) => {
 
           {/* Form Section */}
           <View style={styles.formContainer}>
+            {needsProfileCompletion && (
+              <View style={styles.completeProfileBanner}>
+                <Text style={styles.completeProfileBannerText}>
+                  {t('auth.complete_profile_banner') ||
+                    "Your account was created, but we couldn't finish setting up your profile. Please double-check your info below and try again."}
+                </Text>
+              </View>
+            )}
+
             <View style={styles.row}>
               <View style={[styles.inputWrapper, { flex: 1, marginRight: 8 }]}>
                 <Text style={styles.inputLabel}>
@@ -88,7 +99,7 @@ const RegisterScreen = ({ navigation }: any) => {
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="John"
+                    placeholder={t('auth.first_name_placeholder') || 'John'}
                     value={formData.firstName}
                     onChangeText={text => updateFormData('firstName', text)}
                     placeholderTextColor={theme.colors.textMuted}
@@ -107,7 +118,7 @@ const RegisterScreen = ({ navigation }: any) => {
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="Doe"
+                    placeholder={t('auth.last_name_placeholder') || 'Doe'}
                     value={formData.lastName}
                     onChangeText={text => updateFormData('lastName', text)}
                     placeholderTextColor={theme.colors.textMuted}
@@ -120,7 +131,7 @@ const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.inputLabel}>
                 {t('auth.phone') || 'Phone Number'}
               </Text>
-              <View style={styles.inputField}>
+              <View style={[styles.inputField, phoneError && styles.inputFieldError]}>
                 <Phone
                   size={20}
                   color={theme.colors.textMuted}
@@ -128,20 +139,21 @@ const RegisterScreen = ({ navigation }: any) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="+966 5X XXX XXXX"
+                  placeholder={t('auth.phone_placeholder') || '+966 5X XXX XXXX'}
                   value={formData.phone}
                   onChangeText={text => updateFormData('phone', text)}
                   keyboardType="phone-pad"
                   placeholderTextColor={theme.colors.textMuted}
                 />
               </View>
+              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>
 
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>
                 {t('auth.email') || 'Email Address'}
               </Text>
-              <View style={styles.inputField}>
+              <View style={[styles.inputField, needsProfileCompletion && styles.inputFieldDisabled]}>
                 <Mail
                   size={20}
                   color={theme.colors.textMuted}
@@ -149,12 +161,13 @@ const RegisterScreen = ({ navigation }: any) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="name@example.com"
+                  placeholder={t('auth.email_placeholder') || 'name@example.com'}
                   value={formData.email}
                   onChangeText={text => updateFormData('email', text)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   placeholderTextColor={theme.colors.textMuted}
+                  editable={!needsProfileCompletion}
                 />
               </View>
             </View>
@@ -163,7 +176,7 @@ const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.inputLabel}>
                 {t('auth.password') || 'Password'}
               </Text>
-              <View style={styles.inputField}>
+              <View style={[styles.inputField, needsProfileCompletion && styles.inputFieldDisabled]}>
                 <Lock
                   size={20}
                   color={theme.colors.textMuted}
@@ -176,10 +189,15 @@ const RegisterScreen = ({ navigation }: any) => {
                   onChangeText={text => updateFormData('password', text)}
                   secureTextEntry={!showPassword}
                   placeholderTextColor={theme.colors.textMuted}
+                  editable={!needsProfileCompletion}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(v => !v)}
-                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                  accessibilityLabel={
+                    showPassword
+                      ? t('auth.hide_password') || 'Hide password'
+                      : t('auth.show_password') || 'Show password'
+                  }
                 >
                   {showPassword ? (
                     <EyeOff size={20} color={theme.colors.textMuted} />
@@ -201,7 +219,9 @@ const RegisterScreen = ({ navigation }: any) => {
               ) : (
                 <>
                   <Text style={styles.registerButtonText}>
-                    {t('auth.register_button') || 'Sign Up'}
+                    {needsProfileCompletion
+                      ? t('auth.complete_profile_button') || 'Finish Setting Up'
+                      : t('auth.register_button') || 'Sign Up'}
                   </Text>
                   <ArrowRight
                     size={20}
@@ -309,6 +329,31 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     paddingHorizontal: theme.spacing.md,
     ...theme.shadows.soft,
+  },
+  inputFieldError: {
+    borderColor: theme.colors.error,
+  },
+  inputFieldDisabled: {
+    opacity: 0.6,
+  },
+  errorText: {
+    fontSize: 12,
+    color: theme.colors.error,
+    marginTop: 6,
+    marginLeft: 2,
+  },
+  completeProfileBanner: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+  },
+  completeProfileBannerText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#92400E',
   },
   inputIcon: {
     marginRight: 12,

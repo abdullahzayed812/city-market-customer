@@ -23,11 +23,12 @@ export const OrderService = {
     );
     return response.data?.data?.deliveryFee;
   },
-  getMyOrders: async (page: number) => {
+  getMyOrders: async (page: number, limit = 20) => {
     const response = await apiClient.get<
-      ApiResponse<{ items: CustomerOrder[]; hasNextPage: boolean }>
-    >('/orders/customer-orders', { params: { page, limit: 20 } });
-    return response.data.data!;
+      ApiResponse<{ items: CustomerOrder[]; total: number }>
+    >('/orders/customer-orders', { params: { page, limit } });
+    const { items, total } = response.data.data!;
+    return { items, hasNextPage: page * limit < total };
   },
   getOrderById: async (id: string) => {
     const response = await apiClient.get<ApiResponse<OrderWithItems>>(
@@ -54,6 +55,13 @@ export const OrderService = {
     const response = await apiClient.post<ApiResponse<null>>(
       `/orders/proposals/${proposalId}/reject`,
       { cancelEntireOrder },
+    );
+    return response.data?.data;
+  },
+  resolveVendorCancellation: async (orderId: string, continueOrder: boolean) => {
+    const response = await apiClient.post<ApiResponse<null>>(
+      `/orders/customer-orders/${orderId}/resolve-cancellation`,
+      { continueOrder },
     );
     return response.data?.data;
   },

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '../../../app/SocketContext';
 import { OrderService } from '../../../services/api/orderService';
 import { useSlaCountdown } from '../../../hooks/useSlaCountdown';
@@ -54,6 +54,7 @@ export const useOrderDetails = (orderId: string) => {
     () => [
       // EventType.ORDER_AWAITING_CUSTOMER_CONFIRMATION,
       EventType.VENDOR_ORDER_PROPOSED,
+      EventType.VENDOR_ORDER_CANCELLED,
       EventType.ORDER_CREATED,
       EventType.ORDER_CONFIRMED,
       EventType.ORDER_CANCELLED,
@@ -66,6 +67,7 @@ export const useOrderDetails = (orderId: string) => {
       EventType.SLA_TIMER_STARTED,
       EventType.SLA_VENDOR_CONFIRMATION_EXPIRED,
       EventType.SLA_CUSTOMER_DECISION_EXPIRED,
+      EventType.SLA_VENDOR_CANCELLATION_DECISION_EXPIRED,
     ],
     [],
   );
@@ -131,13 +133,32 @@ export const useOrderDetails = (orderId: string) => {
 
   const customerDecisionDeadline = useMemo(() => {
     if (orderData?.status !== CustomerOrderStatus.WAITING_CUSTOMER_DECISION) return null;
-    const voWithDeadline = vendorOrders.find(
-      (vo: any) => vo.status === VendorOrderStatus.PROPOSAL_SENT && vo.customerDecisionDeadline,
-    );
+    const voWithDeadline = vendorOrders.find((vo: any) => vo.customerDecisionDeadline);
     return voWithDeadline?.customerDecisionDeadline ?? null;
   }, [orderData?.status, vendorOrders]);
 
   const customerDecisionCountdown = useSlaCountdown(customerDecisionDeadline);
+
+  const cancelledVendorPendingDecision = useMemo(() => {
+    if (orderData?.status !== CustomerOrderStatus.WAITING_CUSTOMER_DECISION) return null;
+    return (
+      vendorOrders.find(
+        (vo: any) => vo.status === VendorOrderStatus.CANCELLED && vo.customerDecisionDeadline,
+      ) ?? null
+    );
+  }, [orderData?.status, vendorOrders]);
+
+  const [cancellationDecisionModalVisible, setCancellationDecisionModalVisible] = useState(false);
+
+  const resolveCancellationMutation = useMutation({
+    mutationFn: (continueOrder: boolean) =>
+      OrderService.resolveVendorCancellation(orderId, continueOrder),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setCancellationDecisionModalVisible(false);
+    },
+  });
 
   const handleRateVendor = (vendor: any) => {
     setSelectedVendorForRating(vendor);
@@ -159,6 +180,10 @@ export const useOrderDetails = (orderId: string) => {
     handleRateVendor,
     getStatusConfig,
     customerDecisionCountdown,
+    cancelledVendorPendingDecision,
+    cancellationDecisionModalVisible,
+    setCancellationDecisionModalVisible,
+    resolveCancellationMutation,
     t,
   };
 };

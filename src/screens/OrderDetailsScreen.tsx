@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { VendorRatingModal } from '../components/VendorRatingModal';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
+import CustomModal from '../components/common/CustomModal';
 import {
   VendorOrder,
   VendorOrderItem,
@@ -50,6 +51,10 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     handleRateVendor,
     getStatusConfig,
     customerDecisionCountdown,
+    cancelledVendorPendingDecision,
+    cancellationDecisionModalVisible,
+    setCancellationDecisionModalVisible,
+    resolveCancellationMutation,
     t,
   } = useOrderDetails(orderId);
 
@@ -138,6 +143,22 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 <AlertCircle size={20} color={theme.colors.white} />
                 <Text style={styles.reviewProposalsText}>
                   {t('proposals.review_button')}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {cancelledVendorPendingDecision && (
+              <TouchableOpacity
+                style={styles.cancellationDecisionButton}
+                onPress={() => setCancellationDecisionModalVisible(true)}
+              >
+                <Ban size={20} color={theme.colors.white} />
+                <Text style={styles.cancellationDecisionButtonText}>
+                  {t('orders.vendor_cancelled_decision_banner', {
+                    vendor:
+                      cancelledVendorPendingDecision.vendorName ||
+                      t('common.vendor'),
+                  })}
                 </Text>
               </TouchableOpacity>
             )}
@@ -355,6 +376,42 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             orderId={orderId}
           />
         )}
+
+        <CustomModal
+          visible={cancellationDecisionModalVisible}
+          onClose={() => setCancellationDecisionModalVisible(false)}
+          title={t('orders.vendor_cancelled_title')}
+          message={t('orders.vendor_cancelled_message', {
+            vendor: cancelledVendorPendingDecision?.vendorName || t('common.vendor'),
+          })}
+        >
+          <TouchableOpacity
+            style={styles.continueVendorButton}
+            onPress={() => resolveCancellationMutation.mutate(true)}
+            disabled={resolveCancellationMutation.isPending}
+          >
+            {resolveCancellationMutation.isPending ? (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            ) : (
+              <Text style={styles.continueVendorButtonText}>
+                {t('orders.continue_without_vendor')}
+              </Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.cancelEntireOrderButton}
+            onPress={() => resolveCancellationMutation.mutate(false)}
+            disabled={resolveCancellationMutation.isPending}
+          >
+            {resolveCancellationMutation.isPending ? (
+              <ActivityIndicator size="small" color={theme.colors.white} />
+            ) : (
+              <Text style={styles.cancelEntireOrderButtonText}>
+                {t('orders.cancel_entire_order')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </CustomModal>
       </View>
     </SafeAreaView>
   );

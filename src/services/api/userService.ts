@@ -2,7 +2,16 @@ import apiClient from './apiClient';
 import { ApiResponse, Customer, UpdateCustomerDto, Address, CreateAddressDto, RegisterDeviceDto } from '@city-market/shared';
 
 export const UserService = {
-  createCustomer: async (dto: { fullName: string; phone?: string }) => {
+  // Public — safe to call before the auth account exists (used as a pre-check on
+  // registration so we don't create an orphaned auth account for a phone that's
+  // already taken).
+  checkPhoneAvailable: async (phone: string): Promise<boolean> => {
+    const response = await apiClient.get<ApiResponse<{ available: boolean }>>('/users/customers/check-phone', {
+      params: { phone },
+    });
+    return !!response.data?.data?.available;
+  },
+  createCustomer: async (dto: { fullName: string; phone: string }) => {
     const response = await apiClient.post<ApiResponse<Customer>>('/users/customers', dto);
     return response.data?.data;
   },
