@@ -247,13 +247,20 @@
   "addresses": {
     "no_addresses": "لا توجد عناوين محفوظة",
     "add_hint": "أضف عنوان توصيل للمتابعة",
+    "empty_hint": "اضغط على زر + لإضافة عنوان توصيل",
     "add_new": "إضافة عنوان جديد",
     "address_added": "تمت إضافة العنوان",
     "address_saved": "تم حفظ عنوانك الجديد",
     "address_deleted": "تم حذف العنوان",
+    "add_failed": "فشل إضافة العنوان.",
     "required_fields": "التسمية والعنوان مطلوبان",
+    "label": "التسمية",
+    "address_details": "تفاصيل العنوان",
     "placeholder_label": "مثال: المنزل، العمل",
-    "placeholder_address": "أدخل العنوان الكامل"
+    "placeholder_address": "أدخل العنوان الكامل",
+    "pick_on_map": "اختر على الخريطة",
+    "set_default": "تعيين كعنوان افتراضي",
+    "default": "افتراضي"
   },
   "rating": {
     "rate_vendor": "قيّم تجربتك مع",

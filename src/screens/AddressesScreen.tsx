@@ -38,7 +38,11 @@ const AddressesScreen = ({ navigation }: any) => {
 
   const [mapVisible, setMapVisible] = React.useState(false);
 
-  const handleLocationSelected = (data: { address: string; latitude: number; longitude: number }) => {
+  const handleLocationSelected = (data: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  }) => {
     setNewAddress({
       ...newAddress,
       address: data.address,
@@ -59,11 +63,13 @@ const AddressesScreen = ({ navigation }: any) => {
             <Text style={styles.labelBadgeText}>{item.label}</Text>
             {item.isDefault && (
               <View style={styles.defaultBadge}>
-                <Text style={styles.defaultText}>Default</Text>
+                <Text style={styles.defaultText}>{t('addresses.default')}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.addressText} numberOfLines={2}>{item.address}</Text>
+          <Text style={styles.addressText} numberOfLines={2}>
+            {item.address}
+          </Text>
         </View>
         <TouchableOpacity
           onPress={() => deleteMutation.mutate(item.id)}
@@ -88,7 +94,10 @@ const AddressesScreen = ({ navigation }: any) => {
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <ChevronLeft size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('profile.addresses')}</Text>
@@ -104,10 +113,16 @@ const AddressesScreen = ({ navigation }: any) => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
-                <MapPin size={40} color={theme.colors.primary} strokeWidth={1.5} />
+                <MapPin
+                  size={40}
+                  color={theme.colors.primary}
+                  strokeWidth={1.5}
+                />
               </View>
-              <Text style={styles.emptyTitle}>No Addresses Yet</Text>
-              <Text style={styles.emptyText}>Tap the + button to add a delivery address</Text>
+              <Text style={styles.emptyTitle}>{t('profile.no_addresses')}</Text>
+              <Text style={styles.emptyText}>
+                {t('addresses.empty_hint')}
+              </Text>
             </View>
           }
         />
@@ -131,27 +146,34 @@ const AddressesScreen = ({ navigation }: any) => {
               style={styles.modalPosition}
             >
               <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Add New Address</Text>
+                <Text style={styles.modalTitle}>{t('profile.add_new')}</Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Label</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.label')}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. Home, Work"
+                    placeholder={t('addresses.placeholder_label')}
                     value={newAddress.label}
-                    onChangeText={text => setNewAddress({ ...newAddress, label: text })}
+                    onChangeText={text =>
+                      setNewAddress({ ...newAddress, label: text })
+                    }
                     placeholderTextColor={theme.colors.textMuted}
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Address Details</Text>
+                  <Text style={styles.inputLabel}>{t('addresses.address_details')}</Text>
                   <TextInput
-                    style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-                    placeholder="Enter full address"
+                    style={[
+                      styles.input,
+                      { height: 100, textAlignVertical: 'top' },
+                    ]}
+                    placeholder={t('addresses.placeholder_address')}
                     multiline
                     value={newAddress.address}
-                    onChangeText={text => setNewAddress({ ...newAddress, address: text })}
+                    onChangeText={text =>
+                      setNewAddress({ ...newAddress, address: text })
+                    }
                     placeholderTextColor={theme.colors.textMuted}
                   />
                   <TouchableOpacity
@@ -159,18 +181,32 @@ const AddressesScreen = ({ navigation }: any) => {
                     onPress={() => setMapVisible(true)}
                   >
                     <MapPin size={18} color={theme.colors.primary} />
-                    <Text style={styles.mapPickerButtonText}>Pick on Map</Text>
+                    <Text style={styles.mapPickerButtonText}>{t('addresses.pick_on_map')}</Text>
                   </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
                   style={styles.defaultCheckbox}
-                  onPress={() => setNewAddress({ ...newAddress, isDefault: !newAddress.isDefault })}
+                  onPress={() =>
+                    setNewAddress({
+                      ...newAddress,
+                      isDefault: !newAddress.isDefault,
+                    })
+                  }
                 >
-                  <View style={[styles.checkbox, newAddress.isDefault && styles.checkboxActive]}>
-                    {newAddress.isDefault && <Check size={14} color={theme.colors.white} />}
+                  <View
+                    style={[
+                      styles.checkbox,
+                      newAddress.isDefault && styles.checkboxActive,
+                    ]}
+                  >
+                    {newAddress.isDefault && (
+                      <Check size={14} color={theme.colors.white} />
+                    )}
                   </View>
-                  <Text style={styles.checkboxLabel}>Set as default address</Text>
+                  <Text style={styles.checkboxLabel}>
+                    {t('addresses.set_default')}
+                  </Text>
                 </TouchableOpacity>
 
                 <View style={styles.modalButtons}>
@@ -178,7 +214,9 @@ const AddressesScreen = ({ navigation }: any) => {
                     style={[styles.modalButton, styles.cancelBtn]}
                     onPress={() => setModalVisible(false)}
                   >
-                    <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
+                    <Text style={styles.cancelBtnText}>
+                      {t('common.cancel')}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.modalButton, styles.saveBtn]}
@@ -284,7 +322,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...theme.shadows.strong,
   },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 80 },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+  },
   emptyIconCircle: {
     width: 88,
     height: 88,
@@ -301,7 +343,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: -0.3,
   },
-  emptyText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center', paddingHorizontal: 40 },
+  emptyText: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 40,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

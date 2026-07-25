@@ -248,13 +248,20 @@
   "addresses": {
     "no_addresses": "No addresses saved",
     "add_hint": "Add a delivery address to continue",
+    "empty_hint": "Tap the + button to add a delivery address",
     "add_new": "Add New Address",
     "address_added": "Address Added",
     "address_saved": "Your new address has been saved",
     "address_deleted": "Address Deleted",
+    "add_failed": "Failed to add address.",
     "required_fields": "Label and address are required",
+    "label": "Label",
+    "address_details": "Address Details",
     "placeholder_label": "e.g. Home, Work",
-    "placeholder_address": "Enter full address"
+    "placeholder_address": "Enter full address",
+    "pick_on_map": "Pick on Map",
+    "set_default": "Set as default address",
+    "default": "Default"
   },
   "rating": {
     "rate_vendor": "Rate your experience with",

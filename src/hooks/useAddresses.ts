@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { UserService } from '../services/api/userService';
 import { Home, Briefcase, Navigation } from 'lucide-react-native';
 
 export const useAddresses = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [newAddress, setNewAddress] = useState<{
@@ -40,16 +42,16 @@ export const useAddresses = () => {
       });
       Toast.show({
         type: 'success',
-        text1: 'Address Added',
-        text2: 'Your new address has been saved.',
+        text1: t('addresses.address_added'),
+        text2: t('addresses.address_saved'),
         position: 'top',
       });
     },
     onError: () => {
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Failed to add address.',
+        text1: t('common.error'),
+        text2: t('addresses.add_failed'),
         position: 'top',
       });
     },
@@ -61,7 +63,7 @@ export const useAddresses = () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       Toast.show({
         type: 'success',
-        text1: 'Address Deleted',
+        text1: t('addresses.address_deleted'),
         position: 'top',
       });
     },
@@ -71,8 +73,8 @@ export const useAddresses = () => {
     if (!newAddress.label || !newAddress.address) {
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: 'Label and address are required',
+        text1: t('common.error'),
+        text2: t('addresses.required_fields'),
         position: 'top',
       });
       return;
