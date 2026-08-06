@@ -63,19 +63,19 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     marginRight: theme.spacing.md,
-    width: 72,
+    width: 96,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 88,
+    height: 88,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
   },
   icon: {
-    width: 36,
-    height: 36,
+    width: 60,
+    height: 60,
   },
   name: {
     fontSize: 11,
