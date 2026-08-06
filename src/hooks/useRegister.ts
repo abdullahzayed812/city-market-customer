@@ -65,12 +65,18 @@ export const useRegister = (navigation: any) => {
     } catch (error: any) {
       const code = error?.response?.data?.message;
       if (code === 'phone_already_registered') {
-        setPhoneError(t('auth.validation_phone_already_registered') || 'This phone number is already registered to another account');
+        setPhoneError(
+          t('auth.validation_phone_already_registered') ||
+            'This phone number is already registered to another account',
+        );
       } else {
         Toast.show({
           type: 'error',
           text1: t('common.error'),
-          text2: code || t('auth.profile_setup_failed') || "We couldn't finish setting up your profile.",
+          text2:
+            code ||
+            t('auth.profile_setup_failed') ||
+            "We couldn't finish setting up your profile.",
           position: 'bottom',
         });
       }
@@ -100,17 +106,24 @@ export const useRegister = (navigation: any) => {
 
       const phoneAvailable = await UserService.checkPhoneAvailable(phone);
       if (!phoneAvailable) {
-        setPhoneError(t('auth.validation_phone_already_registered') || 'This phone number is already registered to another account');
+        setPhoneError(
+          t('auth.validation_phone_already_registered') ||
+            'This phone number is already registered to another account',
+        );
         return;
       }
 
-      const data = await AuthService.register({ email, password, role: 'customer' });
+      const data = await AuthService.register({ email, password });
 
       if (data?.accessToken && data?.user) {
         // Authorize this client for the createCustomer call without marking the app
         // "logged in" yet — see comment above.
         await SecureStorage.setAccessToken(data.accessToken);
-        const auth: PendingAuth = { user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken };
+        const auth: PendingAuth = {
+          user: data.user,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        };
         setPendingAuth(auth);
         await saveProfile(auth);
       }

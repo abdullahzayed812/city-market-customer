@@ -40,7 +40,9 @@
     "gram": "g",
     "free": "Free",
     "vendor": "Vendor",
-    "logout_confirm": "Are you sure you want to logout?"
+    "logout_confirm": "Are you sure you want to logout?",
+    "customer": "Customer",
+    "feature_coming_soon": "Feature coming soon"
   },
   "auth": {
     "login_title": "Welcome Back",
@@ -69,7 +71,7 @@
     "server_select": "Select Server Environment",
     "server_pc": "PC (128)",
     "server_laptop": "Laptop (2)",
-    "already_have_account": "Already have an account? Login",
+    "already_have_account": "Already have an account?",
     "dont_have_account": "Don't have an account? Register",
     "login_subtitle": "Sign in to continue to CityMarket",
     "register_subtitle": "Create an account to start shopping",
@@ -80,7 +82,10 @@
     "fill_all_fields": "Please fill all fields",
     "register_success": "Registration Successful",
     "register_failed": "Registration failed. Please try again.",
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "login_success_title": "Welcome back!",
+    "login_success_message": "Signed in as {{name}}",
+    "invalid_credentials": "Invalid credentials"
   },
   "home": {
     "title": "Home",
@@ -120,6 +125,7 @@
     "product_unavailable": "This product is currently unavailable",
     "load_more": "Load more",
     "categories": "Categories",
+    "all": "All",
     "no_categories": "No categories available",
     "low_stock": "Low Stock",
     "no_comment": "No comment"
@@ -235,7 +241,8 @@
     "language": "Language",
     "info": "Personal Info",
     "account_settings": "Account Settings",
-    "support": "Support"
+    "support": "Support",
+    "add_new": "Add New Address"
   },
   "search": {
     "searching": "Searching products...",

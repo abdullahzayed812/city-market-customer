@@ -40,7 +40,9 @@
     "gram": "جرام",
     "free": "مجاني",
     "vendor": "متجر",
-    "logout_confirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟"
+    "logout_confirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+    "customer": "عميل",
+    "feature_coming_soon": "هذه الميزة قادمة قريباً"
   },
   "auth": {
     "login_title": "أهلاً بك مجدداً",
@@ -69,7 +71,7 @@
     "server_select": "اختر بيئة الخادم",
     "server_pc": "كمبيوتر (128)",
     "server_laptop": "لابتوب (2)",
-    "already_have_account": "لديك حساب بالفعل؟ تسجيل الدخول",
+    "already_have_account": "لديك حساب بالفعل؟",
     "dont_have_account": "ليس لديك حساب؟ إنشاء حساب",
     "login_subtitle": "قم بتسجيل الدخول للمتابعة إلى سيتي ماركت",
     "register_subtitle": "أنشئ حسابًا لبدء التسوق",
@@ -80,7 +82,10 @@
     "fill_all_fields": "يرجى تعبئة جميع الحقول",
     "register_success": "تم إنشاء الحساب بنجاح",
     "register_failed": "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.",
-    "welcome": "أهلاً"
+    "welcome": "أهلاً",
+    "login_success_title": "أهلاً بعودتك!",
+    "login_success_message": "تم تسجيل الدخول باسم {{name}}",
+    "invalid_credentials": "بيانات الدخول غير صحيحة"
   },
   "home": {
     "title": "الرئيسية",
@@ -120,6 +125,7 @@
     "product_unavailable": "هذا المنتج غير متوفر حالياً",
     "load_more": "عرض المزيد",
     "categories": "التصنيفات",
+    "all": "الكل",
     "no_categories": "لا توجد تصنيفات متاحة",
     "low_stock": "كمية منخفضة",
     "no_comment": "لا يوجد تعليق"
@@ -234,7 +240,8 @@
     "language": "اللغة",
     "info": "المعلومات الشخصية",
     "account_settings": "إعدادات الحساب",
-    "support": "الدعم"
+    "support": "الدعم",
+    "add_new": "إضافة عنوان جديد"
   },
   "search": {
     "searching": "جاري البحث...",

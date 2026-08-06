@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { Minus, Plus } from 'lucide-react-native';
 import { theme } from '../../theme';
 

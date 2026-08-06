@@ -5,12 +5,21 @@ import { getDeviceId } from '../../utils/deviceId';
 export const AuthService = {
   register: async (userData: any) => {
     const deviceId = await getDeviceId();
-    const response = await apiClient.post('/auth/register', { ...userData, deviceId, platform: Platform.OS });
+    const response = await apiClient.post('/auth/register', {
+      ...userData,
+      deviceId,
+      role: 'CUSTOMER',
+      platform: Platform.OS,
+    });
     return response.data?.data;
   },
   login: async (credentials: any) => {
     const deviceId = await getDeviceId();
-    const response = await apiClient.post('/auth/login', { ...credentials, deviceId, platform: Platform.OS });
+    const response = await apiClient.post('/auth/login', {
+      ...credentials,
+      deviceId,
+      platform: Platform.OS,
+    });
     return response.data?.data;
   },
   logout: async () => {
@@ -23,7 +32,11 @@ export const AuthService = {
   },
   refresh: async (refreshToken: string) => {
     const deviceId = await getDeviceId();
-    const response = await apiClient.post('/auth/refresh', { refreshToken, deviceId, platform: Platform.OS });
+    const response = await apiClient.post('/auth/refresh', {
+      refreshToken,
+      deviceId,
+      platform: Platform.OS,
+    });
     return response.data?.data;
   },
 };

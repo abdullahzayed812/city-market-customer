@@ -2,11 +2,11 @@ import React, { useRef, useCallback } from 'react';
 import {
   TouchableOpacity,
   View,
-  Text,
   StyleSheet,
   Dimensions,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { Star, Clock } from 'lucide-react-native';
 import { theme } from '../../../theme';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';

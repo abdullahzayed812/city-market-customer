@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -11,7 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Mail, Lock, ArrowRight, User, Eye, EyeOff } from 'lucide-react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
+import { Mail, ArrowRight, User, Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useLogin } from '../hooks/useLogin';
@@ -32,7 +32,10 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={theme.colors.background}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -47,18 +50,32 @@ const LoginScreen = ({ navigation }: any) => {
             <View style={styles.iconCircle}>
               <User size={32} color={theme.colors.primary} />
             </View>
-            <Text style={styles.title}>{t('auth.login_title') || 'Welcome Back'}</Text>
+            <Text
+              style={styles.title}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.2}
+            >
+              {t('auth.login_title') || 'Welcome Back'}
+            </Text>
             <Text style={styles.subtitle}>
-              {t('auth.login_subtitle') || 'Sign in to access your account and orders.'}
+              {t('auth.login_subtitle') ||
+                'Sign in to access your account and orders.'}
             </Text>
           </View>
 
           {/* Form Section */}
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>{t('auth.email') || 'Email Address'}</Text>
+              <Text style={styles.inputLabel}>
+                {t('auth.email') || 'Email Address'}
+              </Text>
               <View style={styles.inputField}>
-                <Mail size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
+                <Mail
+                  size={20}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="name@example.com"
@@ -72,9 +89,23 @@ const LoginScreen = ({ navigation }: any) => {
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>{t('auth.password') || 'Password'}</Text>
+              <Text style={styles.inputLabel}>
+                {t('auth.password') || 'Password'}
+              </Text>
               <View style={styles.inputField}>
-                <Lock size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
+                {/* <Lock size={20} color={theme.colors.textMuted} style={styles.inputIcon} /> */}
+                <TouchableOpacity
+                  onPress={() => setShowPassword(v => !v)}
+                  accessibilityLabel={
+                    showPassword ? 'Hide password' : 'Show password'
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={theme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={theme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
@@ -83,16 +114,6 @@ const LoginScreen = ({ navigation }: any) => {
                   secureTextEntry={!showPassword}
                   placeholderTextColor={theme.colors.textMuted}
                 />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(v => !v)}
-                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? (
-                    <EyeOff size={20} color={theme.colors.textMuted} />
-                  ) : (
-                    <Eye size={20} color={theme.colors.textMuted} />
-                  )}
-                </TouchableOpacity>
               </View>
               <TouchableOpacity
                 style={styles.forgotPassword}
@@ -114,8 +135,14 @@ const LoginScreen = ({ navigation }: any) => {
                 <ActivityIndicator color={theme.colors.white} />
               ) : (
                 <>
-                  <Text style={styles.loginButtonText}>{t('auth.login_button') || 'Sign In'}</Text>
-                  <ArrowRight size={20} color={theme.colors.white} strokeWidth={2.5} />
+                  <Text style={styles.loginButtonText}>
+                    {t('auth.login_button') || 'Sign In'}
+                  </Text>
+                  <ArrowRight
+                    size={20}
+                    color={theme.colors.white}
+                    strokeWidth={2.5}
+                  />
                 </>
               )}
             </TouchableOpacity>
@@ -127,7 +154,9 @@ const LoginScreen = ({ navigation }: any) => {
               {t('auth.no_account') || "Don't have an account?"}{' '}
             </Text>
             <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={styles.registerText}>{t('auth.register') || 'Sign Up'}</Text>
+              <Text style={styles.registerText}>
+                {t('auth.register') || 'Sign Up'}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

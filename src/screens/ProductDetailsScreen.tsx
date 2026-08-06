@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ShoppingCart } from 'lucide-react-native';
 import { theme } from '../theme';

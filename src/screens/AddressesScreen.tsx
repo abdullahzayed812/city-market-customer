@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
@@ -12,14 +11,16 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Plus, ChevronLeft, Trash2, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Config from 'react-native-config';
 import { theme } from '../theme';
 import { useAddresses } from '../hooks/useAddresses';
 import MapPickerModal from '../components/MapPickerModal';
 
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+const GOOGLE_MAPS_API_KEY = Config.GOOGLE_MAPS_API_KEY ?? '';
 
 const AddressesScreen = ({ navigation }: any) => {
   const { t } = useTranslation();

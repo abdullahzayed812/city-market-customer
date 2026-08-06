@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { ChevronLeft, LogIn, UserPlus, ShoppingBag, ArrowRight } from 'lucide-react-native';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';

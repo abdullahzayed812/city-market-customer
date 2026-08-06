@@ -16,7 +16,7 @@ export const useLogin = (navigation: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Please fill all fields',
+        text2: t('auth.fill_all_fields'),
         position: 'top',
       });
       return;
@@ -28,8 +28,10 @@ export const useLogin = (navigation: any) => {
       await signIn(data?.user, data.accessToken, data.refreshToken);
       Toast.show({
         type: 'success',
-        text1: 'Welcome back!',
-        text2: `Signed in as ${data?.user?.name || 'Customer'}`,
+        text1: t('auth.login_success_title'),
+        text2: t('auth.login_success_message', {
+          name: data?.user?.name || t('common.customer'),
+        }),
         position: 'bottom',
       });
       if (navigation.canGoBack()) {
@@ -41,7 +43,7 @@ export const useLogin = (navigation: any) => {
       Toast.show({
         type: 'error',
         text1: t('common.error'),
-        text2: 'Invalid credentials',
+        text2: t('auth.invalid_credentials'),
         position: 'bottom',
       });
     } finally {
@@ -50,7 +52,7 @@ export const useLogin = (navigation: any) => {
   };
 
   const handleForgotPassword = () => {
-    Toast.show({ type: 'info', text1: 'Feature coming soon' });
+    Toast.show({ type: 'info', text1: t('common.feature_coming_soon') });
   };
 
   const navigateToRegister = () => {

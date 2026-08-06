@@ -1,19 +1,20 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
+import { ChevronLeft, Package } from 'lucide-react-native';
 import { theme } from '../theme';
-import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
 import { useStoreDetails } from '../features/store/hooks/useStoreDetails';
+import { useCategoryProducts } from '../features/store/hooks/useCategoryProducts';
 import { StoreHeader } from '../features/store/components/StoreHeader';
+import { CategoryTabs } from '../features/store/components/CategoryTabs';
+import { ProductRow } from '../features/store/components/ProductRow';
 import { useCart } from '../app/CartContext';
-import { getApiBaseURL } from '../utils/serverConfig';
 import FloatingCartBar from '../components/common/FloatingCartBar';
 
 const StoreDetailsScreen = ({ route, navigation }: any) => {
@@ -27,17 +28,28 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
     insets,
   } = useStoreDetails(vendorId);
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+
+  const {
+    rows,
+    isLoading: productsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    handleAddToCart,
+  } = useCategoryProducts(vendorId, selectedCategoryId);
+
   const { itemCount, total } = useCart();
 
   const handleCartPress = useCallback(() => {
     navigation.navigate('Main', { screen: 'Cart' });
   }, [navigation]);
 
-  const handleCategoryPress = useCallback(
-    (categoryId: string, categoryName: string) => {
-      navigation.navigate('CategoryProducts', { vendorId, categoryId, categoryName });
-    },
-    [navigation, vendorId],
+  const renderRow = useCallback(
+    ({ item }: { item: any[] }) => (
+      <ProductRow items={item} navigation={navigation} onAdd={handleAddToCart} />
+    ),
+    [navigation, handleAddToCart],
   );
 
   if (vendorLoading || categoriesLoading) {
@@ -50,44 +62,60 @@ const StoreDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={vendorCategories}
-        keyExtractor={item => item.id}
-        ListHeaderComponent={
-          <View>
-            <View style={[styles.heroContainer, { height: 240 + insets.top }]}>
-              <ImageWithPlaceholder
-                uri={vendor?.storeImage ? `${getApiBaseURL()}${vendor.storeImage}` : null}
-                style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }] as any}
-              />
-              <View style={styles.heroOverlay} />
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+          <ChevronLeft size={24} color={theme.colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>{vendor?.shopName}</Text>
+        <View style={styles.headerRight} />
+      </View>
+
+      {productsLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={rows}
+          keyExtractor={(_, index) => String(index)}
+          renderItem={renderRow}
+          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.5}
+          ListHeaderComponent={
+            <View>
+              <StoreHeader t={t} vendor={vendor} navigation={navigation} />
+              {vendorCategories.length > 0 && (
+                <CategoryTabs
+                  t={t}
+                  categories={vendorCategories}
+                  selectedCategoryId={selectedCategoryId}
+                  onSelect={setSelectedCategoryId}
+                />
+              )}
             </View>
-            <StoreHeader t={t} vendor={vendor} navigation={navigation} insets={insets} />
-            <Text style={styles.categorySectionLabel}>{t('store.categories')}</Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.categoryCard}
-            activeOpacity={0.8}
-            onPress={() => handleCategoryPress(item.id, item.name)}
-          >
-            <View style={[styles.categoryColorDot, { backgroundColor: item.color || theme.colors.primary }]} />
-            <Text style={styles.categoryName}>{item.name}</Text>
-            <ChevronRight size={18} color={theme.colors.textMuted} />
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('store.no_categories')}</Text>
-          </View>
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          itemCount > 0 && styles.listContentWithCart,
-        ]}
-        showsVerticalScrollIndicator={false}
-      />
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Package size={36} color={theme.colors.primary} strokeWidth={1.5} />
+              </View>
+              <Text style={styles.emptyText}>{t('store.no_products')}</Text>
+            </View>
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            itemCount > 0 && styles.listContentWithCart,
+          ]}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       <FloatingCartBar itemCount={itemCount} total={total} onPress={handleCartPress} />
     </View>
@@ -105,58 +133,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
-  heroContainer: {
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  categorySectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  categoryCard: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.white,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: theme.radius.lg,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    ...theme.shadows.soft,
-    gap: 14,
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
-  categoryColorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  categoryName: {
+  headerTitle: {
     flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.2,
+    textAlign: 'center',
+    letterSpacing: -0.3,
+  },
+  headerRight: {
+    width: 40,
   },
   listContent: {
+    paddingTop: 8,
     paddingBottom: 40,
   },
   listContentWithCart: {
     paddingBottom: 100,
   },
-  emptyContainer: {
-    paddingVertical: 50,
+  footerLoader: {
+    paddingVertical: 20,
     alignItems: 'center',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.primaryXLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   emptyText: {
     color: theme.colors.textMuted,

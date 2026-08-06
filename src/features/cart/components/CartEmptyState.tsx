@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { ShoppingCart } from 'lucide-react-native';
 import { theme } from '../../../theme';
 import { useAnimatedPress } from '../../../hooks/useAnimatedPress';

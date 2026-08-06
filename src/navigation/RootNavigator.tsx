@@ -13,10 +13,10 @@ import {
   TouchableOpacity,
   Platform,
   View,
-  Text,
   StyleSheet,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { theme } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -33,7 +33,6 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AddressesScreen from '../screens/AddressesScreen';
 import LanguageSettingsScreen from '../screens/LanguageSettingsScreen';
 import AllStoresScreen from '../screens/AllStoresScreen';
-import CategoryProductsScreen from '../screens/CategoryProductsScreen';
 
 import SearchScreen from '../screens/SearchScreen';
 import SplashScreen from '../screens/SplashScreen';
@@ -317,10 +316,6 @@ const RootNavigator = () => {
             <Stack.Screen
               name="VendorReviews"
               component={VendorReviewsScreen}
-            />
-            <Stack.Screen
-              name="CategoryProducts"
-              component={CategoryProductsScreen}
             />
           </>
         )}

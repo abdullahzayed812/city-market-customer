@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -11,10 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import {
   User,
   Mail,
-  Lock,
+  // Lock,
   UserPlus,
   ChevronLeft,
   ArrowRight,
@@ -131,7 +131,12 @@ const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.inputLabel}>
                 {t('auth.phone') || 'Phone Number'}
               </Text>
-              <View style={[styles.inputField, phoneError && styles.inputFieldError]}>
+              <View
+                style={[
+                  styles.inputField,
+                  phoneError && styles.inputFieldError,
+                ]}
+              >
                 <Phone
                   size={20}
                   color={theme.colors.textMuted}
@@ -139,7 +144,9 @@ const RegisterScreen = ({ navigation }: any) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder={t('auth.phone_placeholder') || '+966 5X XXX XXXX'}
+                  placeholder={
+                    t('auth.phone_placeholder') || '+966 5X XXX XXXX'
+                  }
                   value={formData.phone}
                   onChangeText={text => updateFormData('phone', text)}
                   keyboardType="phone-pad"
@@ -153,7 +160,12 @@ const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.inputLabel}>
                 {t('auth.email') || 'Email Address'}
               </Text>
-              <View style={[styles.inputField, needsProfileCompletion && styles.inputFieldDisabled]}>
+              <View
+                style={[
+                  styles.inputField,
+                  needsProfileCompletion && styles.inputFieldDisabled,
+                ]}
+              >
                 <Mail
                   size={20}
                   color={theme.colors.textMuted}
@@ -161,7 +173,9 @@ const RegisterScreen = ({ navigation }: any) => {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder={t('auth.email_placeholder') || 'name@example.com'}
+                  placeholder={
+                    t('auth.email_placeholder') || 'name@example.com'
+                  }
                   value={formData.email}
                   onChangeText={text => updateFormData('email', text)}
                   keyboardType="email-address"
@@ -176,21 +190,17 @@ const RegisterScreen = ({ navigation }: any) => {
               <Text style={styles.inputLabel}>
                 {t('auth.password') || 'Password'}
               </Text>
-              <View style={[styles.inputField, needsProfileCompletion && styles.inputFieldDisabled]}>
-                <Lock
+              <View
+                style={[
+                  styles.inputField,
+                  needsProfileCompletion && styles.inputFieldDisabled,
+                ]}
+              >
+                {/* <Lock
                   size={20}
                   color={theme.colors.textMuted}
                   style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChangeText={text => updateFormData('password', text)}
-                  secureTextEntry={!showPassword}
-                  placeholderTextColor={theme.colors.textMuted}
-                  editable={!needsProfileCompletion}
-                />
+                /> */}
                 <TouchableOpacity
                   onPress={() => setShowPassword(v => !v)}
                   accessibilityLabel={
@@ -205,6 +215,15 @@ const RegisterScreen = ({ navigation }: any) => {
                     <Eye size={20} color={theme.colors.textMuted} />
                   )}
                 </TouchableOpacity>
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChangeText={text => updateFormData('password', text)}
+                  secureTextEntry={!showPassword}
+                  placeholderTextColor={theme.colors.textMuted}
+                  editable={!needsProfileCompletion}
+                />
               </View>
             </View>
 
@@ -240,7 +259,7 @@ const RegisterScreen = ({ navigation }: any) => {
             </Text>
             <TouchableOpacity onPress={navigateToLogin}>
               <Text style={styles.loginText}>
-                {t('auth.login') || 'Sign In'}
+                {t('auth.login_button') || 'Sign In'}
               </Text>
             </TouchableOpacity>
           </View>

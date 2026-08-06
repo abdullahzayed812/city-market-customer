@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   StatusBar,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import {
   MapPin,
   ChevronLeft,

@@ -1,16 +1,16 @@
 import React, { useCallback, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   StatusBar,
   TouchableOpacity,
   Animated,
-  Dimensions,
+  // Dimensions,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, MapPin, Search, Zap } from 'lucide-react-native';
+import { ShoppingCart, Search, Zap } from 'lucide-react-native';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHomeData } from '../features/home/hooks/useHomeData';
@@ -19,7 +19,7 @@ import { VendorItem } from '../features/home/components/VendorItem';
 import { useCart } from '../app/CartContext';
 import { HomeScreenSkeleton } from '../components/common/SkeletonLoader';
 
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window');
 
 const PromoBanner = React.memo(() => {
   const { t } = useTranslation();
@@ -28,8 +28,16 @@ const PromoBanner = React.memo(() => {
   React.useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 0.97, duration: 1200, useNativeDriver: true }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.97,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
       ]),
     );
     anim.start();
@@ -37,7 +45,9 @@ const PromoBanner = React.memo(() => {
   }, [scaleAnim]);
 
   return (
-    <Animated.View style={[styles.promoBanner, { transform: [{ scale: scaleAnim }] }]}>
+    <Animated.View
+      style={[styles.promoBanner, { transform: [{ scale: scaleAnim }] }]}
+    >
       <View style={styles.promoContent}>
         <View style={styles.promoLeft}>
           <Text style={styles.promoTag}>{t('home.promo_tag')}</Text>
@@ -52,78 +62,111 @@ const PromoBanner = React.memo(() => {
   );
 });
 
-const CartButton = React.memo(({ itemCount, onPress }: { itemCount: number; onPress: () => void }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const prevCount = useRef(itemCount);
+const CartButton = React.memo(
+  ({ itemCount, onPress }: { itemCount: number; onPress: () => void }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const prevCount = useRef(itemCount);
 
-  React.useEffect(() => {
-    if (itemCount !== prevCount.current) {
-      prevCount.current = itemCount;
-      Animated.sequence([
-        Animated.spring(scaleAnim, { toValue: 1.25, useNativeDriver: true, speed: 30, bounciness: 12 }),
-        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 8 }),
-      ]).start();
-    }
-  }, [itemCount, scaleAnim]);
+    React.useEffect(() => {
+      if (itemCount !== prevCount.current) {
+        prevCount.current = itemCount;
+        Animated.sequence([
+          Animated.spring(scaleAnim, {
+            toValue: 1.25,
+            useNativeDriver: true,
+            speed: 30,
+            bounciness: 12,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+            speed: 30,
+            bounciness: 8,
+          }),
+        ]).start();
+      }
+    }, [itemCount, scaleAnim]);
 
-  return (
-    <TouchableOpacity style={styles.cartButton} onPress={onPress} activeOpacity={0.8}>
-      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <ShoppingCart color={theme.colors.primary} size={22} />
-      </Animated.View>
-      {itemCount > 0 && (
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
+    return (
+      <TouchableOpacity
+        style={styles.cartButton}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+          <ShoppingCart color={theme.colors.primary} size={22} />
+        </Animated.View>
+        {itemCount > 0 && (
+          <View style={styles.cartBadge}>
+            <Text style={styles.cartBadgeText}>
+              {itemCount > 99 ? '99+' : itemCount}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  },
+);
+
+const HomeHeader = React.memo(
+  ({
+    t,
+    navigation,
+    categories,
+    onCategoryPress,
+    itemCount,
+    onCartPress,
+  }: any) => (
+    <View style={styles.headerContainer}>
+      <View style={styles.headerBar}>
+        <View style={styles.locationContainer}>
+          <Text style={styles.welcomeText}>{t('home.welcome')}</Text>
+          <View style={styles.logoRow}>
+            <Text
+              style={styles.brandName}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.2}
+            >
+              {t('home.brand')}
+            </Text>
+            {/* <MapPin size={14} color={theme.colors.accent} style={{ marginLeft: 4 }} /> */}
+          </View>
         </View>
-      )}
-    </TouchableOpacity>
-  );
-});
-
-const HomeHeader = React.memo(({
-  t,
-  navigation,
-  categories,
-  onCategoryPress,
-  itemCount,
-  onCartPress,
-}: any) => (
-  <View style={styles.headerContainer}>
-    <View style={styles.headerBar}>
-      <View style={styles.locationContainer}>
-        <Text style={styles.welcomeText}>{t('home.welcome')}</Text>
-        <View style={styles.logoRow}>
-          <Text style={styles.brandName}>{t('home.brand')}</Text>
-          <MapPin size={14} color={theme.colors.accent} style={{ marginLeft: 4 }} />
-        </View>
+        <CartButton itemCount={itemCount} onPress={onCartPress} />
       </View>
-      <CartButton itemCount={itemCount} onPress={onCartPress} />
+
+      <TouchableOpacity
+        style={styles.searchContainer}
+        onPress={() => navigation.navigate('Search')}
+        activeOpacity={0.85}
+      >
+        <Search color={theme.colors.primary} size={18} />
+        <Text style={styles.searchPlaceholder}>
+          {t('home.search_placeholder')}
+        </Text>
+      </TouchableOpacity>
+
+      <PromoBanner />
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, styles.categoriesSectionTitle]}>
+          {t('home.categories')}
+        </Text>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={categories}
+          renderItem={({ item }) => (
+            <CategoryItem item={item} onPress={onCategoryPress} />
+          )}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.categoriesList}
+        />
+      </View>
     </View>
-
-    <TouchableOpacity
-      style={styles.searchContainer}
-      onPress={() => navigation.navigate('Search')}
-      activeOpacity={0.85}
-    >
-      <Search color={theme.colors.primary} size={18} />
-      <Text style={styles.searchPlaceholder}>{t('home.search_placeholder')}</Text>
-    </TouchableOpacity>
-
-    <PromoBanner />
-
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={categories}
-        renderItem={({ item }) => <CategoryItem item={item} onPress={onCategoryPress} />}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.categoriesList}
-      />
-    </View>
-  </View>
-));
+  ),
+);
 
 const HomeScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -145,14 +188,22 @@ const HomeScreen = ({ navigation }: any) => {
     [navigation],
   );
 
-  const handleCartPress = useCallback(() => navigation.navigate('Cart'), [navigation]);
+  const handleCartPress = useCallback(
+    () => navigation.navigate('Cart'),
+    [navigation],
+  );
 
   const renderSection = useCallback(
     ({ item }: { item: any }) => (
       <View style={styles.typeSection}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t(`home.type_${item.type.toLowerCase()}`)}</Text>
-          <TouchableOpacity onPress={() => handleSeeAllPress(item.type)} activeOpacity={0.7}>
+          <Text style={styles.sectionTitle}>
+            {t(`home.type_${item.type.toLowerCase()}`)}
+          </Text>
+          <TouchableOpacity
+            onPress={() => handleSeeAllPress(item.type)}
+            activeOpacity={0.7}
+          >
             <Text style={styles.seeAll}>{t('common.see_all')}</Text>
           </TouchableOpacity>
         </View>
@@ -174,7 +225,10 @@ const HomeScreen = ({ navigation }: any) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor={theme.colors.background}
+        />
         <HomeScreenSkeleton />
       </SafeAreaView>
     );
@@ -182,7 +236,10 @@ const HomeScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={theme.colors.background}
+      />
       <FlatList
         data={groupedVendors}
         renderItem={renderSection}
@@ -340,6 +397,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.textPrimary,
     letterSpacing: -0.2,
+  },
+  categoriesSectionTitle: {
+    marginLeft: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
   seeAll: {
     fontSize: 13,

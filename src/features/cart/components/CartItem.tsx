@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { Trash2 } from 'lucide-react-native';
 import { theme } from '../../../theme';
 import QuantitySelector from '../../../components/common/QuantitySelector';

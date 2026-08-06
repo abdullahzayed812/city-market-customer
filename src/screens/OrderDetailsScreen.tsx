@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   View,
-  Text,
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
   StatusBar,
   RefreshControl,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import {
   ChevronLeft,
   Package,

@@ -8,7 +8,7 @@ import { MeasurementType } from '@city-market/shared';
 
 const PAGE_SIZE = 20;
 
-export const useCategoryProducts = (vendorId: string, categoryId: string) => {
+export const useCategoryProducts = (vendorId: string, categoryId?: string) => {
   const { t } = useTranslation();
   const { addToCart } = useCart();
 
@@ -19,7 +19,7 @@ export const useCategoryProducts = (vendorId: string, categoryId: string) => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['category-products', vendorId, categoryId],
+    queryKey: ['category-products', vendorId, categoryId || 'all'],
     queryFn: ({ pageParam = 1 }) =>
       CatalogService.getVendorProductsByVendor(vendorId, pageParam as number, PAGE_SIZE, categoryId),
     getNextPageParam: lastPage => {

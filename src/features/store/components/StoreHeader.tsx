@@ -1,28 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronLeft, Star, MapPin, MessageSquare } from 'lucide-react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
+import { Star, MapPin, MessageSquare } from 'lucide-react-native';
 import { theme } from '../../../theme';
 
 interface StoreHeaderProps {
   t: any;
   vendor: any;
   navigation: any;
-  insets: any;
 }
 
-export const StoreHeader = React.memo(({ t, vendor, navigation, insets }: StoreHeaderProps) => (
+export const StoreHeader = React.memo(({ t, vendor, navigation }: StoreHeaderProps) => (
   <View>
-    {/* Spacer that matches hero height */}
-    <View style={{ height: 220 + insets.top }}>
-      <TouchableOpacity
-        style={[styles.backButton, { top: insets.top + 12 }]}
-        onPress={() => navigation.goBack()}
-        activeOpacity={0.8}
-      >
-        <ChevronLeft color={theme.colors.white} size={24} />
-      </TouchableOpacity>
-    </View>
-
     <View style={styles.infoCard}>
       <View style={styles.titleRow}>
         <Text style={styles.shopName} numberOfLines={1}>{vendor?.shopName}</Text>
@@ -60,21 +49,10 @@ export const StoreHeader = React.memo(({ t, vendor, navigation, insets }: StoreH
 ));
 
 const styles = StyleSheet.create({
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
   infoCard: {
     backgroundColor: theme.colors.white,
     marginHorizontal: 16,
-    marginTop: -20,
+    marginTop: 12,
     marginBottom: 8,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,

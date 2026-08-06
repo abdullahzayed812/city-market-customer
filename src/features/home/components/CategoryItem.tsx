@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
-import { Animated, TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { Animated, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { theme } from '../../../theme';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 

@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   FlatList,
@@ -10,6 +9,7 @@ import {
   StatusBar,
   Animated,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import {
   Search,
   ChevronLeft,

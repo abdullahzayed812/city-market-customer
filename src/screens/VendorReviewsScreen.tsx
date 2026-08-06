@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
+import { AppText as Text } from '@city-market/mobile-ui';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Star, MessageSquare, User } from 'lucide-react-native';
