@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { AppText as Text } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, Search, Zap } from 'lucide-react-native';
+import { ShoppingCart, Search, Zap, ChevronRight } from 'lucide-react-native';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useHomeData } from '../features/home/hooks/useHomeData';
@@ -147,7 +147,7 @@ const HomeHeader = React.memo(
         </Text>
       </TouchableOpacity>
 
-      <PromoBanner />
+      {/* <PromoBanner /> */}
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, styles.categoriesSectionTitle]}>
@@ -201,10 +201,12 @@ const HomeScreen = ({ navigation }: any) => {
             {t(`home.type_${item.type.toLowerCase()}`)}
           </Text>
           <TouchableOpacity
+            style={styles.seeAllButton}
             onPress={() => handleSeeAllPress(item.type)}
             activeOpacity={0.7}
           >
             <Text style={styles.seeAll}>{t('common.see_all')}</Text>
+            <ChevronRight size={14} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
         <FlatList
@@ -283,27 +285,30 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 12,
     color: theme.colors.textMuted,
-    fontWeight: '500',
-    letterSpacing: 0.3,
-    marginBottom: 2,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: 3,
   },
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   brandName: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     color: theme.colors.primary,
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
   },
   cartButton: {
     width: 46,
     height: 46,
-    borderRadius: 23,
+    borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.white,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(17,24,39,0.04)',
     ...theme.shadows.medium,
   },
   cartBadge: {
@@ -331,10 +336,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
     marginHorizontal: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
-    height: 50,
-    borderRadius: theme.radius.lg,
+    height: 52,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(17,24,39,0.04)',
     ...theme.shadows.soft,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
     gap: theme.spacing.sm,
   },
   searchPlaceholder: {
@@ -393,14 +400,19 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
   categoriesSectionTitle: {
     marginLeft: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   seeAll: {
     fontSize: 13,
@@ -415,7 +427,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   typeSection: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
   },
   vendorsHorizontalList: {
     paddingHorizontal: theme.spacing.lg,

@@ -186,7 +186,9 @@ const ProfileScreen = ({ navigation }: any) => {
             </View>
             <View style={styles.avatarRing} />
           </View>
-          <Text style={styles.heroName}>{profile?.fullName}</Text>
+          <Text style={styles.heroName} numberOfLines={2} adjustsFontSizeToFit>
+            {profile?.fullName}
+          </Text>
           {profile?.phone && (
             <View style={styles.heroPhone}>
               <Phone size={13} color={theme.colors.textMuted} />
@@ -321,6 +323,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     letterSpacing: -0.4,
     marginBottom: 5,
+    textAlign: 'center',
   },
   heroPhone: {
     flexDirection: 'row',

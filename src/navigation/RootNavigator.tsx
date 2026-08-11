@@ -16,7 +16,7 @@ import {
   StyleSheet,
   Animated,
 } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { AppText as Text, AnimatedAppText } from '@city-market/mobile-ui';
 import { theme } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -114,7 +114,7 @@ const TabBarButton = ({
           </View>
         )}
       </Animated.View>
-      <Animated.Text
+      <AnimatedAppText
         style={[
           tabStyles.tabLabel,
           { color: focused ? theme.colors.primary : theme.colors.textMuted },
@@ -122,7 +122,7 @@ const TabBarButton = ({
         ]}
       >
         {label}
-      </Animated.Text>
+      </AnimatedAppText>
     </TouchableOpacity>
   );
 };

@@ -47,7 +47,8 @@ const buildBase = (ip: string, port: string): string =>
 export const getApiBaseURL = async (): Promise<string> => {
   if (!__DEV__) return 'https://citymarket.tech/api/v1';
   const [ip, port] = await Promise.all([getServerIP(), getServerPort()]);
-  return `${buildBase(ip, port)}/api/v1`;
+  // return `${buildBase(ip, port)}/api/v1`;
+  return 'https://citymarket.tech/api/v1';
 };
 
 export const getSocketURL = async (): Promise<string> => {
