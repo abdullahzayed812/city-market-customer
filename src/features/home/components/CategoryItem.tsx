@@ -60,19 +60,13 @@ export const CategoryItem = React.memo(
 
 const styles = StyleSheet.create({
   wrapper: {
-    // alignItems: 'center',
-    marginRight: theme.spacing.md,
-    // width: 80,
+    alignItems: 'center',
+    marginRight: theme.spacing.sm,
+    width: 60,
   },
-  // iconShadow: {
-  //   borderRadius: theme.radius.md,
-  //   backgroundColor: theme.colors.white,
-  //   marginBottom: theme.spacing.sm,
-  //   ...theme.shadows.soft,
-  // },
   iconContainer: {
-    width: 72,
-    height: 72,
+    width: 52,
+    height: 52,
     borderRadius: '50%',
     overflow: 'hidden',
   },
@@ -81,10 +75,11 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   name: {
-    fontSize: 13,
+    fontSize: 11,
     color: theme.colors.textSecondary,
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 15,
+    lineHeight: 13,
+    marginTop: 4,
   },
 });

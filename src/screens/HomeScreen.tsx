@@ -21,46 +21,46 @@ import { HomeScreenSkeleton } from '../components/common/SkeletonLoader';
 
 // const { width } = Dimensions.get('window');
 
-const PromoBanner = React.memo(() => {
-  const { t } = useTranslation();
-  const scaleAnim = useRef(new Animated.Value(0.97)).current;
+// const PromoBanner = React.memo(() => {
+//   const { t } = useTranslation();
+//   const scaleAnim = useRef(new Animated.Value(0.97)).current;
 
-  React.useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.97,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [scaleAnim]);
+//   React.useEffect(() => {
+//     const anim = Animated.loop(
+//       Animated.sequence([
+//         Animated.timing(scaleAnim, {
+//           toValue: 1,
+//           duration: 1200,
+//           useNativeDriver: true,
+//         }),
+//         Animated.timing(scaleAnim, {
+//           toValue: 0.97,
+//           duration: 1200,
+//           useNativeDriver: true,
+//         }),
+//       ]),
+//     );
+//     anim.start();
+//     return () => anim.stop();
+//   }, [scaleAnim]);
 
-  return (
-    <Animated.View
-      style={[styles.promoBanner, { transform: [{ scale: scaleAnim }] }]}
-    >
-      <View style={styles.promoContent}>
-        <View style={styles.promoLeft}>
-          <Text style={styles.promoTag}>{t('home.promo_tag')}</Text>
-          <Text style={styles.promoTitle}>{t('home.promo_title')}</Text>
-          <Text style={styles.promoSubtitle}>{t('home.promo_subtitle')}</Text>
-        </View>
-        <View style={styles.promoRight}>
-          <Zap size={48} color="rgba(255,255,255,0.3)" />
-        </View>
-      </View>
-    </Animated.View>
-  );
-});
+//   return (
+//     <Animated.View
+//       style={[styles.promoBanner, { transform: [{ scale: scaleAnim }] }]}
+//     >
+//       <View style={styles.promoContent}>
+//         <View style={styles.promoLeft}>
+//           <Text style={styles.promoTag}>{t('home.promo_tag')}</Text>
+//           <Text style={styles.promoTitle}>{t('home.promo_title')}</Text>
+//           <Text style={styles.promoSubtitle}>{t('home.promo_subtitle')}</Text>
+//         </View>
+//         <View style={styles.promoRight}>
+//           <Zap size={48} color="rgba(255,255,255,0.3)" />
+//         </View>
+//       </View>
+//     </Animated.View>
+//   );
+// });
 
 const CartButton = React.memo(
   ({ itemCount, onPress }: { itemCount: number; onPress: () => void }) => {
@@ -397,17 +397,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '800',
     color: theme.colors.textPrimary,
     letterSpacing: -0.3,
   },
   categoriesSectionTitle: {
     marginLeft: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -427,10 +427,10 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   typeSection: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
   vendorsHorizontalList: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
   },
 });
 
