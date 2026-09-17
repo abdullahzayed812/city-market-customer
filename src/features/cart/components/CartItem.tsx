@@ -5,7 +5,6 @@ import { Trash2 } from 'lucide-react-native';
 import { theme } from '../../../theme';
 import QuantitySelector from '../../../components/common/QuantitySelector';
 import { MeasurementType } from '@city-market/shared';
-import { getApiBaseURL } from '../../../utils/serverConfig';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 
 interface CartItemProps {
@@ -26,7 +25,7 @@ export const CartItem = React.memo(({ item, onRemove, onUpdateAmount, t }: CartI
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const imageUri = item.imageUrl ? `${getApiBaseURL()}${item.imageUrl}` : null;
+  const imageUri = item.imageUrl || null;
 
   return (
     <Animated.View
