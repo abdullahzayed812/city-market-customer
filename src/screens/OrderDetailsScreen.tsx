@@ -19,11 +19,13 @@ import {
   XCircle,
   Ban,
   Timer,
+  Bike,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { VendorRatingModal } from '../components/VendorRatingModal';
 import { OrderStatusStepper } from '../components/OrderStatusStepper';
+import { CourierCard } from '../components/CourierCard';
 import CustomModal from '../components/common/CustomModal';
 import {
   VendorOrder,
@@ -55,6 +57,8 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
     cancellationDecisionModalVisible,
     setCancellationDecisionModalVisible,
     resolveCancellationMutation,
+    couriers,
+    vendorRatingFor,
     t,
   } = useOrderDetails(orderId);
 
@@ -201,6 +205,26 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
             )}
           </View>
 
+          {/* Courier: who is bringing the order, with a call button */}
+          {couriers.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Bike size={20} color={theme.colors.primary} />
+                <Text style={styles.sectionTitle}>
+                  {t(couriers.length > 1 ? 'courier.title_plural' : 'courier.title')}
+                </Text>
+              </View>
+              {couriers.map((delivery, index) => (
+                <CourierCard
+                  key={delivery.deliveryId}
+                  orderId={orderId}
+                  delivery={delivery}
+                  position={{ index, total: couriers.length }}
+                />
+              ))}
+            </View>
+          )}
+
           {/* Multi-Vendor Items Sections */}
           {vendorOrders.map(
             (
@@ -302,22 +326,36 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                   </View>
                 )}
 
-                {vo.status === VendorOrderStatus.DELIVERED && (
-                  <TouchableOpacity
-                    style={styles.rateButton}
-                    onPress={() =>
-                      handleRateVendor({
-                        id: vo.vendorId,
-                        name: vo.vendorName || t('common.vendor'),
-                      })
-                    }
-                  >
-                    <Star size={16} color={theme.colors.white} />
-                    <Text style={styles.rateButtonText}>
-                      {t('rating.rate_vendor_title')}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                {vo.status === VendorOrderStatus.DELIVERED &&
+                  (vendorRatingFor(vo.vendorId) ? (
+                    // Already rated: one rating per vendor per order
+                    <View style={styles.ratedRow}>
+                      <Text style={styles.ratedLabel}>{t('courier.your_rating')}</Text>
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <Star
+                          key={n}
+                          size={16}
+                          color={theme.colors.accent}
+                          fill={n <= (vendorRatingFor(vo.vendorId)?.stars ?? 0) ? theme.colors.accent : 'transparent'}
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.rateButton}
+                      onPress={() =>
+                        handleRateVendor({
+                          id: vo.vendorId,
+                          name: vo.vendorName || t('common.vendor'),
+                        })
+                      }
+                    >
+                      <Star size={16} color={theme.colors.white} />
+                      <Text style={styles.rateButtonText}>
+                        {t('rating.rate_vendor_title')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
               </View>
             ),
           )}

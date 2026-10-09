@@ -3,15 +3,19 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../app/AuthContext';
 import { AuthService } from '../services/api/authService';
+import { DEMO_MODE, DEMO_ACCOUNTS, DEMO_PASSWORD } from '../config/demo';
 
 export const useLogin = (navigation: any) => {
   const { t } = useTranslation();
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('customer@citymarket.com');
-  const [password, setPassword] = useState('password123');
+  // Demo account prefilled while DEMO_MODE is on (see src/config/demo.ts)
+  const [email, setEmail] = useState(DEMO_MODE ? DEMO_ACCOUNTS[0].email : '');
+  const [password, setPassword] = useState(DEMO_MODE ? DEMO_PASSWORD : '');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = () => loginWith(email, password);
+
+  const loginWith = async (email: string, password: string) => {
     if (!email || !password) {
       Toast.show({
         type: 'error',
@@ -67,6 +71,7 @@ export const useLogin = (navigation: any) => {
     setPassword,
     loading,
     handleLogin,
+    loginWith,
     handleForgotPassword,
     navigateToRegister,
   };

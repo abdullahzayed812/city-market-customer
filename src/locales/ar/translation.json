@@ -85,7 +85,8 @@
     "welcome": "أهلاً",
     "login_success_title": "أهلاً بعودتك!",
     "login_success_message": "تم تسجيل الدخول باسم {{name}}",
-    "invalid_credentials": "بيانات الدخول غير صحيحة"
+    "invalid_credentials": "بيانات الدخول غير صحيحة",
+    "demo_accounts": "حسابات تجريبية"
   },
   "home": {
     "title": "الرئيسية",
@@ -325,5 +326,21 @@
     "declineMessage": "يجب قبول الشروط والأحكام لاستخدام سيتي ماركت. إذا رفضت، سيتم إغلاق التطبيق.",
     "exitApp": "إغلاق التطبيق",
     "scrollHint": "يُرجى التمرير لأسفل لقراءة جميع الشروط قبل القبول"
+  },
+  "courier": {
+    "title": "المندوب",
+    "title_plural": "المندوبون",
+    "finding": "جارٍ البحث عن مندوب لطلبك…",
+    "heading_to_store": "في الطريق إلى المتجر لاستلام طلبك",
+    "picked_up": "استلم طلبك",
+    "on_the_way": "في الطريق إليك",
+    "delivered": "تم التوصيل",
+    "call": "اتصال",
+    "delivery_n_of_m": "التوصيل {{n}} من {{m}}",
+    "vehicle_motorcycle": "دراجة نارية",
+    "vehicle_car": "سيارة",
+    "vehicle_bicycle": "دراجة",
+    "rate_delivery": "قيّم التوصيل",
+    "your_rating": "تقييمك"
   }
 }

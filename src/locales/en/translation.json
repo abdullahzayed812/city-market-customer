@@ -85,7 +85,8 @@
     "welcome": "Welcome",
     "login_success_title": "Welcome back!",
     "login_success_message": "Signed in as {{name}}",
-    "invalid_credentials": "Invalid credentials"
+    "invalid_credentials": "Invalid credentials",
+    "demo_accounts": "Demo accounts"
   },
   "home": {
     "title": "Home",
@@ -326,5 +327,21 @@
     "declineMessage": "You must accept the Terms and Conditions to use CityMarket. If you decline, the app will close.",
     "exitApp": "Exit App",
     "scrollHint": "Please scroll down to read all terms before accepting"
+  },
+  "courier": {
+    "title": "Your courier",
+    "title_plural": "Your couriers",
+    "finding": "Finding a courier for your order…",
+    "heading_to_store": "Heading to the store to pick up your order",
+    "picked_up": "Picked up your order",
+    "on_the_way": "On the way to you",
+    "delivered": "Delivered",
+    "call": "Call",
+    "delivery_n_of_m": "Delivery {{n}} of {{m}}",
+    "vehicle_motorcycle": "Motorcycle",
+    "vehicle_car": "Car",
+    "vehicle_bicycle": "Bicycle",
+    "rate_delivery": "Rate the delivery",
+    "your_rating": "Your rating"
   }
 }

@@ -10,11 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { AppText as Text, DemoAccounts } from '@city-market/mobile-ui';
 import { Mail, ArrowRight, User, Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useLogin } from '../hooks/useLogin';
+import { DEMO_MODE, DEMO_ACCOUNTS, DEMO_PASSWORD } from '../config/demo';
 
 const LoginScreen = ({ navigation }: any) => {
   const {
@@ -25,6 +26,7 @@ const LoginScreen = ({ navigation }: any) => {
     setPassword,
     loading,
     handleLogin,
+    loginWith,
     handleForgotPassword,
     navigateToRegister,
   } = useLogin(navigation);
@@ -146,6 +148,20 @@ const LoginScreen = ({ navigation }: any) => {
                 </>
               )}
             </TouchableOpacity>
+
+            {DEMO_MODE && (
+              <DemoAccounts
+                title={t('auth.demo_accounts')}
+                accounts={DEMO_ACCOUNTS}
+                loading={loading}
+                accentColor={theme.colors.primary}
+                onSelect={account => {
+                  setEmail(account.email);
+                  setPassword(DEMO_PASSWORD);
+                  loginWith(account.email, DEMO_PASSWORD);
+                }}
+              />
+            )}
           </View>
 
           {/* Footer Section */}

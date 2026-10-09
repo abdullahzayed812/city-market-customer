@@ -260,6 +260,17 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  ratedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 12,
+  },
+  ratedLabel: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    marginEnd: 6,
+  },
   rateButton: {
     flexDirection: 'row',
     alignItems: 'center',

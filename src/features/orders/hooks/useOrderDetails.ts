@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSocket } from '../../../app/SocketContext';
 import { OrderService } from '../../../services/api/orderService';
+import { DeliveryService } from '../../../services/api/deliveryService';
+import { RatingService } from '../../../services/api/ratingService';
 import { useSlaCountdown } from '../../../hooks/useSlaCountdown';
 import { theme } from '../../../theme';
 import {
@@ -40,14 +42,42 @@ export const useOrderDetails = (orderId: string) => {
     queryFn: () => OrderService.getOrderProposals(orderId),
   });
 
+  // Courier(s) exist once the order is ready; after completion the card turns into
+  // "rate your courier"
+  const inDelivery = [
+    CustomerOrderStatus.READY,
+    CustomerOrderStatus.PICKED_UP,
+    CustomerOrderStatus.IN_DELIVERY,
+    CustomerOrderStatus.COMPLETED,
+  ].includes(order?.order?.status as CustomerOrderStatus);
+
+  const { data: couriers = [], refetch: refetchCouriers } = useQuery({
+    queryKey: ['order-couriers', orderId],
+    queryFn: () => DeliveryService.getOrderCouriers(orderId),
+    enabled: inDelivery,
+  });
+
+  // Vendors this customer already rated on this order: show their stars, not "rate"
+  const { data: myVendorRatings = [] } = useQuery({
+    queryKey: ['order-vendor-ratings', orderId],
+    queryFn: () => RatingService.getMyOrderRatings(orderId),
+    enabled: order?.order?.status === CustomerOrderStatus.COMPLETED,
+  });
+  const vendorRatingFor = useCallback(
+    (vendorId: string) => myVendorRatings.find(r => r.vendorId === vendorId),
+    [myVendorRatings],
+  );
+
   const refetch = useCallback(() => {
     refetchOrder();
     refetchProposals();
-  }, [refetchOrder, refetchProposals]);
+    if (inDelivery) refetchCouriers();
+  }, [refetchOrder, refetchProposals, refetchCouriers, inDelivery]);
 
   const handleUpdate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['order', orderId] });
     queryClient.invalidateQueries({ queryKey: ['order-proposals', orderId] });
+    queryClient.invalidateQueries({ queryKey: ['order-couriers', orderId] });
   }, [queryClient, orderId]);
 
   const socketEvents = useMemo(
@@ -68,6 +98,11 @@ export const useOrderDetails = (orderId: string) => {
       EventType.SLA_VENDOR_CONFIRMATION_EXPIRED,
       EventType.SLA_CUSTOMER_DECISION_EXPIRED,
       EventType.SLA_VENDOR_CANCELLATION_DECISION_EXPIRED,
+      // Courier assigned, changed or removed
+      EventType.COURIER_ASSIGNED,
+      EventType.DELIVERY_RETURNED_TO_POOL,
+      EventType.DELIVERY_RELEASED_BY_COURIER,
+      EventType.SLA_COURIER_PICKUP_EXPIRED,
     ],
     [],
   );
@@ -184,6 +219,8 @@ export const useOrderDetails = (orderId: string) => {
     cancellationDecisionModalVisible,
     setCancellationDecisionModalVisible,
     resolveCancellationMutation,
+    couriers,
+    vendorRatingFor,
     t,
   };
 };
