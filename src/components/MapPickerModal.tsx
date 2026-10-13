@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   StyleSheet,
@@ -23,6 +24,7 @@ interface MapPickerModalProps {
 }
 
 const MapPickerModal = ({ visible, onClose, onConfirm, googleApiKey, initialLocation }: MapPickerModalProps) => {
+  const { t } = useTranslation();
   const [region, setRegion] = useState({
     latitude: initialLocation?.latitude || 24.7136,
     longitude: initialLocation?.longitude || 46.6753,
@@ -95,7 +97,7 @@ const MapPickerModal = ({ visible, onClose, onConfirm, googleApiKey, initialLoca
           <TouchableOpacity onPress={onClose} style={styles.iconButton}>
             <X size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.title}>Pick Location</Text>
+          <Text style={styles.title}>{t('map.pick_location')}</Text>
           <View style={{ width: 44 }} />
         </View>
 
@@ -108,7 +110,7 @@ const MapPickerModal = ({ visible, onClose, onConfirm, googleApiKey, initialLoca
           </View>
           <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
             <Check size={24} color={theme.colors.white} />
-            <Text style={styles.confirmButtonText}>Confirm Location</Text>
+            <Text style={styles.confirmButtonText}>{t('map.confirm_location')}</Text>
           </TouchableOpacity>
         </View>
       </View>

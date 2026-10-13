@@ -7,10 +7,10 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { AppText as Text, BackIcon } from '@city-market/mobile-ui';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Star, MessageSquare, User } from 'lucide-react-native';
+import { Star, MessageSquare, User } from 'lucide-react-native';
 import { theme } from '../theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RatingService } from '../services/api/ratingService';
@@ -77,7 +77,7 @@ const VendorReviewsScreen = ({ route, navigation }: any) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <ChevronLeft size={24} color={theme.colors.primary} />
+          <BackIcon size={24} color={theme.colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('store.reviews')}</Text>
         <View style={{ width: 40 }} />

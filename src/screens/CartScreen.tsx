@@ -1,26 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import { View, StyleSheet, FlatList, StatusBar, Modal, Pressable } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  StatusBar,
-  Modal,
-  TouchableWithoutFeedback,
-  Dimensions,
-  Animated,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { ChevronLeft, LogIn, UserPlus, ShoppingBag, ArrowRight } from 'lucide-react-native';
-import { theme } from '../theme';
+  AppText as Text,
+  Button,
+  ScreenHeader,
+  EmptyState,
+  SummaryRow,
+  palette,
+  radii,
+  space,
+} from '@city-market/mobile-ui';
+import { LogIn, UserPlus, ShoppingBag, ShoppingCart } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCartLogic } from '../features/cart/hooks/useCartLogic';
 import { CartItem } from '../features/cart/components/CartItem';
-import { CartEmptyState } from '../features/cart/components/CartEmptyState';
 import { useAuth } from '../app/AuthContext';
-import { useAnimatedPress } from '../hooks/useAnimatedPress';
-
-const { width } = Dimensions.get('window');
+import { useCart } from '../app/CartContext';
+import { useFormat } from '../hooks/useFormat';
 
 const AuthModal = ({
   visible,
@@ -34,85 +30,42 @@ const AuthModal = ({
   onLogin: () => void;
   onRegister: () => void;
   t: any;
-}) => {
-  const slideAnim = useRef(new Animated.Value(300)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        speed: 16,
-        bounciness: 6,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, slideAnim]);
-
-  const { scaleValue: loginScale, onPressIn: loginIn, onPressOut: loginOut } = useAnimatedPress(0.96);
-  const { scaleValue: regScale, onPressIn: regIn, onPressOut: regOut } = useAnimatedPress(0.96);
-
-  return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback>
-            <Animated.View style={[styles.modalCard, { transform: [{ translateY: slideAnim }] }]}>
-              <View style={styles.modalHandle} />
-              <View style={styles.modalIconCircle}>
-                <ShoppingBag size={30} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.modalTitle}>
-                {t('auth.login_required_title') || 'Login Required'}
-              </Text>
-              <Text style={styles.modalMessage}>
-                {t('auth.login_required_message') ||
-                  'Please sign in to place your order'}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.modalLoginBtn}
-                onPress={onLogin}
-                onPressIn={loginIn}
-                onPressOut={loginOut}
-                activeOpacity={1}
-              >
-                <Animated.View style={[styles.modalLoginBtnInner, { transform: [{ scale: loginScale }] }]}>
-                  <LogIn size={18} color={theme.colors.white} />
-                  <Text style={styles.modalLoginBtnText}>{t('common.login') || 'Login'}</Text>
-                </Animated.View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalRegBtn}
-                onPress={onRegister}
-                onPressIn={regIn}
-                onPressOut={regOut}
-                activeOpacity={1}
-              >
-                <Animated.View style={[styles.modalRegBtnInner, { transform: [{ scale: regScale }] }]}>
-                  <UserPlus size={18} color={theme.colors.primary} />
-                  <Text style={styles.modalRegBtnText}>{t('common.register') || 'Register'}</Text>
-                </Animated.View>
-              </TouchableOpacity>
-            </Animated.View>
-          </TouchableWithoutFeedback>
+}) => (
+  <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
+    <View style={styles.modalOverlay}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('common.cancel')} />
+      <View style={styles.modalCard}>
+        <View style={styles.modalHandle} />
+        <View style={styles.modalIconCircle}>
+          <ShoppingBag size={30} color={palette.primary} />
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
-  );
-};
+        <Text variant="title" color={palette.text} style={styles.center}>
+          {t('auth.login_required_title')}
+        </Text>
+        <Text variant="body" color={palette.textMuted} style={[styles.center, styles.modalMessage]}>
+          {t('auth.login_required_message')}
+        </Text>
+        <Button label={t('common.login')} icon={LogIn} size="lg" fullWidth onPress={onLogin} />
+        <Button
+          label={t('common.register')}
+          icon={UserPlus}
+          size="lg"
+          variant="outline"
+          fullWidth
+          onPress={onRegister}
+          style={styles.modalSecondBtn}
+        />
+      </View>
+    </View>
+  </Modal>
+);
 
 const CartScreen = ({ navigation }: any) => {
   const { isAuthenticated } = useAuth();
   const { items, total, removeFromCart, handleUpdateAmount, t } = useCartLogic();
+  const { itemCount } = useCart();
+  const { money } = useFormat();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.97);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -122,288 +75,128 @@ const CartScreen = ({ navigation }: any) => {
     }
   };
 
-  if (items.length === 0) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
-        <View style={styles.emptyHeader}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={24} color={theme.colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{t('cart.title')}</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <CartEmptyState t={t} onShopPress={() => navigation.navigate('Home')} />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={24} color={theme.colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{t('cart.title')}</Text>
-          <View style={{ width: 40 }} />
-        </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={palette.surface} />
+      <ScreenHeader
+        title={t('cart.title')}
+        subtitle={items.length > 0 ? t('cart.items_count', { count: itemCount }) : undefined}
+      />
 
-        <FlatList
-          data={items}
-          renderItem={({ item }) => (
-            <CartItem
-              item={item}
-              onRemove={removeFromCart}
-              onUpdateAmount={handleUpdateAmount}
-              t={t}
-            />
-          )}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+      {items.length === 0 ? (
+        <EmptyState
+          icon={ShoppingCart}
+          title={t('cart.empty')}
+          message={t('cart.empty_subtitle')}
+          actionLabel={t('cart.browse_stores')}
+          onAction={() => navigation.navigate('Home')}
         />
+      ) : (
+        <>
+          <FlatList
+            data={items}
+            renderItem={({ item }) => (
+              <CartItem item={item} onRemove={removeFromCart} onUpdateAmount={handleUpdateAmount} t={t} />
+            )}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            ItemSeparatorComponent={Separator}
+            showsVerticalScrollIndicator={false}
+          />
 
-        <View style={styles.footer}>
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t('cart.subtotal') || 'Subtotal'}</Text>
-              <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t('checkout.delivery_fee') || 'Delivery'}</Text>
-              <Text style={[styles.summaryValue, { color: theme.colors.success }]}>
-                {t('common.free') || 'Free'}
-              </Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t('cart.total')}</Text>
-              <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-            </View>
+          <View style={styles.footer}>
+            <SummaryRow label={t('cart.subtotal')} value={money(total)} />
+            <SummaryRow label={t('checkout.delivery_fee')} value={t('cart.delivery_at_checkout')} emphasis="muted" />
+            <Button
+              label={t('cart.continue')}
+              size="lg"
+              fullWidth
+              onPress={handleCheckout}
+              style={styles.checkoutBtn}
+            />
           </View>
-
-          <TouchableOpacity
-            onPress={handleCheckout}
-            onPressIn={onPressIn}
-            onPressOut={onPressOut}
-            activeOpacity={1}
-          >
-            <Animated.View style={[styles.checkoutBtn, { transform: [{ scale: scaleValue }] }]}>
-              <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
-              <ArrowRight size={20} color={theme.colors.white} strokeWidth={2.5} />
-            </Animated.View>
-          </TouchableOpacity>
-        </View>
-      </View>
+        </>
+      )}
 
       <AuthModal
         visible={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onLogin={() => { setShowAuthModal(false); navigation.navigate('Login'); }}
-        onRegister={() => { setShowAuthModal(false); navigation.navigate('Register'); }}
+        onLogin={() => {
+          setShowAuthModal(false);
+          navigation.navigate('Login');
+        }}
+        onRegister={() => {
+          setShowAuthModal(false);
+          navigation.navigate('Register');
+        }}
         t={t}
       />
     </SafeAreaView>
   );
 };
 
+const Separator = () => <View style={styles.separator} />;
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.white,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  emptyHeader: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.3,
+    backgroundColor: palette.background,
   },
   listContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    padding: space.lg,
+  },
+  separator: {
+    height: space.md,
   },
   footer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    ...theme.shadows.medium,
-  },
-  summaryCard: {
-    marginBottom: theme.spacing.md,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginVertical: 10,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-  },
-  totalValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
+    paddingHorizontal: space.xl,
+    paddingTop: space.lg,
+    paddingBottom: space.lg,
+    backgroundColor: palette.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.borderStrong,
   },
   checkoutBtn: {
-    backgroundColor: theme.colors.primary,
-    height: 56,
-    borderRadius: theme.radius.xl,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    ...theme.shadows.medium,
+    marginTop: space.md,
   },
-  checkoutBtnText: {
-    color: theme.colors.white,
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+  center: {
+    textAlign: 'center',
   },
-  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: palette.overlay,
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: theme.radius.xxl,
-    borderTopRightRadius: theme.radius.xxl,
-    padding: theme.spacing.xl,
-    paddingBottom: 36,
+    backgroundColor: palette.surface,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    padding: space.xxl,
+    paddingBottom: space.huge,
     alignItems: 'center',
   },
   modalHandle: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.border,
-    marginBottom: theme.spacing.lg,
+    backgroundColor: palette.borderStrong,
+    marginBottom: space.xl,
   },
   modalIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.primaryXLight,
+    backgroundColor: palette.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-    letterSpacing: -0.3,
+    marginBottom: space.lg,
   },
   modalMessage: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: theme.spacing.xl,
-    paddingHorizontal: 16,
+    marginTop: space.xs,
+    marginBottom: space.xxl,
   },
-  modalLoginBtn: {
-    width: '100%',
-    marginBottom: theme.spacing.sm,
-  },
-  modalLoginBtnInner: {
-    height: 52,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    ...theme.shadows.soft,
-  },
-  modalLoginBtnText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  modalRegBtn: {
-    width: '100%',
-  },
-  modalRegBtnInner: {
-    height: 52,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary,
-  },
-  modalRegBtnText: {
-    color: theme.colors.primary,
-    fontSize: 16,
-    fontWeight: '700',
+  modalSecondBtn: {
+    marginTop: space.md,
   },
 });
 

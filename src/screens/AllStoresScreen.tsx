@@ -1,29 +1,17 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { ScreenHeader, IconButton, EmptyState, LoadingState, palette, space } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Search } from 'lucide-react-native';
+import { Search, Store } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../theme';
 import { useHomeData } from '../features/home/hooks/useHomeData';
 import { VendorItem } from '../features/home/components/VendorItem';
-
-const { width } = Dimensions.get('window');
-const COLUMN_COUNT = 2;
-const ITEM_WIDTH =
-  (width - theme.spacing.lg * 2 - theme.spacing.md) / COLUMN_COUNT;
+import QueryError from '../components/common/QueryError';
 
 const AllStoresScreen = ({ route, navigation }: any) => {
   const { t } = useTranslation();
   const { type } = route.params || {};
-  const { vendors, isLoading } = useHomeData();
+  const { vendors, isLoading, error, refetch, isRefetching } = useHomeData();
 
   const filteredVendors = useMemo(() => {
     if (!vendors) return [];
@@ -35,113 +23,74 @@ const AllStoresScreen = ({ route, navigation }: any) => {
     navigation.navigate('StoreDetails', { vendorId: id });
   };
 
-  const title = type ? t(`home.type_${type.toLowerCase()}`) : t('home.stores');
-
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
+  const title = type ? t(`home.type_${type.toLowerCase()}`, { defaultValue: type }) : t('home.stores');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Search')}
-          style={styles.searchButton}
-        >
-          <Search size={22} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={filteredVendors}
-        renderItem={({ item }) => (
-          <VendorItem
-            item={item}
-            onPress={handleVendorPress}
-            t={t}
-            style={{ width: ITEM_WIDTH, marginRight: 0 }}
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScreenHeader
+        title={title}
+        onBack={() => navigation.goBack()}
+        backLabel={t('common.back')}
+        right={
+          <IconButton
+            icon={Search}
+            variant="soft"
+            size={40}
+            onPress={() => navigation.navigate('Search')}
+            accessibilityLabel={t('common.search')}
           />
-        )}
-        keyExtractor={item => item.id}
-        numColumns={COLUMN_COUNT}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('common.no_results')}</Text>
-          </View>
         }
       />
+
+      {isLoading ? (
+        <LoadingState />
+      ) : (
+        <FlatList
+          data={filteredVendors}
+          renderItem={({ item }) => (
+            <View style={styles.cell}>
+              <VendorItem item={item} onPress={handleVendorPress} t={t} />
+            </View>
+          )}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.primary} colors={[palette.primary]} />
+          }
+          ListEmptyComponent={
+            error ? (
+              <QueryError error={error} onRetry={refetch} retrying={isRefetching} />
+            ) : (
+              <EmptyState icon={Store} title={t('home.no_stores')} message={t('home.no_stores_hint')} />
+            )
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
+  safeArea: {
     flex: 1,
-    textAlign: 'center',
-    letterSpacing: -0.3,
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: palette.background,
   },
   listContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    flexGrow: 1,
+    padding: space.lg,
+    paddingBottom: space.xxxl,
   },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.md,
+  row: {
+    gap: space.md,
+    marginBottom: space.md,
   },
-  emptyContainer: {
+  cell: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
+    // Keeps a lone last card at half width instead of stretching.
+    maxWidth: '50%',
   },
 });
 

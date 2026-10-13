@@ -1,23 +1,23 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import { View, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Dimensions,
-  Animated,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, ShoppingCart } from 'lucide-react-native';
-import { theme } from '../theme';
+  AppText as Text,
+  BackButton,
+  Button,
+  StatusBadge,
+  LoadingState,
+  palette,
+  radii,
+  space,
+  elevation,
+} from '@city-market/mobile-ui';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ShoppingCart, CircleCheck, CircleSlash } from 'lucide-react-native';
 import QuantitySelector from '../components/common/QuantitySelector';
 import { useProductDetails } from '../features/products/hooks/useProductDetails';
 import ImageWithPlaceholder from '../components/common/ImageWithPlaceholder';
-import { useAnimatedPress } from '../hooks/useAnimatedPress';
-
-const { width } = Dimensions.get('window');
+import QueryError from '../components/common/QueryError';
+import { useFormat } from '../hooks/useFormat';
 
 const ProductDetailsScreen = ({ route, navigation }: any) => {
   const { productId } = route.params;
@@ -33,281 +33,203 @@ const ProductDetailsScreen = ({ route, navigation }: any) => {
     stockAvailable,
     maxAmount,
     t,
+    error,
+    refetch,
+    isRefetching,
   } = useProductDetails(productId, navigation);
+  const { money, weight } = useFormat();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  const addBtnScale = useRef(new Animated.Value(1)).current;
-  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.97);
-
-  const triggerAddAnim = () => {
-    Animated.sequence([
-      Animated.spring(addBtnScale, { toValue: 0.93, useNativeDriver: true, speed: 50, bounciness: 4 }),
-      Animated.spring(addBtnScale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 8 }),
-    ]).start();
-    handleAddToCart();
-  };
+  const backButton = (
+    <BackButton
+      onPress={() => navigation.goBack()}
+      accessibilityLabel={t('common.back')}
+      style={[styles.backBtn, { top: insets.top + space.sm }]}
+    />
+  );
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <LoadingState />
+        {backButton}
+      </SafeAreaView>
     );
   }
 
+  if (!product) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <QueryError error={error} onRetry={refetch} retrying={isRefetching} />
+        {backButton}
+      </SafeAreaView>
+    );
+  }
+
+  const canAdd = stockAvailable && product.isAvailable !== false;
+  const lineTotal = isWeight ? (product.price * amount) / 1000 : product.price * amount;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.floatingHeader}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.8}
-          >
-            <ChevronLeft color={theme.colors.textPrimary} size={22} />
-          </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.imageWrapper, { height: Math.min(width, 420) + insets.top }]}>
+          <ImageWithPlaceholder uri={imageUrl} style={styles.heroImage} resizeMode="contain" />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.imageWrapper}>
-            <ImageWithPlaceholder
-              uri={imageUrl}
-              style={styles.heroImage}
-              resizeMode="contain"
-            />
-            {!stockAvailable && (
-              <View style={styles.outOfStockBanner}>
-                <Text style={styles.outOfStockBannerText}>Out of Stock</Text>
-              </View>
-            )}
+        <View style={styles.sheet}>
+          {product.vendorName ? (
+            <Text variant="caption" color={palette.primary}>
+              {t('product.from_store', { store: product.vendorName })}
+            </Text>
+          ) : null}
+          <Text variant="title" color={palette.text}>
+            {product.name}
+          </Text>
+
+          <View style={styles.priceRow}>
+            <Text variant="display" color={palette.text} style={styles.price}>
+              {money(product.price)}
+            </Text>
+            {isWeight ? (
+              <Text variant="body" color={palette.textMuted}>{t('common.per_kg')}</Text>
+            ) : null}
           </View>
 
-          <View style={styles.infoSheet}>
-            <View style={styles.titleRow}>
-              <Text style={styles.productName}>{product?.name}</Text>
-              <View style={styles.priceBox}>
-                <Text style={styles.productPrice}>${product?.price.toFixed(2)}</Text>
-                {isWeight && <Text style={styles.priceUnit}>/kg</Text>}
-              </View>
-            </View>
+          <StatusBadge
+            label={canAdd ? t('product.available') : t('store.out_of_stock')}
+            tone={canAdd ? 'success' : 'neutral'}
+            icon={canAdd ? CircleCheck : CircleSlash}
+          />
 
-            <View style={styles.stockRow}>
-              <View style={[styles.stockDot, { backgroundColor: stockAvailable ? theme.colors.success : theme.colors.error }]} />
-              <Text style={[styles.stockLabel, { color: stockAvailable ? theme.colors.success : theme.colors.error }]}>
-                {stockAvailable ? t('product.in_stock') || 'In Stock' : t('store.out_of_stock')}
+          {product.description ? (
+            <View style={styles.block}>
+              <Text variant="subheading" color={palette.text}>{t('common.description')}</Text>
+              <Text variant="body" color={palette.textSecondary} style={styles.description}>
+                {product.description}
               </Text>
             </View>
+          ) : null}
 
-            <View style={styles.divider} />
-
-            <Text style={styles.sectionLabel}>{t('common.description') || 'Description'}</Text>
-            <Text style={styles.description}>{product?.description}</Text>
-
-            <View style={styles.qtySection}>
-              <Text style={styles.sectionLabel}>
-                {isWeight ? t('product.weight') || 'Weight' : t('product.quantity') || 'Quantity'}
+          {canAdd ? (
+            <View style={[styles.block, styles.qtyRow]}>
+              <Text variant="subheading" color={palette.text}>
+                {isWeight ? t('product.weight') : t('product.quantity')}
               </Text>
               <QuantitySelector
+                size="lg"
                 quantity={amount}
                 onIncrement={handleIncrement}
                 onDecrement={handleDecrement}
                 maxQuantity={maxAmount}
                 minQuantity={isWeight ? 500 : 1}
-                displayValue={isWeight ? `${(amount / 1000).toFixed(1)} kg` : undefined}
+                displayValue={isWeight ? weight(amount) : undefined}
               />
             </View>
-          </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={stockAvailable ? triggerAddAnim : undefined}
-            onPressIn={stockAvailable ? onPressIn : undefined}
-            onPressOut={stockAvailable ? onPressOut : undefined}
-            disabled={!stockAvailable}
-            activeOpacity={1}
-          >
-            <Animated.View
-              style={[
-                styles.addBtn,
-                !stockAvailable && styles.addBtnDisabled,
-                { transform: [{ scale: stockAvailable ? scaleValue : 1 }] },
-              ]}
-            >
-              <ShoppingCart size={20} color={theme.colors.white} />
-              <Text style={styles.addBtnText}>{t('store.add_to_cart')}</Text>
-            </Animated.View>
-          </TouchableOpacity>
+          ) : null}
+          {canAdd && amount >= maxAmount ? (
+            <Text variant="caption" color={palette.warning}>{t('product.max_reached')}</Text>
+          ) : null}
         </View>
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, space.lg) }]}>
+        {canAdd ? (
+          <View style={styles.footerTotal}>
+            <Text variant="caption" color={palette.textMuted}>{t('product.line_total')}</Text>
+            <Text variant="heading" color={palette.text} style={styles.tabular}>{money(lineTotal)}</Text>
+          </View>
+        ) : null}
+        <Button
+          label={canAdd ? t('store.add_to_cart') : t('store.out_of_stock')}
+          icon={ShoppingCart}
+          size="lg"
+          disabled={!canAdd}
+          onPress={handleAddToCart}
+          style={styles.addBtn}
+        />
       </View>
-    </SafeAreaView>
+
+      {backButton}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.white },
-  container: { flex: 1, backgroundColor: theme.colors.white },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    zIndex: 10,
-    flexDirection: 'row',
+  safeArea: {
+    flex: 1,
+    backgroundColor: palette.background,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.shadows.medium,
+  container: {
+    flex: 1,
+    backgroundColor: palette.background,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: space.xxl,
+  },
+  backBtn: {
+    position: 'absolute',
+    start: space.lg,
+    ...elevation.card,
   },
   imageWrapper: {
-    width: width,
-    height: width * 0.78,
-    backgroundColor: theme.colors.borderLight,
+    width: '100%',
+    backgroundColor: palette.surface,
   },
   heroImage: {
     width: '100%',
     height: '100%',
   },
-  outOfStockBanner: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(239,68,68,0.9)',
-    padding: 10,
-    borderRadius: theme.radius.md,
-    alignItems: 'center',
+  sheet: {
+    marginTop: -space.xl,
+    backgroundColor: palette.background,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    paddingHorizontal: space.xl,
+    paddingTop: space.xxl,
+    gap: space.sm,
   },
-  outOfStockBannerText: {
-    color: theme.colors.white,
-    fontWeight: '800',
-    fontSize: 13,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  infoSheet: {
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: theme.radius.xxl,
-    borderTopRightRadius: theme.radius.xxl,
-    marginTop: -theme.radius.xxl,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    ...theme.shadows.soft,
-  },
-  titleRow: {
+  priceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-    gap: 12,
+    alignItems: 'baseline',
+    gap: space.xs,
   },
-  productName: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.5,
-    lineHeight: 28,
+  price: {
+    fontVariant: ['tabular-nums'],
   },
-  priceBox: {
-    alignItems: 'flex-end',
-  },
-  productPrice: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
-  },
-  priceUnit: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
-    marginTop: 1,
-  },
-  stockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
-  },
-  stockDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  stockLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginBottom: 20,
-  },
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    marginBottom: 8,
-    letterSpacing: -0.2,
+  block: {
+    marginTop: space.lg,
   },
   description: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: 24,
-    fontWeight: '400',
+    marginTop: space.xs,
   },
-  qtySection: {
+  qtyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: space.md,
+    padding: space.lg,
+    backgroundColor: palette.surface,
+    borderRadius: radii.lg,
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    paddingBottom: 24,
-    backgroundColor: theme.colors.white,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.lg,
+    paddingHorizontal: space.xl,
+    paddingTop: space.md,
+    backgroundColor: palette.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.borderStrong,
+  },
+  footerTotal: {
+    minWidth: 96,
+  },
+  tabular: {
+    fontVariant: ['tabular-nums'],
   },
   addBtn: {
-    backgroundColor: theme.colors.primary,
-    height: 56,
-    borderRadius: theme.radius.xl,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    ...theme.shadows.medium,
-  },
-  addBtnDisabled: {
-    backgroundColor: theme.colors.border,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  addBtnText: {
-    color: theme.colors.white,
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    flex: 1,
   },
 });
 

@@ -42,7 +42,17 @@
     "vendor": "Vendor",
     "logout_confirm": "Are you sure you want to logout?",
     "customer": "Customer",
-    "feature_coming_soon": "Feature coming soon"
+    "feature_coming_soon": "Feature coming soon",
+    "currency": "EGP",
+    "per_kg": "/ kg",
+    "back": "Back",
+    "error_title": "Couldn't load this",
+    "error_message": "Something went wrong. Please try again.",
+    "offline_title": "You're offline",
+    "offline_message": "Check your connection and try again.",
+    "action_failed": "Couldn't complete the action",
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity"
   },
   "auth": {
     "login_title": "Welcome Back",
@@ -110,7 +120,11 @@
     "type_pastry": "Pastry",
     "type_stationery": "Stationery",
     "type_vegfruit": "Vegetables & Fruits",
-    "type_other": "Other"
+    "type_other": "Other",
+    "no_stores": "No stores available right now",
+    "no_stores_hint": "Pull down to refresh or try again later.",
+    "greeting": "What do you need today?",
+    "rating_count": "({{count}})"
   },
   "store": {
     "products": "Products",
@@ -129,13 +143,20 @@
     "all": "All",
     "no_categories": "No categories available",
     "low_stock": "Low Stock",
-    "no_comment": "No comment"
+    "no_comment": "No comment",
+    "add_item_a11y": "Add {{name}} to cart",
+    "in_cart": "In cart"
   },
   "product": {
     "in_stock": "In Stock",
     "quantity": "Quantity",
     "proposed_quantity": "Proposed Quantity",
-    "weight": "Weight"
+    "weight": "Weight",
+    "line_total": "Total",
+    "max_reached": "You've reached the available stock",
+    "from_store": "From {{store}}",
+    "available": "Available",
+    "not_found": "This product isn't available"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -144,7 +165,13 @@
     "total": "Total",
     "subtotal": "Subtotal",
     "checkout": "Checkout",
-    "remove": "Remove"
+    "remove": "Remove",
+    "view_cart": "View cart",
+    "delivery_at_checkout": "Calculated at checkout",
+    "continue": "Continue to checkout",
+    "items_count": "Items: {{count}}",
+    "remove_a11y": "Remove {{name}} from cart",
+    "browse_stores": "Browse stores"
   },
   "checkout": {
     "title": "Checkout",
@@ -161,7 +188,12 @@
     "grand_total": "Grand Total",
     "select_address": "Please select a delivery address",
     "address_not_found": "Selected address not found",
-    "failed_to_place_order": "Failed to place order"
+    "failed_to_place_order": "Failed to place order",
+    "fee_pending": "Select an address to calculate delivery",
+    "fee_calculating": "Calculating delivery fee...",
+    "items_subtotal": "Items subtotal",
+    "pay_on_delivery_note": "You'll pay in cash when you receive your order.",
+    "add_address": "Add address"
   },
   "orders": {
     "title": "My Orders",
@@ -234,7 +266,11 @@
     "cancel_entire_order_label": "Cancel Entire Order",
     "cancel_entire_order_instead": "Cancel Entire Order Instead",
     "type_weight_adjustment": "Weight Adjustment",
-    "actual_quantity": "Acual Quantity"
+    "actual_quantity": "Acual Quantity",
+    "requested": "Requested",
+    "proposed": "Proposed",
+    "unavailable_desc": "The store says this item is unavailable. Accepting removes it from your order.",
+    "pending_count": "{{count}} awaiting your decision"
   },
   "profile": {
     "title": "Profile",
@@ -343,5 +379,9 @@
     "vehicle_bicycle": "Bicycle",
     "rate_delivery": "Rate the delivery",
     "your_rating": "Your rating"
+  },
+  "map": {
+    "pick_location": "Pick location on map",
+    "confirm_location": "Confirm location"
   }
 }

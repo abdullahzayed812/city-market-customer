@@ -9,7 +9,7 @@ import {
   StatusBar,
   Animated,
 } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { AppText as Text, ForwardIcon } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -17,7 +17,6 @@ import {
   MapPin,
   Globe,
   LogOut,
-  ChevronRight,
   Phone,
   HelpCircle,
   Shield,
@@ -64,7 +63,7 @@ const MenuItem = ({
           <Text style={[styles.menuLabel, { color: labelColor }]}>{label}</Text>
           {value && <Text style={styles.menuValue}>{value}</Text>}
         </View>
-        <ChevronRight size={18} color={theme.colors.border} />
+        <ForwardIcon size={18} color={theme.colors.border} />
       </Animated.View>
     </TouchableOpacity>
   );
@@ -283,7 +282,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.4,
   },
   heroSection: {
     backgroundColor: theme.colors.white,
@@ -321,7 +319,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.4,
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -354,15 +351,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.3,
     marginBottom: 3,
   },
   statLabel: {
     fontSize: 11,
     color: theme.colors.textMuted,
     fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
     textAlign: 'center',
   },
   statDivider: {
@@ -378,8 +372,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
     marginBottom: 10,
     marginLeft: 4,
   },
@@ -412,7 +404,6 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 15,
     fontWeight: '600',
-    letterSpacing: -0.2,
   },
   menuValue: {
     fontSize: 13,
@@ -441,7 +432,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
-    letterSpacing: -0.4,
   },
   guestMessage: {
     fontSize: 14,

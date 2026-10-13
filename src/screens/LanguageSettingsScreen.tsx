@@ -1,21 +1,19 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, I18nManager, StatusBar } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { View, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import { AppText as Text, BackIcon } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { Globe, Check, ChevronLeft } from 'lucide-react-native';
+import { Globe, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { theme } from '../theme';
+import { applyLanguage, AppLanguage } from '../locales/i18n';
 
 const LanguageSettingsScreen = ({ navigation }: any) => {
     const { t, i18n } = useTranslation();
 
     const changeLanguage = async (lang: string) => {
-        const isRTL = lang === 'ar';
-        if (isRTL !== I18nManager.isRTL) {
-            I18nManager.allowRTL(isRTL);
-            I18nManager.forceRTL(isRTL);
-            i18n.changeLanguage(lang);
+        const needsRestart = await applyLanguage(lang as AppLanguage);
+        if (needsRestart) {
             Toast.show({
                 type: 'info',
                 text1: t('common.language_changed'),
@@ -23,8 +21,6 @@ const LanguageSettingsScreen = ({ navigation }: any) => {
                 position: 'top',
                 autoHide: false,
             });
-        } else {
-            i18n.changeLanguage(lang);
         }
     };
 
@@ -57,7 +53,7 @@ const LanguageSettingsScreen = ({ navigation }: any) => {
             <View style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <ChevronLeft size={24} color={theme.colors.primary} />
+                        <BackIcon size={24} color={theme.colors.primary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('profile.language')}</Text>
                     <View style={{ width: 40 }} />
@@ -104,7 +100,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '700',
         color: theme.colors.textPrimary,
-        letterSpacing: -0.3,
     },
     content: {
         padding: theme.spacing.lg,
@@ -114,8 +109,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
         color: theme.colors.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
         marginBottom: 20,
         paddingLeft: 4,
     },

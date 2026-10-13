@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
-import { FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { theme } from '../../../theme';
+import { FlatList, StyleSheet } from 'react-native';
+import { Chip, space } from '@city-market/mobile-ui';
 
 interface CategoryTabsProps {
   t: any;
@@ -14,20 +13,9 @@ export const CategoryTabs = React.memo(({ t, categories, selectedCategoryId, onS
   const data = [{ id: undefined, name: t('store.all') }, ...categories];
 
   const renderItem = useCallback(
-    ({ item }: { item: any }) => {
-      const isSelected = selectedCategoryId === item.id;
-      return (
-        <TouchableOpacity
-          style={[styles.tab, isSelected && styles.tabSelected]}
-          activeOpacity={0.8}
-          onPress={() => onSelect(item.id)}
-        >
-          <Text style={[styles.tabText, isSelected && styles.tabTextSelected]} numberOfLines={1}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      );
-    },
+    ({ item }: { item: any }) => (
+      <Chip label={item.name} selected={selectedCategoryId === item.id} onPress={() => onSelect(item.id)} />
+    ),
     [selectedCategoryId, onSelect],
   );
 
@@ -45,28 +33,8 @@ export const CategoryTabs = React.memo(({ t, categories, selectedCategoryId, onS
 
 const styles = StyleSheet.create({
   list: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
-    gap: theme.spacing.sm,
-  },
-  tab: {
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 9,
-  },
-  tabSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-  },
-  tabTextSelected: {
-    color: theme.colors.white,
+    paddingHorizontal: space.lg,
+    paddingBottom: space.lg,
+    gap: space.sm,
   },
 });

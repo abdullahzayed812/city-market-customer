@@ -11,9 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import { AppText as Text, BackIcon } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Plus, ChevronLeft, Trash2, Check } from 'lucide-react-native';
+import { MapPin, Plus, Trash2, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Config from 'react-native-config';
 import { theme } from '../theme';
@@ -99,7 +99,7 @@ const AddressesScreen = ({ navigation }: any) => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <ChevronLeft size={24} color={theme.colors.primary} />
+            <BackIcon size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('profile.addresses')}</Text>
           <View style={{ width: 40 }} />
@@ -273,7 +273,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: theme.colors.textPrimary,
-    letterSpacing: -0.3,
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
   addressCard: {
@@ -342,7 +341,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.textPrimary,
     marginBottom: 6,
-    letterSpacing: -0.3,
   },
   emptyText: {
     fontSize: 14,

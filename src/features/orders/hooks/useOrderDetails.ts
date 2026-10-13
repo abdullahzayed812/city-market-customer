@@ -7,6 +7,8 @@ import { DeliveryService } from '../../../services/api/deliveryService';
 import { RatingService } from '../../../services/api/ratingService';
 import { useSlaCountdown } from '../../../hooks/useSlaCountdown';
 import { theme } from '../../../theme';
+import Toast from 'react-native-toast-message';
+import { apiErrorMessage } from '@city-market/mobile-ui';
 import {
   OrderWithItems,
   CustomerOrderStatus,
@@ -25,6 +27,7 @@ export const useOrderDetails = (orderId: string) => {
   const {
     data: order,
     isLoading,
+    error,
     refetch: refetchOrder,
     isRefetching: isRefetchingOrder,
   } = useQuery<OrderWithItems | undefined>({
@@ -126,7 +129,6 @@ export const useOrderDetails = (orderId: string) => {
         case CustomerOrderStatus.DRAFT:
         case VendorOrderStatus.DRAFT:
           return { color: theme.colors.textMuted };
-        case CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION:
         case CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION:
         case CustomerOrderStatus.WAITING_CUSTOMER_DECISION:
         case VendorOrderStatus.PENDING:
@@ -193,6 +195,14 @@ export const useOrderDetails = (orderId: string) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setCancellationDecisionModalVisible(false);
     },
+    onError: (err: unknown) => {
+      Toast.show({
+        type: 'error',
+        text1: t('common.action_failed'),
+        text2: apiErrorMessage(err) ?? t('common.error_message'),
+        position: 'top',
+      });
+    },
   });
 
   const handleRateVendor = (vendor: any) => {
@@ -221,6 +231,7 @@ export const useOrderDetails = (orderId: string) => {
     resolveCancellationMutation,
     couriers,
     vendorRatingFor,
+    error,
     t,
   };
 };

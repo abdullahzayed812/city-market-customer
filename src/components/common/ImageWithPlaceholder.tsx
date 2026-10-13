@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, View, StyleSheet, ImageStyle, ViewStyle, Animated } from 'react-native';
-import { ImageOff } from 'lucide-react-native';
+import { Package, type LucideIcon } from 'lucide-react-native';
 import { theme } from '../../theme';
 import { useShimmer } from '../../hooks/useShimmer';
 
@@ -9,6 +9,8 @@ interface Props {
   style?: ImageStyle;
   placeholderStyle?: ViewStyle;
   resizeMode?: 'cover' | 'contain' | 'stretch' | 'center';
+  /** Icon shown when there is no image or it fails to load. */
+  fallbackIcon?: LucideIcon;
 }
 
 const ShimmerView = ({ style }: { style?: any }) => {
@@ -16,14 +18,14 @@ const ShimmerView = ({ style }: { style?: any }) => {
   return <Animated.View style={[styles.shimmer, style, { opacity }]} />;
 };
 
-const ImageWithPlaceholder = ({ uri, style, placeholderStyle, resizeMode = 'cover' }: Props) => {
+const ImageWithPlaceholder = ({ uri, style, placeholderStyle, resizeMode = 'cover', fallbackIcon: FallbackIcon = Package }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
   if (!uri || hasError) {
     return (
       <View style={[styles.placeholder, style, placeholderStyle]}>
-        <ImageOff size={22} color={theme.colors.border} />
+        <FallbackIcon size={26} color={theme.colors.primaryLight} strokeWidth={1.5} />
       </View>
     );
   }
@@ -44,13 +46,13 @@ const ImageWithPlaceholder = ({ uri, style, placeholderStyle, resizeMode = 'cove
 
 const styles = StyleSheet.create({
   placeholder: {
-    backgroundColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.primaryXLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   shimmer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.borderLight,
     zIndex: 1,
   },
   hidden: {

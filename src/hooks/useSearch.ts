@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { Keyboard } from 'react-native';
@@ -8,6 +8,12 @@ import { VendorService } from '../services/api/vendorService';
 export const useSearch = (categoryId?: string) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
+  // Requests follow the typed text after a short pause, not every keystroke.
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const {
     data: productsData,
@@ -16,12 +22,14 @@ export const useSearch = (categoryId?: string) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    error,
+    isFetching,
   } = useInfiniteQuery({
-    queryKey: ['search', query, categoryId],
+    queryKey: ['search', debouncedQuery, categoryId],
     queryFn: ({ pageParam = 1 }) =>
       CatalogService.searchVendorProducts({
         globalCategoryId: categoryId || undefined,
-        search: query.length > 2 ? query : undefined,
+        search: debouncedQuery.length > 2 ? debouncedQuery : undefined,
         page: pageParam,
         limit: 20,
       } as any),
@@ -32,7 +40,7 @@ export const useSearch = (categoryId?: string) => {
       return undefined;
     },
     initialPageParam: 1,
-    enabled: !!categoryId || query.length > 2,
+    enabled: !!categoryId || debouncedQuery.length > 2,
   });
 
   const productsRaw = useMemo(() => productsData?.pages.flatMap(page => page?.data || []) || [], [productsData]);
@@ -70,6 +78,7 @@ export const useSearch = (categoryId?: string) => {
 
   const clearSearch = useCallback(() => {
     setQuery('');
+    setDebouncedQuery('');
     Keyboard.dismiss();
   }, []);
 
@@ -85,5 +94,10 @@ export const useSearch = (categoryId?: string) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    error,
+    isFetching,
+    // True while the user is still typing (results are about to change).
+    isTyping: query.trim() !== debouncedQuery,
+    submitSearch: () => setDebouncedQuery(query.trim()),
   };
 };

@@ -1,7 +1,7 @@
-import React, { useRef, useCallback } from 'react';
-import { Animated, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { theme } from '../../../theme';
+import React from 'react';
+import { Pressable, View, StyleSheet } from 'react-native';
+import { AppText as Text, palette, radii } from '@city-market/mobile-ui';
+import { LayoutGrid } from 'lucide-react-native';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 
 interface CategoryItemProps {
@@ -9,77 +9,47 @@ interface CategoryItemProps {
   onPress: (id: string) => void;
 }
 
-export const CategoryItem = React.memo(
-  ({ item, onPress }: CategoryItemProps) => {
-    const scale = useRef(new Animated.Value(1)).current;
+export const CATEGORY_TILE_WIDTH = 76;
 
-    const handlePressIn = useCallback(() => {
-      Animated.spring(scale, {
-        toValue: 0.88,
-        useNativeDriver: true,
-        speed: 40,
-        bounciness: 4,
-      }).start();
-    }, [scale]);
-
-    const handlePressOut = useCallback(() => {
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 40,
-        bounciness: 6,
-      }).start();
-    }, [scale]);
-
-    return (
-      <TouchableOpacity
-        onPress={() => onPress(item.id)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-        style={styles.wrapper}
-      >
-        <Animated.View style={{ transform: [{ scale }] }}>
-          {/* <View style={styles.iconShadow}> */}
-          <View style={styles.iconContainer}>
-            <ImageWithPlaceholder
-              uri={item.iconUrl || null}
-              style={styles.icon}
-              resizeMode="cover"
-            />
-          </View>
-          {/* </View> */}
-          <Text style={styles.name} numberOfLines={1}>
-            {item.name}
-          </Text>
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  },
-);
+export const CategoryItem = React.memo(({ item, onPress }: CategoryItemProps) => (
+  <Pressable
+    onPress={() => onPress(item.id)}
+    accessibilityRole="button"
+    accessibilityLabel={item.name}
+    style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}
+  >
+    <View style={styles.tile}>
+      <ImageWithPlaceholder uri={item.iconUrl || null} style={styles.icon} resizeMode="cover" fallbackIcon={LayoutGrid} />
+    </View>
+    <Text variant="caption" color={palette.text} style={styles.name} numberOfLines={2}>
+      {item.name}
+    </Text>
+  </Pressable>
+));
 
 const styles = StyleSheet.create({
   wrapper: {
+    width: CATEGORY_TILE_WIDTH,
     alignItems: 'center',
-    marginRight: theme.spacing.sm,
-    width: 60,
   },
-  iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: '50%',
+  pressed: {
+    opacity: 0.75,
+  },
+  tile: {
+    width: 68,
+    height: 68,
+    borderRadius: radii.lg,
     overflow: 'hidden',
+    backgroundColor: palette.primarySoft,
   },
   icon: {
     width: '100%',
     height: '100%',
   },
   name: {
-    fontSize: 11,
-    color: theme.colors.textSecondary,
-    fontWeight: '600',
+    marginTop: 6,
     textAlign: 'center',
-    lineHeight: 13,
-    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

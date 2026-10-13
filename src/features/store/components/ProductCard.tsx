@@ -1,173 +1,154 @@
-import React, { useRef, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { Plus } from 'lucide-react-native';
-import { theme } from '../../../theme';
+import React, { useCallback } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { AppText as Text, palette, radii, space, elevation } from '@city-market/mobile-ui';
+import { useTranslation } from 'react-i18next';
+import { Plus, Check } from 'lucide-react-native';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 import { MeasurementType } from '@city-market/shared';
+import { useFormat } from '../../../hooks/useFormat';
 
 interface ProductCardProps {
   item: any;
   onPress: (id: string) => void;
   onAdd: (item: any) => void;
+  /** Units (or grams for weighed items) of this product already in the cart. */
+  cartAmount?: number;
 }
 
-export const ProductCard = React.memo(({ item, onPress, onAdd }: ProductCardProps) => {
+export const ProductCard = React.memo(({ item, onPress, onAdd, cartAmount = 0 }: ProductCardProps) => {
+  const { t } = useTranslation();
+  const { money } = useFormat();
   const isAvailable = item.isAvailable;
-  const cardScale = useRef(new Animated.Value(1)).current;
-  const addScale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = useCallback(() => {
-    if (!isAvailable) return;
-    Animated.spring(cardScale, { toValue: 0.97, useNativeDriver: true, speed: 40, bounciness: 2 }).start();
-  }, [cardScale, isAvailable]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 4 }).start();
-  }, [cardScale]);
+  const isWeight = item.measurementType === MeasurementType.WEIGHT;
+  const inCart = cartAmount > 0;
 
   const handleAdd = useCallback(() => {
-    if (!isAvailable) return;
-    Animated.sequence([
-      Animated.spring(addScale, { toValue: 1.3, useNativeDriver: true, speed: 50, bounciness: 12 }),
-      Animated.spring(addScale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 6 }),
-    ]).start();
-    onAdd(item);
-  }, [addScale, isAvailable, item, onAdd]);
+    if (isAvailable) onAdd(item);
+  }, [isAvailable, item, onAdd]);
 
   return (
-    <View style={[styles.wrapper, !isAvailable && styles.disabled]}>
-      <TouchableOpacity
-        onPress={() => isAvailable && onPress(item.id)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
-        disabled={!isAvailable}
-      >
-        <Animated.View style={[styles.card, { transform: [{ scale: cardScale }] }]}>
-          <View style={styles.imageWrapper}>
-            <ImageWithPlaceholder uri={item.imageUrl || null} style={styles.image} />
-            {!isAvailable && (
-              <View style={styles.outOfStockOverlay}>
-                <Text style={styles.outOfStockText}>Out of Stock</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={styles.addButtonWrapper}
-              onPress={handleAdd}
-              disabled={!isAvailable}
-              activeOpacity={0.8}
-            >
-              <Animated.View
-                style={[
-                  styles.addButton,
-                  !isAvailable && styles.addButtonDisabled,
-                  { transform: [{ scale: addScale }] },
-                ]}
-              >
-                <Plus size={16} color={theme.colors.white} strokeWidth={3} />
-              </Animated.View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.info}>
-            <Text style={styles.name} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>${item.price.toFixed(2)}</Text>
-              {item.measurementType === MeasurementType.WEIGHT && (
-                <Text style={styles.unit}>/kg</Text>
-              )}
+    <Pressable
+      onPress={() => onPress(item.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}, ${money(item.price)}`}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
+      <View style={styles.imageWrapper}>
+        <ImageWithPlaceholder uri={item.imageUrl || null} style={styles.image} />
+        {!isAvailable && (
+          <View style={styles.unavailableVeil}>
+            <View style={styles.unavailableTag}>
+              <Text variant="micro" color={palette.textSecondary}>{t('store.out_of_stock')}</Text>
             </View>
           </View>
-        </Animated.View>
-      </TouchableOpacity>
-    </View>
+        )}
+      </View>
+
+      <View style={styles.info}>
+        <Text variant="label" color={palette.text} numberOfLines={2} style={styles.name}>
+          {item.name}
+        </Text>
+        <View style={styles.footer}>
+          <View style={styles.priceBlock}>
+            <Text variant="bodyStrong" color={isAvailable ? palette.text : palette.textMuted} numberOfLines={1}>
+              {money(item.price)}
+            </Text>
+            {isWeight && (
+              <Text variant="micro" color={palette.textMuted}>{t('common.per_kg')}</Text>
+            )}
+          </View>
+          {isAvailable ? (
+            <Pressable
+              onPress={handleAdd}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('store.add_item_a11y', { name: item.name })}
+              style={({ pressed }) => [styles.addButton, inCart && styles.addButtonInCart, pressed && styles.addPressed]}
+            >
+              {inCart && !isWeight ? (
+                <Text variant="label" color={palette.white} maxFontSizeMultiplier={1}>
+                  {cartAmount > 99 ? '99+' : cartAmount}
+                </Text>
+              ) : inCart ? (
+                <Check size={18} color={palette.white} strokeWidth={3} />
+              ) : (
+                <Plus size={18} color={palette.white} strokeWidth={3} />
+              )}
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+    </Pressable>
   );
 });
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    padding: theme.spacing.xs,
-  },
-  disabled: {
-    opacity: 0.55,
-  },
   card: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
+    flex: 1,
+    backgroundColor: palette.surface,
+    borderRadius: radii.lg,
     overflow: 'hidden',
-    ...theme.shadows.soft,
+    ...elevation.card,
+  },
+  pressed: {
+    opacity: 0.9,
   },
   imageWrapper: {
-    height: 118,
+    aspectRatio: 1,
     width: '100%',
-    backgroundColor: theme.colors.borderLight,
+    backgroundColor: palette.surfaceMuted,
   },
   image: {
-    height: '100%',
     width: '100%',
+    height: '100%',
   },
-  outOfStockOverlay: {
+  unavailableVeil: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255,255,255,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    padding: space.sm,
   },
-  outOfStockText: {
-    color: theme.colors.error,
-    fontWeight: '800',
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    backgroundColor: theme.colors.white,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  addButtonWrapper: {
-    position: 'absolute',
-    right: 8,
-    bottom: 8,
-  },
-  addButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.shadows.soft,
-  },
-  addButtonDisabled: {
-    backgroundColor: theme.colors.textMuted,
+  unavailableTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: palette.surface,
+    borderRadius: radii.pill,
+    paddingHorizontal: space.sm,
+    paddingVertical: 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.borderStrong,
   },
   info: {
-    padding: 10,
-    paddingTop: 8,
+    padding: space.md,
+    paddingTop: space.sm,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   name: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    marginBottom: 5,
-    lineHeight: 17,
+    // Two lines reserved so prices align across a row.
+    minHeight: 40,
   },
-  priceRow: {
+  footer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 2,
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: space.xs,
+    marginTop: space.xs,
   },
-  price: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: theme.colors.primary,
+  priceBlock: {
+    flexShrink: 1,
   },
-  unit: {
-    fontSize: 10,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: palette.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonInCart: {
+    backgroundColor: palette.primaryPressed,
+  },
+  addPressed: {
+    transform: [{ scale: 0.92 }],
   },
 });

@@ -1,11 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { AppText as Text, IconButton, palette, radii, space } from '@city-market/mobile-ui';
 import { Trash2 } from 'lucide-react-native';
-import { theme } from '../../../theme';
 import QuantitySelector from '../../../components/common/QuantitySelector';
 import { MeasurementType } from '@city-market/shared';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
+import { useFormat } from '../../../hooks/useFormat';
 
 interface CartItemProps {
   item: any;
@@ -15,81 +15,71 @@ interface CartItemProps {
 }
 
 export const CartItem = React.memo(({ item, onRemove, onUpdateAmount, t }: CartItemProps) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(12)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 280, useNativeDriver: true }),
-      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 20, bounciness: 4 }),
-    ]).start();
-  }, [fadeAnim, slideAnim]);
-
-  const imageUri = item.imageUrl || null;
+  const { money, weight } = useFormat();
+  const isWeight = item.measurementType === MeasurementType.WEIGHT;
+  // Same formula as CartContext's total.
+  const lineTotal = isWeight ? (item.price * (item.weightGrams || 0)) / 1000 : item.price * (item.quantity || 0);
 
   return (
-    <Animated.View
-      style={[
-        styles.card,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={styles.card}>
       <View style={styles.imageContainer}>
-        <ImageWithPlaceholder uri={imageUri} style={styles.image} />
+        <ImageWithPlaceholder uri={item.imageUrl || null} style={styles.image} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={2}>
-            {item.name}
-          </Text>
-          <TouchableOpacity onPress={() => onRemove(item.id)} style={styles.removeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Trash2 size={16} color={theme.colors.error} />
-          </TouchableOpacity>
+          <View style={styles.titleBlock}>
+            <Text variant="label" color={palette.text} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <Text variant="caption" color={palette.textMuted}>
+              {money(item.price)}
+              {isWeight ? ` ${t('common.per_kg')}` : ''}
+            </Text>
+          </View>
+          <IconButton
+            icon={Trash2}
+            variant="plain"
+            size={36}
+            iconColor={palette.error}
+            onPress={() => onRemove(item.id)}
+            accessibilityLabel={t('cart.remove_a11y', { name: item.name })}
+          />
         </View>
 
         <View style={styles.bottomRow}>
-          <View style={styles.priceGroup}>
-            <Text style={styles.price}>${item.price.toFixed(2)}</Text>
-            {item.measurementType === MeasurementType.WEIGHT && (
-              <Text style={styles.unit}>/kg</Text>
-            )}
-          </View>
           <QuantitySelector
-            quantity={
-              item.measurementType === MeasurementType.WEIGHT ? item.weightGrams : item.quantity
-            }
+            quantity={isWeight ? item.weightGrams : item.quantity}
             onIncrement={() => onUpdateAmount(item, true)}
             onDecrement={() => onUpdateAmount(item, false)}
-            minQuantity={item.measurementType === MeasurementType.WEIGHT ? 500 : 1}
-            displayValue={
-              item.measurementType === MeasurementType.WEIGHT
-                ? `${(item.weightGrams / 1000).toFixed(1)}kg`
-                : undefined
-            }
+            minQuantity={isWeight ? 500 : 1}
+            displayValue={isWeight ? weight(item.weightGrams) : undefined}
           />
+          <Text variant="bodyStrong" color={palette.text} style={styles.lineTotal}>
+            {money(lineTotal)}
+          </Text>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.soft,
-    gap: theme.spacing.md,
+    backgroundColor: palette.surface,
+    borderRadius: radii.lg,
+    padding: space.md,
+    gap: space.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.borderStrong,
   },
   imageContainer: {
-    width: 76,
-    height: 76,
-    borderRadius: theme.radius.md,
+    width: 84,
+    height: 84,
+    borderRadius: radii.md,
     overflow: 'hidden',
-    backgroundColor: theme.colors.borderLight,
+    backgroundColor: palette.surfaceMuted,
   },
   image: {
     width: '100%',
@@ -98,41 +88,24 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
+    gap: space.sm,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: space.xs,
   },
-  name: {
+  titleBlock: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    lineHeight: 19,
-  },
-  removeBtn: {
-    padding: 2,
   },
   bottomRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 6,
+    justifyContent: 'space-between',
+    gap: space.sm,
   },
-  priceGroup: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 2,
-  },
-  price: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: theme.colors.primary,
-  },
-  unit: {
-    fontSize: 11,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
+  lineTotal: {
+    fontVariant: ['tabular-nums'],
+    flexShrink: 1,
   },
 });

@@ -1,45 +1,25 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { AppText as Text, palette, space } from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
-import {
-  Package,
-  MapPin,
-  CheckCircle2,
-  Truck,
-  ClipboardList,
-  PackageCheck,
-  XCircle,
-} from 'lucide-react-native';
-import { theme } from '../theme';
+import { Package, MapPin, Check, Truck, ClipboardList, PackageCheck, XCircle } from 'lucide-react-native';
 import { CustomerOrderStatus } from '@city-market/shared';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const PADDING = 20;
-const CONTAINER_WIDTH = SCREEN_WIDTH - PADDING * 2;
-const NODE_SIZE = 50;
-const ROW_HEIGHT = 125;
-const COLUMN_WIDTH = CONTAINER_WIDTH / 3;
-
 const STATUS_STEPS = [
-  {
-    status: CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION,
-    icon: ClipboardList,
-  },
+  { status: CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION, icon: ClipboardList },
   { status: CustomerOrderStatus.PREPARING, icon: Package },
   { status: CustomerOrderStatus.READY, icon: PackageCheck },
   { status: CustomerOrderStatus.PICKED_UP, icon: Truck },
   { status: CustomerOrderStatus.IN_DELIVERY, icon: MapPin },
-  { status: CustomerOrderStatus.COMPLETED, icon: CheckCircle2 },
+  { status: CustomerOrderStatus.COMPLETED, icon: Check },
 ];
 
 interface OrderStatusStepperProps {
   currentStatus: CustomerOrderStatus | undefined;
 }
 
-export const OrderStatusStepper = ({
-  currentStatus,
-}: OrderStatusStepperProps) => {
+/** Vertical order-progress timeline. Hook-free, so it can render any status safely. */
+export const OrderStatusStepper = ({ currentStatus }: OrderStatusStepperProps) => {
   const { t } = useTranslation();
 
   if (!currentStatus) return null;
@@ -49,274 +29,106 @@ export const OrderStatusStepper = ({
     currentStatus === CustomerOrderStatus.CANCELLED_BY_CUSTOMER
   ) {
     return (
-      <View style={styles.cancelledContainer}>
-        <XCircle size={36} color={theme.colors.error} />
-        <Text style={styles.cancelledText}>
-          {currentStatus === CustomerOrderStatus.CANCELLED_BY_CUSTOMER
-            ? t('orders.status_cancelled_by_customer')
-            : t('orders.status_cancelled')}
+      <View style={styles.cancelled}>
+        <XCircle size={22} color={palette.error} />
+        <Text variant="subheading" color={palette.error}>
+          {t(`orders.status_${currentStatus.toLowerCase()}`)}
         </Text>
       </View>
     );
   }
 
-  // AWAITING_CUSTOMER_CONFIRMATION is handled by the confirmation card in OrderDetailsScreen
-  if (currentStatus === CustomerOrderStatus.AWAITING_CUSTOMER_CONFIRMATION) {
-    return null;
-  }
-
-  const effectiveStatus =
-    currentStatus === CustomerOrderStatus.WAITING_CUSTOMER_DECISION
-      ? CustomerOrderStatus.PREPARING
-      : currentStatus;
-
-  const currentIndex = STATUS_STEPS.findIndex(
-    step => step.status === effectiveStatus,
-  );
-
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.18, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [pulseAnim]);
-
-  const renderNode = (index: number) => {
-    const step = STATUS_STEPS[index];
-    const isCompleted =
-      index < currentIndex || currentStatus === CustomerOrderStatus.COMPLETED;
-    const isActive =
-      index === currentIndex && currentStatus !== CustomerOrderStatus.COMPLETED;
-    const Icon = step.icon;
-    const iconColor =
-      isActive || isCompleted ? theme.colors.white : theme.colors.primary;
-
-    return (
-      <View key={step.status} style={styles.nodeContainer}>
-        {isActive ? (
-          <Animated.View
-            style={[
-              styles.node,
-              styles.nodeActive,
-              { transform: [{ scale: pulseAnim }] },
-            ]}
-          >
-            <Icon size={24} color={iconColor} />
-            {currentStatus === CustomerOrderStatus.WAITING_CUSTOMER_DECISION && (
-              <View style={styles.alertBadge}>
-                <Text style={styles.alertText}>!</Text>
-              </View>
-            )}
-          </Animated.View>
-        ) : (
-          <View
-            style={[
-              styles.node,
-              isCompleted && styles.nodeCompleted,
-            ]}
-          >
-            <Icon size={24} color={iconColor} />
-          </View>
-        )}
-        <Text
-          style={[
-            styles.label,
-            isCompleted && styles.labelCompleted,
-            isActive && styles.labelActive,
-          ]}
-          numberOfLines={2}
-        >
-          {t(`orders.status_${step.status.toLowerCase()}`)}
-        </Text>
-      </View>
-    );
-  };
+  // Waiting on the customer happens during preparation, so it sits on that step.
+  const waitingOnCustomer = currentStatus === CustomerOrderStatus.WAITING_CUSTOMER_DECISION;
+  const effectiveStatus = waitingOnCustomer ? CustomerOrderStatus.PREPARING : currentStatus;
+  const currentIndex = STATUS_STEPS.findIndex(step => step.status === effectiveStatus);
+  const isComplete = currentStatus === CustomerOrderStatus.COMPLETED;
 
   return (
-    <View style={styles.outerContainer}>
-      <View style={styles.innerContainer}>
-        {/* Path Overlay (Lines) - Positioned behind nodes */}
-        <View style={styles.pathOverlay}>
-          {/* Row 1 Line: From Node 0 (Right) to Node 2 (Left) */}
-          <View
-            style={[
-              styles.hLine,
-              { width: COLUMN_WIDTH * 2, right: COLUMN_WIDTH / 2 },
-              currentIndex > 0 && styles.lineCompleted,
-            ]}
-          />
+    <View accessibilityRole="progressbar">
+      {STATUS_STEPS.map((step, index) => {
+        const done = index < currentIndex || isComplete;
+        const active = index === currentIndex && !isComplete;
+        const Icon = done ? Check : step.icon;
+        const isLast = index === STATUS_STEPS.length - 1;
+        const label =
+          active && waitingOnCustomer
+            ? t('orders.status_waiting_customer_decision')
+            : t(`orders.status_${step.status.toLowerCase()}`);
 
-          {/* Vertical U-Turn Line: On the far LEFT side */}
-          <View
-            style={[
-              styles.vLine,
-              { left: COLUMN_WIDTH / 2 - 2, height: ROW_HEIGHT },
-              currentIndex >= 3 && styles.lineCompleted,
-            ]}
-          />
-
-          {/* Row 2 Line: From Node 3 (Left) back to Node 5 (Right) */}
-          <View
-            style={[
-              styles.hLine,
-              {
-                width: COLUMN_WIDTH * 2,
-                left: COLUMN_WIDTH / 2,
-                top: ROW_HEIGHT + NODE_SIZE / 2 - 2,
-              },
-              currentIndex > 3 && styles.lineCompleted,
-            ]}
-          />
-        </View>
-
-        {/* Nodes Layer */}
-        <View style={styles.nodesLayer}>
-          {/* Row 1: Right -> Left (Zig) */}
-          <View style={[styles.row, { flexDirection: 'row-reverse' }]}>
-            {renderNode(0)}
-            {renderNode(1)}
-            {renderNode(2)}
+        return (
+          <View key={step.status} style={styles.row}>
+            <View style={styles.rail}>
+              <View style={[styles.node, done && styles.nodeDone, active && (waitingOnCustomer ? styles.nodeWarn : styles.nodeActive)]}>
+                <Icon size={16} color={done || active ? palette.white : palette.textDisabled} strokeWidth={2.5} />
+              </View>
+              {!isLast ? <View style={[styles.line, done && styles.lineDone]} /> : null}
+            </View>
+            <View style={styles.labelBlock}>
+              <Text
+                variant={active ? 'subheading' : 'body'}
+                color={active ? (waitingOnCustomer ? palette.warning : palette.text) : done ? palette.textSecondary : palette.textMuted}
+              >
+                {label}
+              </Text>
+            </View>
           </View>
-
-          {/* Spacer for Vertical Connector Area */}
-          <View style={{ height: ROW_HEIGHT - NODE_SIZE }} />
-
-          {/* Row 2: Left -> Right (Zag) */}
-          <View style={[styles.row, { flexDirection: 'row' }]}>
-            {renderNode(3)}
-            {renderNode(4)}
-            {renderNode(5)}
-          </View>
-        </View>
-      </View>
+        );
+      })}
     </View>
   );
 };
 
+const NODE = 30;
+
 const styles = StyleSheet.create({
-  outerContainer: {
-    width: '100%',
-    paddingVertical: theme.spacing.sm,
-    alignItems: 'center',
-  },
-  innerContainer: {
-    width: CONTAINER_WIDTH,
-    position: 'relative',
-  },
-  pathOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
-  },
-  nodesLayer: {
-    zIndex: 2,
-  },
   row: {
     flexDirection: 'row',
-    height: NODE_SIZE,
-    alignItems: 'center',
+    gap: space.md,
   },
-  nodeContainer: {
-    width: COLUMN_WIDTH,
+  rail: {
+    width: NODE,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   node: {
-    width: NODE_SIZE,
-    height: NODE_SIZE,
-    borderRadius: NODE_SIZE / 2,
-    backgroundColor: theme.colors.white,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    justifyContent: 'center',
+    width: NODE,
+    height: NODE,
+    borderRadius: NODE / 2,
     alignItems: 'center',
-    marginBottom: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    justifyContent: 'center',
+    backgroundColor: palette.surfaceMuted,
   },
-  nodeCompleted: {
-    backgroundColor: theme.colors.success,
-    borderColor: theme.colors.success,
+  nodeDone: {
+    backgroundColor: palette.primary,
   },
   nodeActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-    elevation: 6,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    backgroundColor: palette.primary,
+    borderWidth: 3,
+    borderColor: palette.primaryMuted,
   },
-  label: {
-    fontSize: 12,
-    fontWeight: 'bold', // Made base text bold
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    position: 'absolute',
-    top: NODE_SIZE + 6,
-    width: COLUMN_WIDTH - 8,
-    lineHeight: 14,
+  nodeWarn: {
+    backgroundColor: palette.warning,
+    borderWidth: 3,
+    borderColor: palette.warningSoft,
   },
-  labelCompleted: {
-    color: theme.colors.textPrimary,
+  line: {
+    width: 2,
+    flex: 1,
+    minHeight: 14,
+    backgroundColor: palette.border,
   },
-  labelActive: {
-    color: theme.colors.primary,
+  lineDone: {
+    backgroundColor: palette.primary,
   },
-  hLine: {
-    position: 'absolute',
-    top: NODE_SIZE / 2 - 2,
-    height: 4,
-    backgroundColor: theme.colors.border,
-  },
-  vLine: {
-    position: 'absolute',
-    top: NODE_SIZE / 2,
-    width: 4,
-    backgroundColor: theme.colors.border,
-  },
-  lineCompleted: {
-    backgroundColor: theme.colors.success,
-  },
-  alertBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#FF9500',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+  labelBlock: {
+    flex: 1,
+    minHeight: NODE,
     justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.white,
+    paddingBottom: space.md,
   },
-  alertText: {
-    color: theme.colors.white,
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  cancelledContainer: {
+  cancelled: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 18,
-    backgroundColor: theme.colors.error + '15',
-    borderRadius: 15,
-    width: '95%',
-  },
-  cancelledText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.error,
-    marginLeft: 12,
+    gap: space.sm,
   },
 });

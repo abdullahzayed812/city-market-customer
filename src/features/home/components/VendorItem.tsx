@@ -1,178 +1,196 @@
-import React, { useRef, useCallback } from 'react';
-import {
-  TouchableOpacity,
-  View,
-  StyleSheet,
-  Dimensions,
-  Animated,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { Star, Clock } from 'lucide-react-native';
-import { theme } from '../../../theme';
+import React from 'react';
+import { Pressable, View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { AppText as Text, StatusBadge, palette, radii, space, elevation } from '@city-market/mobile-ui';
+import { Star, MapPin, Store, Clock } from 'lucide-react-native';
+import { ShopStatus } from '@city-market/shared';
 import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
-
-const { width } = Dimensions.get('window');
-const VENDOR_CARD_WIDTH = width * 0.29;
-
-enum VendorStatus {
-  OPEN = 'OPEN',
-}
 
 interface VendorItemProps {
   item: any;
   onPress: (id: string) => void;
   t: any;
-  style?: any;
+  /** Card width; omit to fill the parent (grid cells). */
+  width?: number;
+  /** Small tile (square image, name, rating) so a home-screen row fits several stores. */
+  compact?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const VendorItem = React.memo(({ item, onPress, t, style }: VendorItemProps) => {
-  const scale = useRef(new Animated.Value(1)).current;
-  const isOpen = item.status === VendorStatus.OPEN;
+/** Store card: cover image with open/closed state, name, area and rating. */
+export const VendorItem = React.memo(({ item, onPress, t, width, compact, style }: VendorItemProps) => {
+  const isOpen = item.status === ShopStatus.OPEN;
+  const rating = Number(item.averageRating) || 0;
+  const area = item.address?.split(',')[0]?.trim();
 
-  const handlePressIn = useCallback(() => {
-    Animated.spring(scale, {
-      toValue: 0.97,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 2,
-    }).start();
-  }, [scale]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 4,
-    }).start();
-  }, [scale]);
-
-  return (
-    <TouchableOpacity
-      onPress={() => onPress(item.id)}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      activeOpacity={1}
-    >
-      <Animated.View style={[styles.vendorCard, style, { transform: [{ scale }] }]}>
-        <View style={styles.imageContainer}>
-          <ImageWithPlaceholder uri={item.storeImage || null} style={styles.vendorImage} />
-          <View style={styles.imageGradient} />
-          <View style={[styles.statusBadge, { backgroundColor: isOpen ? theme.colors.success : theme.colors.error }]}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusText}>
-              {isOpen ? t('home.open') : t('home.closed')}
-            </Text>
-          </View>
-          {item.averageRating > 0 && (
-            <View style={styles.ratingOverlay}>
-              <Star size={10} color={theme.colors.accent} fill={theme.colors.accent} />
-              <Text style={styles.ratingOverlayText}>{item.averageRating}</Text>
+  if (compact) {
+    return (
+      <Pressable
+        onPress={() => onPress(item.id)}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.shopName}, ${isOpen ? t('home.open') : t('home.closed')}`}
+        style={({ pressed }) => [styles.tile, width ? { width } : null, pressed && styles.pressed, style]}
+      >
+        <View style={styles.tileImage}>
+          <ImageWithPlaceholder uri={item.storeImage || null} style={styles.image} fallbackIcon={Store} />
+          {!isOpen && (
+            <View style={styles.tileClosed}>
+              <Text variant="micro" color={palette.white} numberOfLines={1} adjustsFontSizeToFit>
+                {t('home.closed')}
+              </Text>
             </View>
           )}
         </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.vendorName} numberOfLines={1}>
-            {item.shopName}
-          </Text>
-          <View style={styles.metaRow}>
-            <Clock size={11} color={theme.colors.textMuted} />
-            <Text style={styles.metaText} numberOfLines={1}>
-              {item.address?.split(',')[0]}
+        <Text variant="caption" color={palette.text} numberOfLines={2} style={styles.tileName}>
+          {item.shopName}
+        </Text>
+        {rating > 0 ? (
+          <View style={styles.tileRating}>
+            <Star size={11} color={palette.accent} fill={palette.accent} />
+            <Text variant="micro" color={palette.textMuted}>
+              {rating.toFixed(1)}
             </Text>
           </View>
+        ) : null}
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => onPress(item.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.shopName}, ${isOpen ? t('home.open') : t('home.closed')}`}
+      style={({ pressed }) => [styles.card, width ? { width } : null, pressed && styles.pressed, style]}
+    >
+      <View style={styles.imageContainer}>
+        <ImageWithPlaceholder uri={item.storeImage || null} style={styles.image} fallbackIcon={Store} />
+        {!isOpen && <View style={styles.closedVeil} />}
+        <StatusBadge
+          label={isOpen ? t('home.open') : t('home.closed')}
+          tone={isOpen ? 'success' : 'neutral'}
+          icon={isOpen ? undefined : Clock}
+          size="sm"
+          solid
+          style={styles.statusBadge}
+        />
+      </View>
+
+      <View style={styles.info}>
+        <Text variant="bodyStrong" color={palette.text} numberOfLines={1}>
+          {item.shopName}
+        </Text>
+        <View style={styles.metaRow}>
+          {rating > 0 ? (
+            <View style={styles.rating}>
+              <Star size={13} color={palette.accent} fill={palette.accent} />
+              <Text variant="caption" color={palette.text} style={styles.ratingValue}>
+                {rating.toFixed(1)}
+              </Text>
+              {item.totalRatings ? (
+                <Text variant="caption" color={palette.textMuted}>
+                  {t('home.rating_count', { count: item.totalRatings })}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+          {area ? (
+            <View style={styles.area}>
+              <MapPin size={13} color={palette.textMuted} />
+              <Text variant="caption" color={palette.textMuted} numberOfLines={1} style={styles.areaText}>
+                {area}
+              </Text>
+            </View>
+          ) : null}
         </View>
-      </Animated.View>
-    </TouchableOpacity>
+      </View>
+    </Pressable>
   );
 });
 
 const styles = StyleSheet.create({
-  vendorCard: {
-    width: VENDOR_CARD_WIDTH,
-    marginRight: theme.spacing.xs,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(17,24,39,0.04)',
+  tile: {
+    alignItems: 'center',
+  },
+  tileImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: radii.md,
     overflow: 'hidden',
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.soft,
+    backgroundColor: palette.surface,
+    ...elevation.card,
+  },
+  tileClosed: {
+    position: 'absolute',
+    start: 0,
+    end: 0,
+    bottom: 0,
+    paddingVertical: 2,
+    alignItems: 'center',
+    backgroundColor: 'rgba(32, 41, 35, 0.65)',
+  },
+  tileName: {
+    marginTop: space.xs,
+    textAlign: 'center',
+  },
+  tileRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  card: {
+    backgroundColor: palette.surface,
+    borderRadius: radii.lg,
+    overflow: 'hidden',
+    ...elevation.card,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   imageContainer: {
-    height: 64,
+    aspectRatio: 16 / 9,
     width: '100%',
-    backgroundColor: theme.colors.border,
+    backgroundColor: palette.surfaceMuted,
   },
-  vendorImage: {
+  image: {
+    width: '100%',
     height: '100%',
-    width: '100%',
   },
-  imageGradient: {
+  closedVeil: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
   },
   statusBadge: {
     position: 'absolute',
-    top: 5,
-    left: 5,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: theme.radius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
+    top: space.sm,
+    start: space.sm,
   },
-  statusDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.white,
-    marginRight: 2,
-  },
-  statusText: {
-    color: theme.colors.white,
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  ratingOverlay: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: theme.radius.pill,
+  info: {
+    paddingHorizontal: space.md,
+    paddingTop: space.sm,
+    paddingBottom: space.md,
     gap: 2,
-  },
-  ratingOverlayText: {
-    color: theme.colors.white,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  infoContainer: {
-    padding: theme.spacing.xs,
-    paddingTop: 5,
-    paddingBottom: 5,
-  },
-  vendorName: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    marginBottom: 2,
-    letterSpacing: -0.2,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: space.sm,
+  },
+  rating: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 3,
   },
-  metaText: {
-    fontSize: 9,
-    color: theme.colors.textMuted,
+  ratingValue: {
+    fontWeight: '700',
+  },
+  area: {
     flex: 1,
-    fontWeight: '500',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  areaText: {
+    flexShrink: 1,
   },
 });

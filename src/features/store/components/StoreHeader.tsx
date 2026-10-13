@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import { Star, MapPin, MessageSquare } from 'lucide-react-native';
-import { theme } from '../../../theme';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { AppText as Text, StatusBadge, ForwardIcon, palette, radii, space, elevation } from '@city-market/mobile-ui';
+import { Star, MapPin, Store, Clock } from 'lucide-react-native';
+import { ShopStatus } from '@city-market/shared';
+import ImageWithPlaceholder from '../../../components/common/ImageWithPlaceholder';
 
 interface StoreHeaderProps {
   t: any;
@@ -10,123 +11,115 @@ interface StoreHeaderProps {
   navigation: any;
 }
 
-export const StoreHeader = React.memo(({ t, vendor, navigation }: StoreHeaderProps) => (
-  <View>
-    <View style={styles.infoCard}>
-      <View style={styles.titleRow}>
-        <Text style={styles.shopName} numberOfLines={1}>{vendor?.shopName}</Text>
-        <View style={styles.ratingBadge}>
-          <Star size={12} color={theme.colors.accent} fill={theme.colors.accent} />
-          <Text style={styles.ratingValue}>{vendor?.averageRating?.toFixed(1) ?? '0.0'}</Text>
-        </View>
-      </View>
+export const StoreHeader = React.memo(({ t, vendor, navigation }: StoreHeaderProps) => {
+  const isOpen = vendor?.status === ShopStatus.OPEN;
+  const rating = Number(vendor?.averageRating) || 0;
+  const totalRatings = vendor?.totalRatings ?? 0;
 
-      {vendor?.shopDescription ? (
-        <Text style={styles.description} numberOfLines={2}>{vendor.shopDescription}</Text>
-      ) : null}
+  return (
+    <View>
+      <ImageWithPlaceholder uri={vendor?.storeImage || null} style={styles.cover} fallbackIcon={Store} />
 
-      <View style={styles.divider} />
-
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
-          <MapPin size={13} color={theme.colors.textMuted} />
-          <Text style={styles.metaText} numberOfLines={1}>
-            {vendor?.address?.split(',')[0]}
+      <View style={styles.infoCard}>
+        <View style={styles.titleRow}>
+          <Text variant="title" color={palette.text} style={styles.shopName}>
+            {vendor?.shopName}
           </Text>
+          <StatusBadge
+            label={isOpen ? t('home.open') : t('home.closed')}
+            tone={isOpen ? 'success' : 'neutral'}
+            icon={isOpen ? undefined : Clock}
+          />
         </View>
-        <TouchableOpacity
-          style={styles.reviewsBtn}
-          onPress={() => navigation.navigate('VendorReviews', { vendorId: vendor?.id })}
-        >
-          <MessageSquare size={13} color={theme.colors.primary} />
-          <Text style={styles.reviewsBtnText}>
-            {vendor?.totalRatings ?? 0} {t('store.reviews')}
+
+        {vendor?.shopDescription ? (
+          <Text variant="body" color={palette.textSecondary} numberOfLines={3}>
+            {vendor.shopDescription}
           </Text>
-        </TouchableOpacity>
+        ) : null}
+
+        <View style={styles.metaRow}>
+          <Pressable
+            style={({ pressed }) => [styles.reviews, pressed && styles.pressed]}
+            onPress={() => navigation.navigate('VendorReviews', { vendorId: vendor?.id })}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('store.reviews')} ${totalRatings}`}
+            hitSlop={6}
+          >
+            <Star size={16} color={palette.accent} fill={rating > 0 ? palette.accent : 'transparent'} />
+            {rating > 0 ? (
+              <Text variant="label" color={palette.text}>{rating.toFixed(1)}</Text>
+            ) : null}
+            <Text variant="caption" color={palette.textMuted}>
+              {totalRatings} {t('store.reviews')}
+            </Text>
+            <ForwardIcon size={16} color={palette.textMuted} />
+          </Pressable>
+
+          {vendor?.address ? (
+            <View style={styles.address}>
+              <MapPin size={15} color={palette.textMuted} />
+              <Text variant="caption" color={palette.textMuted} numberOfLines={1} style={styles.addressText}>
+                {vendor.address.split(',')[0]}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
     </View>
-  </View>
-));
+  );
+});
 
 const styles = StyleSheet.create({
+  cover: {
+    width: '100%',
+    aspectRatio: 2.2,
+  },
   infoCard: {
-    backgroundColor: theme.colors.white,
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing.lg,
-    ...theme.shadows.medium,
+    backgroundColor: palette.surface,
+    marginHorizontal: space.lg,
+    marginTop: -space.xxl,
+    marginBottom: space.lg,
+    borderRadius: radii.lg,
+    padding: space.lg,
+    gap: space.sm,
+    ...elevation.raised,
   },
   titleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    alignItems: 'flex-start',
+    gap: space.md,
   },
   shopName: {
     flex: 1,
-    fontSize: 20,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.4,
-    marginRight: 10,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: theme.colors.accentLight,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-  },
-  ratingValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#92400E',
-  },
-  description: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    lineHeight: 19,
-    marginBottom: 14,
-    fontWeight: '400',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginBottom: 12,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: space.md,
+    paddingTop: space.sm,
+    marginTop: space.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.borderStrong,
   },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    flex: 1,
-  },
-  metaText: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    flex: 1,
-    fontWeight: '500',
-  },
-  reviewsBtn: {
+  reviews: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: theme.colors.primaryXLight,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.radius.pill,
+    minHeight: 32,
   },
-  reviewsBtnText: {
-    fontSize: 12,
-    color: theme.colors.primary,
-    fontWeight: '700',
+  pressed: {
+    opacity: 0.6,
+  },
+  address: {
+    flex: 1,
+    minWidth: 120,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addressText: {
+    flexShrink: 1,
   },
 });

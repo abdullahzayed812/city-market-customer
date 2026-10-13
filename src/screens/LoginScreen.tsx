@@ -10,8 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { AppText as Text, DemoAccounts } from '@city-market/mobile-ui';
-import { Mail, ArrowRight, User, Eye, EyeOff } from 'lucide-react-native';
+import { AppText as Text, DemoAccounts, ForwardIcon } from '@city-market/mobile-ui';
+import { Mail, User, Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useLogin } from '../hooks/useLogin';
@@ -140,7 +140,7 @@ const LoginScreen = ({ navigation }: any) => {
                   <Text style={styles.loginButtonText}>
                     {t('auth.login_button') || 'Sign In'}
                   </Text>
-                  <ArrowRight
+                  <ForwardIcon
                     size={20}
                     color={theme.colors.white}
                     strokeWidth={2.5}
@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: theme.colors.primary,
     marginBottom: theme.spacing.xs,
-    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
@@ -233,8 +232,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: 6,
     marginLeft: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   inputField: {
     flexDirection: 'row',

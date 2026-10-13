@@ -12,7 +12,7 @@ export const useProductDetails = (productId: string, navigation: any) => {
 
   const [amount, setAmount] = useState(1);
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => CatalogService.getVendorProductById(productId),
   });
@@ -68,7 +68,7 @@ export const useProductDetails = (productId: string, navigation: any) => {
     navigation.goBack();
   }, [product, isWeight, amount, addToCart, t, navigation]);
 
-  const imageUrl = useMemo(() => product?.imageUrl || 'https://via.placeholder.com/400', [product?.imageUrl]);
+  const imageUrl = product?.imageUrl || null;
 
   const stockAvailable = useMemo(() => {
       if (!product) return false;
@@ -92,5 +92,8 @@ export const useProductDetails = (productId: string, navigation: any) => {
     stockAvailable,
     maxAmount,
     t,
+    error,
+    refetch,
+    isRefetching,
   };
 };

@@ -1,31 +1,35 @@
 import React from 'react';
+import { View, StyleSheet, Pressable, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  StatusBar,
-  Animated,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
-import {
-  MapPin,
-  ChevronLeft,
-  Check,
-  Plus,
-  CreditCard,
-  Ban,
-  ArrowRight,
-} from 'lucide-react-native';
+  AppText as Text,
+  Button,
+  Card,
+  ScreenHeader,
+  SectionHeader,
+  SummaryRow,
+  Divider,
+  LoadingState,
+  palette,
+  radii,
+  space,
+} from '@city-market/mobile-ui';
+import { MapPin, Plus, Banknote, Ban, Receipt, ShoppingBasket } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../theme';
+import { MeasurementType } from '@city-market/shared';
 import { useCheckout } from '../features/cart/hooks/useCheckout';
-import { useAnimatedPress } from '../hooks/useAnimatedPress';
+import QueryError from '../components/common/QueryError';
+import { useFormat } from '../hooks/useFormat';
+
+const Radio = ({ selected }: { selected: boolean }) => (
+  <View style={[styles.radioOuter, selected && styles.radioOuterOn]}>
+    {selected ? <View style={styles.radioInner} /> : null}
+  </View>
+);
 
 const CheckoutScreen = ({ navigation }: any) => {
   const {
     t,
+    items,
     total,
     selectedAddress,
     setSelectedAddress,
@@ -36,173 +40,165 @@ const CheckoutScreen = ({ navigation }: any) => {
     deliveryFee,
     deliveryFeeLoading,
     grandTotal,
+    deliveryFeeKnown,
+    addressesError,
+    refetchAddresses,
     hasPenalty,
   } = useCheckout(navigation);
+  const { money, weight } = useFormat();
 
-  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.97);
+  const header = (
+    <ScreenHeader title={t('checkout.title')} onBack={() => navigation.goBack()} backLabel={t('common.back')} />
+  );
 
   if (addressesLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {header}
+        <LoadingState />
+      </SafeAreaView>
     );
   }
 
-  const isDisabled = orderMutation.isPending || hasPenalty || !selectedAddress;
+  if (addressesError && !addresses) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {header}
+        <QueryError error={addressesError} onRetry={refetchAddresses} />
+      </SafeAreaView>
+    );
+  }
+
+  const isDisabled = hasPenalty || !selectedAddress;
+  const feeValue = deliveryFeeKnown
+    ? money(deliveryFee)
+    : deliveryFeeLoading
+      ? t('checkout.fee_calculating')
+      : t('checkout.fee_pending');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ChevronLeft size={24} color={theme.colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{t('checkout.title')}</Text>
-          <View style={{ width: 40 }} />
-        </View>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor={palette.surface} />
+      {header}
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {/* Address Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('checkout.address')}</Text>
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={() => navigation.navigate('Addresses')}
-              >
-                <Plus size={16} color={theme.colors.primary} />
-                <Text style={styles.addBtnText}>{t('addresses.add_new') || 'Add'}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {addresses?.length === 0 ? (
-              <TouchableOpacity
-                style={styles.emptyAddressCard}
-                onPress={() => navigation.navigate('Addresses')}
-              >
-                <View style={styles.emptyAddressIcon}>
-                  <MapPin size={28} color={theme.colors.primary} />
-                </View>
-                <Text style={styles.emptyAddressText}>{t('addresses.add_new')}</Text>
-                <Text style={styles.emptyAddressHint}>
-                  {t('addresses.add_hint') || 'Add a delivery address to continue'}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              addresses?.map((address: any) => {
-                const isSelected = selectedAddress === address.id;
-                return (
-                  <TouchableOpacity
-                    key={address.id}
-                    style={[styles.addressCard, isSelected && styles.addressCardSelected]}
-                    onPress={() => setSelectedAddress(address.id)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.addressIconBox, isSelected && styles.addressIconBoxSelected]}>
-                      <MapPin size={20} color={isSelected ? theme.colors.white : theme.colors.textMuted} />
-                    </View>
-                    <View style={styles.addressInfo}>
-                      <Text style={[styles.addressLabel, isSelected && styles.addressLabelSelected]}>
-                        {address.label}
-                      </Text>
-                      <Text style={styles.addressText} numberOfLines={2}>
-                        {address.address}
-                      </Text>
-                    </View>
-                    {isSelected && (
-                      <View style={styles.checkCircle}>
-                        <Check size={14} color={theme.colors.white} strokeWidth={3} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })
-            )}
-          </View>
-
-          {/* Payment Method */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('checkout.payment_method')}</Text>
-            {hasPenalty ? (
-              <View style={styles.penaltyBanner}>
-                <Ban size={20} color={theme.colors.error} />
-                <View style={styles.penaltyText}>
-                  <Text style={styles.penaltyTitle}>{t('checkout.cod_blocked_title')}</Text>
-                  <Text style={styles.penaltyDesc}>{t('checkout.cod_blocked_desc')}</Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.paymentCard}>
-                <View style={styles.paymentIconBox}>
-                  <CreditCard size={20} color={theme.colors.primary} />
-                </View>
-                <View style={styles.paymentInfo}>
-                  <Text style={styles.paymentLabel}>{t('checkout.cash_on_delivery')}</Text>
-                  <Text style={styles.paymentDesc}>{t('checkout.cash_description')}</Text>
-                </View>
-                <View style={styles.radioOuter}>
-                  <View style={styles.radioInner} />
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Order Summary */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('checkout.order_summary')}</Text>
-            <View style={styles.summaryCard}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('cart.total')}</Text>
-                <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('checkout.delivery_fee')}</Text>
-                <View style={styles.deliveryFeeRow}>
-                  {deliveryFeeLoading && (
-                    <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginRight: 6 }} />
-                  )}
-                  <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
-                </View>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.grandRow}>
-                <Text style={styles.grandLabel}>{t('checkout.grand_total')}</Text>
-                <Text style={styles.grandValue}>${grandTotal.toFixed(2)}</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={{ height: 16 }} />
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={handleConfirmOrder}
-            onPressIn={!isDisabled ? onPressIn : undefined}
-            onPressOut={!isDisabled ? onPressOut : undefined}
-            disabled={isDisabled}
-            activeOpacity={1}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Address */}
+        <SectionHeader
+          title={t('checkout.address')}
+          icon={MapPin}
+          actionLabel={addresses?.length ? t('checkout.add_address') : undefined}
+          onAction={() => navigation.navigate('Addresses')}
+        />
+        {!addresses?.length ? (
+          <Pressable
+            style={({ pressed }) => [styles.emptyAddress, pressed && styles.pressed]}
+            onPress={() => navigation.navigate('Addresses')}
+            accessibilityRole="button"
           >
-            <Animated.View
-              style={[
-                styles.confirmBtn,
-                isDisabled && styles.confirmBtnDisabled,
-                { transform: [{ scale: isDisabled ? 1 : scaleValue }] },
-              ]}
-            >
-              {orderMutation.isPending ? (
-                <ActivityIndicator color={theme.colors.white} />
-              ) : (
-                <>
-                  <Text style={styles.confirmBtnText}>{t('checkout.confirm_order')}</Text>
-                  <ArrowRight size={20} color={theme.colors.white} strokeWidth={2.5} />
-                </>
-              )}
-            </Animated.View>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.emptyAddressIcon}>
+              <Plus size={22} color={palette.primary} />
+            </View>
+            <Text variant="subheading" color={palette.primary}>{t('addresses.add_new')}</Text>
+            <Text variant="caption" color={palette.textMuted} style={styles.center}>
+              {t('addresses.add_hint')}
+            </Text>
+          </Pressable>
+        ) : (
+          <View style={styles.stack}>
+            {addresses.map((address: any) => {
+              const isSelected = selectedAddress === address.id;
+              return (
+                <Pressable
+                  key={address.id}
+                  style={({ pressed }) => [styles.addressCard, isSelected && styles.addressCardSelected, pressed && styles.pressed]}
+                  onPress={() => setSelectedAddress(address.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isSelected }}
+                >
+                  <Radio selected={isSelected} />
+                  <View style={styles.flex}>
+                    <Text variant="label" color={palette.text}>{address.label}</Text>
+                    <Text variant="caption" color={palette.textMuted} numberOfLines={2}>
+                      {address.address}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Items */}
+        <SectionHeader title={t('checkout.order_summary')} icon={ShoppingBasket} style={styles.sectionGap} />
+        <Card>
+          {items.map((item, index) => {
+            const isWeight = item.measurementType === MeasurementType.WEIGHT;
+            const line = isWeight ? (item.price * (item.weightGrams || 0)) / 1000 : item.price * (item.quantity || 0);
+            return (
+              <View key={item.id} style={[styles.itemRow, index > 0 && styles.itemRowBorder]}>
+                <Text variant="body" color={palette.text} numberOfLines={2} style={styles.flex}>
+                  {item.name}
+                </Text>
+                <Text variant="caption" color={palette.textMuted} style={styles.qty}>
+                  {isWeight ? weight(item.weightGrams) : `× ${item.quantity}`}
+                </Text>
+                <Text variant="bodyStrong" color={palette.text} style={styles.tabular}>
+                  {money(line)}
+                </Text>
+              </View>
+            );
+          })}
+        </Card>
+
+        {/* Payment */}
+        <SectionHeader title={t('checkout.payment_method')} icon={Banknote} style={styles.sectionGap} />
+        {hasPenalty ? (
+          <View style={styles.penaltyBanner} accessibilityRole="alert">
+            <Ban size={20} color={palette.error} />
+            <View style={styles.flex}>
+              <Text variant="label" color={palette.error}>{t('checkout.cod_blocked_title')}</Text>
+              <Text variant="caption" color={palette.textSecondary}>{t('checkout.cod_blocked_desc')}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.addressCard, styles.addressCardSelected]}>
+            <Radio selected />
+            <View style={styles.flex}>
+              <Text variant="label" color={palette.text}>{t('checkout.cash_on_delivery')}</Text>
+              <Text variant="caption" color={palette.textMuted}>{t('checkout.pay_on_delivery_note')}</Text>
+            </View>
+            <Banknote size={22} color={palette.primary} />
+          </View>
+        )}
+
+        {/* Totals */}
+        <SectionHeader title={t('orders.payment_summary')} icon={Receipt} style={styles.sectionGap} />
+        <Card>
+          <SummaryRow label={t('checkout.items_subtotal')} value={money(total)} />
+          <SummaryRow
+            label={t('checkout.delivery_fee')}
+            value={feeValue}
+            emphasis={deliveryFeeKnown ? 'normal' : 'muted'}
+            trailing={deliveryFeeLoading ? <ActivityIndicator size="small" color={palette.primary} /> : undefined}
+          />
+          <Divider />
+          <SummaryRow
+            label={t('checkout.grand_total')}
+            value={deliveryFeeKnown ? money(grandTotal) : '—'}
+            emphasis="total"
+          />
+        </Card>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <Button
+          label={deliveryFeeKnown ? `${t('checkout.confirm_order')} · ${money(grandTotal)}` : t('checkout.confirm_order')}
+          size="lg"
+          fullWidth
+          loading={orderMutation.isPending}
+          disabled={isDisabled}
+          onPress={handleConfirmOrder}
+        />
       </View>
     </SafeAreaView>
   );
@@ -211,304 +207,108 @@ const CheckoutScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.white,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.3,
+    backgroundColor: palette.background,
   },
   scrollContent: {
-    paddingBottom: 8,
+    padding: space.lg,
+    paddingBottom: space.xxl,
   },
-  section: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
+  sectionGap: {
+    marginTop: space.xxl,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  stack: {
+    gap: space.sm,
+  },
+  flex: {
+    flex: 1,
+  },
+  center: {
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  tabular: {
+    fontVariant: ['tabular-nums'],
+  },
+  emptyAddress: {
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
-    letterSpacing: -0.2,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primaryXLight,
-  },
-  addBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.primary,
-  },
-  emptyAddressCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.border,
+    gap: space.xs,
+    padding: space.xl,
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
+    borderColor: palette.primaryMuted,
+    backgroundColor: palette.surface,
   },
   emptyAddressIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primaryXLight,
-    justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: palette.primarySoft,
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  emptyAddressText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.primary,
-    marginBottom: 4,
-  },
-  emptyAddressHint: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
+    justifyContent: 'center',
+    marginBottom: space.xs,
   },
   addressCard: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.sm,
     alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: palette.surface,
     borderWidth: 1.5,
-    borderColor: 'transparent',
-    ...theme.shadows.soft,
+    borderColor: palette.border,
   },
   addressCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryXLight,
-  },
-  addressIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: theme.colors.borderLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  addressIconBoxSelected: {
-    backgroundColor: theme.colors.primary,
-  },
-  addressInfo: {
-    flex: 1,
-  },
-  addressLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    marginBottom: 2,
-  },
-  addressLabelSelected: {
-    color: theme.colors.primary,
-  },
-  addressText: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    lineHeight: 18,
-  },
-  checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  penaltyBanner: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.errorLight,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  penaltyText: {
-    flex: 1,
-  },
-  penaltyTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.colors.error,
-    marginBottom: 3,
-  },
-  penaltyDesc: {
-    fontSize: 13,
-    color: '#991B1B',
-    lineHeight: 18,
-  },
-  paymentCard: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    alignItems: 'center',
-    ...theme.shadows.soft,
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary,
-  },
-  paymentIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primaryXLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  paymentInfo: {
-    flex: 1,
-  },
-  paymentLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-  },
-  paymentDesc: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    marginTop: 1,
+    borderColor: palette.primary,
+    backgroundColor: palette.primarySoft,
   },
   radioOuter: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: theme.colors.primary,
-    justifyContent: 'center',
+    borderColor: palette.borderStrong,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuterOn: {
+    borderColor: palette.primary,
   },
   radioInner: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: theme.colors.primary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: palette.primary,
   },
-  summaryCard: {
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.lg,
-    ...theme.shadows.soft,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-  },
-  deliveryFeeRow: {
+  itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: space.md,
+    paddingVertical: space.sm,
   },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-    marginVertical: 12,
+  itemRowBorder: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
   },
-  grandRow: {
+  qty: {
+    minWidth: 40,
+    textAlign: 'center',
+  },
+  penaltyBanner: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  grandLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-  },
-  grandValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: palette.errorSoft,
   },
   footer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.white,
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    ...theme.shadows.medium,
-  },
-  confirmBtn: {
-    backgroundColor: theme.colors.primary,
-    height: 56,
-    borderRadius: theme.radius.xl,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    ...theme.shadows.medium,
-  },
-  confirmBtnDisabled: {
-    backgroundColor: theme.colors.border,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  confirmBtnText: {
-    color: theme.colors.white,
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    paddingHorizontal: space.xl,
+    paddingVertical: space.md,
+    backgroundColor: palette.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.borderStrong,
   },
 });
 

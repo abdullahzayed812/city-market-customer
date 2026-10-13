@@ -18,6 +18,9 @@ export const useCategoryProducts = (vendorId: string, categoryId?: string) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    error,
+    refetch,
+    isRefetching,
   } = useInfiniteQuery({
     queryKey: ['category-products', vendorId, categoryId || 'all'],
     queryFn: ({ pageParam = 1 }) =>
@@ -74,5 +77,8 @@ export const useCategoryProducts = (vendorId: string, categoryId?: string) => {
     hasNextPage,
     isFetchingNextPage,
     handleAddToCart,
+    error,
+    refetch,
+    isRefetching,
   };
 };

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
@@ -17,10 +17,17 @@ export const useCheckout = (navigation: any) => {
     queryFn: UserService.getProfile,
   });
 
-  const { data: addresses, isLoading: addressesLoading } = useQuery({
+  const { data: addresses, isLoading: addressesLoading, error: addressesError, refetch: refetchAddresses } = useQuery({
     queryKey: ['addresses'],
     queryFn: UserService.getAddresses,
   });
+
+  // Preselect the default address (or the only one) so most orders are one tap.
+  useEffect(() => {
+    if (selectedAddress || !addresses?.length) return;
+    const preferred = addresses.find((a: any) => a.isDefault) ?? (addresses.length === 1 ? addresses[0] : undefined);
+    if (preferred) setSelectedAddress(preferred.id);
+  }, [addresses, selectedAddress]);
 
   const orderMutation = useMutation({
     mutationFn: OrderService.createOrder,
@@ -46,7 +53,7 @@ export const useCheckout = (navigation: any) => {
 
   const address = addresses?.find((a: any) => a.id === selectedAddress);
 
-  const { data: dynamicDeliveryFee, isLoading: deliveryFeeLoading } = useQuery({
+  const { data: dynamicDeliveryFee, isLoading: deliveryFeeLoading, isError: deliveryFeeError } = useQuery({
     queryKey: ['delivery-fee', selectedAddress, items.map(i => i.id).join(',')],
     queryFn: () => OrderService.getDeliveryFee(
       address!.latitude as number,
@@ -116,6 +123,12 @@ export const useCheckout = (navigation: any) => {
     deliveryFee,
     deliveryFeeLoading,
     grandTotal,
+    // The fee is only known once the API has quoted it for the selected address;
+    // until then the UI must not present the fallback as a real amount.
+    deliveryFeeKnown: typeof dynamicDeliveryFee === 'number',
+    deliveryFeeError,
+    addressesError,
+    refetchAddresses,
     hasPenalty: profile?.hasPenalty === true,
   };
 };

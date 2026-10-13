@@ -1,8 +1,8 @@
-import React, { useRef, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+import React from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
+import { AppText as Text, palette, radii } from '@city-market/mobile-ui';
+import { useTranslation } from 'react-i18next';
 import { Minus, Plus } from 'lucide-react-native';
-import { theme } from '../../theme';
 
 interface QuantitySelectorProps {
   quantity: number;
@@ -11,48 +11,9 @@ interface QuantitySelectorProps {
   maxQuantity?: number;
   minQuantity?: number;
   displayValue?: string;
+  /** `lg` for the product page, `md` for list rows. */
+  size?: 'md' | 'lg';
 }
-
-const AnimatedIconButton = ({
-  onPress,
-  disabled,
-  children,
-}: {
-  onPress: () => void;
-  disabled: boolean;
-  children: React.ReactNode;
-}) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = useCallback(() => {
-    if (disabled) return;
-    Animated.spring(scale, { toValue: 0.82, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
-  }, [scale, disabled]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 6 }).start();
-  }, [scale]);
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={disabled}
-      activeOpacity={1}
-    >
-      <Animated.View
-        style={[
-          styles.button,
-          disabled && styles.buttonDisabled,
-          { transform: [{ scale }] },
-        ]}
-      >
-        {children}
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
 
 const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   quantity,
@@ -61,23 +22,45 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   maxQuantity,
   minQuantity = 1,
   displayValue,
+  size = 'md',
 }) => {
+  const { t } = useTranslation();
   const isDecrDisabled = quantity <= minQuantity;
   const isIncrDisabled = maxQuantity !== undefined && quantity >= maxQuantity;
+  const btn = size === 'lg' ? 44 : 36;
+
+  const renderButton = (kind: 'dec' | 'inc') => {
+    const disabled = kind === 'dec' ? isDecrDisabled : isIncrDisabled;
+    const Icon = kind === 'dec' ? Minus : Plus;
+    return (
+      <Pressable
+        onPress={kind === 'dec' ? onDecrement : onIncrement}
+        disabled={disabled}
+        hitSlop={4}
+        accessibilityRole="button"
+        accessibilityLabel={kind === 'dec' ? t('common.decrease') : t('common.increase')}
+        accessibilityState={{ disabled }}
+        style={({ pressed }) => [
+          styles.button,
+          { width: btn, height: btn, borderRadius: btn / 2 },
+          disabled && styles.buttonDisabled,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Icon size={size === 'lg' ? 20 : 17} color={disabled ? palette.textDisabled : palette.primary} strokeWidth={2.5} />
+      </Pressable>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <AnimatedIconButton onPress={onDecrement} disabled={isDecrDisabled}>
-        <Minus size={16} color={isDecrDisabled ? theme.colors.textMuted : theme.colors.primary} strokeWidth={2.5} />
-      </AnimatedIconButton>
-
-      <View style={styles.valueContainer}>
-        <Text style={styles.valueText}>{displayValue ?? quantity}</Text>
+    <View style={styles.container} accessibilityRole="adjustable" accessibilityValue={{ text: displayValue ?? String(quantity) }}>
+      {renderButton('dec')}
+      <View style={[styles.valueContainer, size === 'lg' && styles.valueLg]}>
+        <Text variant={size === 'lg' ? 'heading' : 'bodyStrong'} color={palette.text} style={styles.valueText} numberOfLines={1}>
+          {displayValue ?? quantity}
+        </Text>
       </View>
-
-      <AnimatedIconButton onPress={onIncrement} disabled={isIncrDisabled}>
-        <Plus size={16} color={isIncrDisabled ? theme.colors.textMuted : theme.colors.primary} strokeWidth={2.5} />
-      </AnimatedIconButton>
+      {renderButton('inc')}
     </View>
   );
 };
@@ -86,35 +69,32 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primaryXLight,
-    borderRadius: theme.radius.md,
+    backgroundColor: palette.primarySoft,
+    borderRadius: radii.pill,
     padding: 3,
-    gap: 2,
   },
   button: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    backgroundColor: theme.colors.white,
+    backgroundColor: palette.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.soft,
   },
   buttonDisabled: {
-    backgroundColor: theme.colors.borderLight,
-    shadowOpacity: 0,
-    elevation: 0,
+    backgroundColor: 'transparent',
+  },
+  pressed: {
+    opacity: 0.6,
   },
   valueContainer: {
-    minWidth: 32,
+    minWidth: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: 6,
+  },
+  valueLg: {
+    minWidth: 64,
   },
   valueText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: theme.colors.primary,
+    fontVariant: ['tabular-nums'],
   },
 });
 

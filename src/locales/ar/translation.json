@@ -42,7 +42,17 @@
     "vendor": "متجر",
     "logout_confirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
     "customer": "عميل",
-    "feature_coming_soon": "هذه الميزة قادمة قريباً"
+    "feature_coming_soon": "هذه الميزة قادمة قريباً",
+    "currency": "ج.م",
+    "per_kg": "/ كجم",
+    "back": "رجوع",
+    "error_title": "تعذّر تحميل البيانات",
+    "error_message": "حدث خطأ غير متوقع، حاول مرة أخرى.",
+    "offline_title": "لا يوجد اتصال بالإنترنت",
+    "offline_message": "تحقق من اتصالك ثم حاول مرة أخرى.",
+    "action_failed": "تعذّر إتمام العملية",
+    "increase": "زيادة الكمية",
+    "decrease": "تقليل الكمية"
   },
   "auth": {
     "login_title": "أهلاً بك مجدداً",
@@ -110,7 +120,11 @@
     "type_pastry": "حلواني",
     "type_stationery": "مكتبة",
     "type_vegfruit": "خضروات وفاكهة",
-    "type_other": "أخرى"
+    "type_other": "أخرى",
+    "no_stores": "لا توجد متاجر متاحة حالياً",
+    "no_stores_hint": "اسحب للأسفل للتحديث أو حاول لاحقاً.",
+    "greeting": "ماذا تحتاج اليوم؟",
+    "rating_count": "({{count}})"
   },
   "store": {
     "products": "المنتجات",
@@ -129,13 +143,20 @@
     "all": "الكل",
     "no_categories": "لا توجد تصنيفات متاحة",
     "low_stock": "كمية منخفضة",
-    "no_comment": "لا يوجد تعليق"
+    "no_comment": "لا يوجد تعليق",
+    "add_item_a11y": "إضافة {{name}} إلى السلة",
+    "in_cart": "في السلة"
   },
   "product": {
     "in_stock": "متوفر في المخزن",
     "quantity": "الكمية",
     "proposed_quantity": "الكمية المقترحة",
-    "weight": "الوزن"
+    "weight": "الوزن",
+    "line_total": "الإجمالي",
+    "max_reached": "وصلت للحد المتاح من المخزون",
+    "from_store": "من {{store}}",
+    "available": "متوفر",
+    "not_found": "هذا المنتج غير متاح"
   },
   "cart": {
     "title": "سلة التسوق",
@@ -144,7 +165,13 @@
     "total": "المجموع الكلي",
     "subtotal": "المجموع الفرعي",
     "checkout": "الدفع",
-    "remove": "إزالة"
+    "remove": "إزالة",
+    "view_cart": "عرض السلة",
+    "delivery_at_checkout": "تُحسب عند الدفع",
+    "continue": "متابعة الدفع",
+    "items_count": "عدد المنتجات: {{count}}",
+    "remove_a11y": "إزالة {{name}} من السلة",
+    "browse_stores": "تصفح المتاجر"
   },
   "checkout": {
     "title": "إتمام الطلب",
@@ -161,7 +188,12 @@
     "grand_total": "المجموع الإجمالي",
     "select_address": "يرجى اختيار عنوان التوصيل",
     "address_not_found": "العنوان المختار غير موجود",
-    "failed_to_place_order": "فشل تقديم الطلب"
+    "failed_to_place_order": "فشل تقديم الطلب",
+    "fee_pending": "اختر عنواناً لحساب رسوم التوصيل",
+    "fee_calculating": "جاري حساب رسوم التوصيل...",
+    "items_subtotal": "إجمالي المنتجات",
+    "pay_on_delivery_note": "ستدفع المبلغ نقداً عند استلام الطلب.",
+    "add_address": "إضافة عنوان"
   },
   "orders": {
     "title": "طلباتي",
@@ -233,7 +265,11 @@
     "type_weight_adjustment": "تعديل الوزن",
     "requested_weight": "الوزن المطلوب",
     "proposed_weight": "الوزن المقترح",
-    "actual_quantity": "الكمية المطلوبة"
+    "actual_quantity": "الكمية المطلوبة",
+    "requested": "المطلوب",
+    "proposed": "المقترح",
+    "unavailable_desc": "أبلغ المتجر أن هذا المنتج غير متوفر. القبول يعني حذفه من طلبك.",
+    "pending_count": "{{count}} بانتظار قرارك"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -342,5 +378,9 @@
     "vehicle_bicycle": "دراجة",
     "rate_delivery": "قيّم التوصيل",
     "your_rating": "تقييمك"
+  },
+  "map": {
+    "pick_location": "حدد الموقع على الخريطة",
+    "confirm_location": "تأكيد الموقع"
   }
 }

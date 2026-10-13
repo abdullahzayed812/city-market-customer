@@ -1,149 +1,93 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
+import { View, StyleSheet, FlatList, ActivityIndicator, Pressable, StatusBar, RefreshControl } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-  StatusBar,
-  RefreshControl,
-  Animated,
-} from 'react-native';
-import { AppText as Text } from '@city-market/mobile-ui';
+  AppText as Text,
+  Button,
+  ScreenHeader,
+  StatusBadge,
+  EmptyState,
+  LoadingState,
+  ForwardIcon,
+  shortId,
+  palette,
+  radii,
+  space,
+} from '@city-market/mobile-ui';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Package,
-  ChevronRight,
-  Clock,
-  Calendar,
-  LogIn,
-  UserPlus,
-  ShoppingBag,
-  Timer,
-} from 'lucide-react-native';
+import { Package, LogIn, UserPlus, ShoppingBag, Timer } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OrderService } from '../services/api/orderService';
 import { useSocket } from '../app/SocketContext';
 import { useAuth } from '../app/AuthContext';
-import { theme } from '../theme';
-import {
-  CustomerOrder,
-  CustomerOrderStatus,
-  EventType,
-} from '@city-market/shared';
-import { useAnimatedPress } from '../hooks/useAnimatedPress';
+import { CustomerOrder, CustomerOrderStatus, EventType } from '@city-market/shared';
 import { useSlaCountdown } from '../hooks/useSlaCountdown';
-
-const STATUS_COLORS: Record<string, string> = {
-  [CustomerOrderStatus.PENDING_VENDOR_CONFIRMATION]: '#F59E0B',
-  [CustomerOrderStatus.WAITING_CUSTOMER_DECISION]: '#F59E0B',
-  [CustomerOrderStatus.READY]: theme.colors.primary,
-  [CustomerOrderStatus.IN_DELIVERY]: theme.colors.primary,
-  [CustomerOrderStatus.COMPLETED]: '#10B981',
-  [CustomerOrderStatus.CANCELLED]: theme.colors.error,
-};
+import { useFormat } from '../hooks/useFormat';
+import { orderStatusMeta } from '../features/orders/orderStatus';
+import QueryError from '../components/common/QueryError';
 
 const OrderCard = React.memo(({ item, onPress, t }: { item: CustomerOrder; onPress: () => void; t: any }) => {
-  const { scaleValue, onPressIn, onPressOut } = useAnimatedPress(0.98);
+  const { money } = useFormat();
   const date = new Date(item.createdAt);
-  const statusColor = STATUS_COLORS[item.status] ?? theme.colors.textMuted;
+  const status = orderStatusMeta(item.status);
   const isWaiting = item.status === CustomerOrderStatus.WAITING_CUSTOMER_DECISION;
   const countdown = useSlaCountdown(isWaiting ? (item as any).customerDecisionDeadline : null);
+  const showCountdown = isWaiting && countdown.remainingSeconds > 0 && !countdown.isExpired;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      activeOpacity={1}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.orderCard, isWaiting && styles.orderCardUrgent, pressed && styles.pressed]}
     >
-      <Animated.View style={[styles.orderCard, { transform: [{ scale: scaleValue }] }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.orderIdRow}>
-            <View style={styles.pkgIcon}>
-              <Package size={16} color={theme.colors.primary} />
-            </View>
-            <Text style={styles.orderId}>#{item.id.slice(-6).toUpperCase()}</Text>
-          </View>
-          <View style={[styles.statusPill, { backgroundColor: statusColor + '18' }]}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.statusText, { color: statusColor }]}>
-              {t(`orders.status_${item.status.toLowerCase()}`)}
-            </Text>
-          </View>
+      <View style={styles.cardHeader}>
+        <View style={styles.flex}>
+          <Text variant="subheading" color={palette.text}>{shortId(item.id)}</Text>
+          <Text variant="caption" color={palette.textMuted}>
+            {date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+          </Text>
         </View>
+        <StatusBadge label={t(`orders.status_${item.status.toLowerCase()}`)} tone={status.tone} icon={status.icon} size="sm" />
+      </View>
 
-        {isWaiting && countdown.remainingSeconds > 0 && !countdown.isExpired && (
-          <View style={[
-            styles.countdownRow,
-            countdown.isWarning && { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
-          ]}>
-            <Timer size={13} color={countdown.isWarning ? '#dc2626' : '#b45309'} />
-            <Text style={[styles.countdownText, countdown.isWarning && { color: '#dc2626' }]}>
-              {t('orders.decide_before', 'Decide before')}: {countdown.formattedTime}
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.divider} />
-
-        <View style={styles.dateRow}>
-          <View style={styles.dateItem}>
-            <Calendar size={13} color={theme.colors.textMuted} />
-            <Text style={styles.dateText}>{date.toLocaleDateString()}</Text>
-          </View>
-          <View style={styles.dateItem}>
-            <Clock size={13} color={theme.colors.textMuted} />
-            <Text style={styles.dateText}>
-              {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
-          </View>
+      {showCountdown ? (
+        <View style={[styles.countdownRow, countdown.isWarning && styles.countdownUrgent]}>
+          <Timer size={15} color={countdown.isWarning ? palette.error : palette.warning} />
+          <Text variant="caption" color={countdown.isWarning ? palette.error : palette.warning}>
+            {t('orders.decide_before', 'Decide before')}: {countdown.formattedTime}
+          </Text>
         </View>
+      ) : null}
 
-        <View style={styles.cardFooter}>
-          <View>
-            <Text style={styles.totalLabel}>{t('cart.total')}</Text>
-            <Text style={styles.totalValue}>${item.totalAmount.toFixed(2)}</Text>
-          </View>
-          <View style={styles.trackBtn}>
-            <Text style={styles.trackText}>{t('orders.track')}</Text>
-            <ChevronRight size={15} color={theme.colors.primary} />
-          </View>
+      <View style={styles.cardFooter}>
+        <View style={styles.flex}>
+          <Text variant="caption" color={palette.textMuted}>{t('cart.total')}</Text>
+          <Text variant="heading" color={palette.text} style={styles.tabular}>{money(item.totalAmount)}</Text>
         </View>
-      </Animated.View>
-    </TouchableOpacity>
+        <View style={styles.trackBtn}>
+          <Text variant="label" color={palette.primary}>{t('orders.track')}</Text>
+          <ForwardIcon size={16} color={palette.primary} />
+        </View>
+      </View>
+    </Pressable>
   );
 });
 
-const GuestView = ({ navigation, t }: { navigation: any; t: any }) => {
-  const { scaleValue: ls, onPressIn: li, onPressOut: lo } = useAnimatedPress(0.96);
-  const { scaleValue: rs, onPressIn: ri, onPressOut: ro } = useAnimatedPress(0.96);
-
-  return (
-    <View style={styles.guestContainer}>
-      <View style={styles.guestIconCircle}>
-        <ShoppingBag size={36} color={theme.colors.primary} />
-      </View>
-      <Text style={styles.guestTitle}>{t('auth.login_required_title') || 'Login Required'}</Text>
-      <Text style={styles.guestMessage}>
-        {t('auth.login_to_view_orders') || 'Login to view and track your orders'}
-      </Text>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')} onPressIn={li} onPressOut={lo} activeOpacity={1} style={{ width: '100%', marginBottom: theme.spacing.sm }}>
-        <Animated.View style={[styles.guestLoginBtn, { transform: [{ scale: ls }] }]}>
-          <LogIn size={18} color={theme.colors.white} />
-          <Text style={styles.guestLoginBtnText}>{t('common.login') || 'Login'}</Text>
-        </Animated.View>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Register')} onPressIn={ri} onPressOut={ro} activeOpacity={1} style={{ width: '100%' }}>
-        <Animated.View style={[styles.guestRegBtn, { transform: [{ scale: rs }] }]}>
-          <UserPlus size={18} color={theme.colors.primary} />
-          <Text style={styles.guestRegBtnText}>{t('common.register') || 'Register'}</Text>
-        </Animated.View>
-      </TouchableOpacity>
-    </View>
-  );
-};
+const GuestView = ({ navigation, t }: { navigation: any; t: any }) => (
+  <View style={styles.guestContainer}>
+    <EmptyState icon={ShoppingBag} title={t('auth.login_required_title')} message={t('auth.login_to_view_orders')} compact />
+    <Button label={t('common.login')} icon={LogIn} size="lg" fullWidth onPress={() => navigation.navigate('Login')} />
+    <Button
+      label={t('common.register')}
+      icon={UserPlus}
+      size="lg"
+      variant="outline"
+      fullWidth
+      onPress={() => navigation.navigate('Register')}
+      style={styles.guestSecond}
+    />
+  </View>
+);
 
 const OrdersScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
@@ -151,7 +95,7 @@ const OrdersScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
   const { socket } = useSocket();
 
-  const { data, isLoading, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, error, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ['myOrders'],
       queryFn: ({ pageParam }) => OrderService.getMyOrders(pageParam),
@@ -199,287 +143,125 @@ const OrdersScreen = ({ navigation }: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('orders.title')}</Text>
-        </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={palette.surface} />
+      <ScreenHeader title={t('orders.title')} />
 
-        {!isAuthenticated ? (
-          <GuestView navigation={navigation} t={t} />
-        ) : isLoading ? (
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-          </View>
-        ) : (
-          <FlatList
-            data={orders}
-            renderItem={renderOrderItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.colors.primary} />
-            }
-            onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <ActivityIndicator style={styles.footerLoader} color={theme.colors.primary} />
-              ) : null
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <View style={styles.emptyIconCircle}>
-                  <Package size={40} color={theme.colors.primary} strokeWidth={1.5} />
-                </View>
-                <Text style={styles.emptyTitle}>{t('orders.no_orders')}</Text>
-                <Text style={styles.emptyHint}>
-                  {t('orders.no_orders_hint') || 'Your order history will appear here'}
-                </Text>
-              </View>
-            }
-          />
-        )}
-      </View>
+      {!isAuthenticated ? (
+        <GuestView navigation={navigation} t={t} />
+      ) : isLoading ? (
+        <LoadingState />
+      ) : (
+        <FlatList
+          data={orders}
+          renderItem={renderOrderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={Separator}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.primary} colors={[palette.primary]} />
+          }
+          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            isFetchingNextPage ? <ActivityIndicator style={styles.footerLoader} color={palette.primary} /> : null
+          }
+          ListEmptyComponent={
+            error ? (
+              <QueryError error={error} onRetry={refetch} retrying={isRefetching} />
+            ) : (
+              <EmptyState
+                icon={Package}
+                title={t('orders.no_orders')}
+                message={t('orders.no_orders_hint')}
+                actionLabel={t('cart.browse_stores')}
+                onAction={() => navigation.navigate('Home')}
+              />
+            )
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
 
+const Separator = () => <View style={styles.separator} />;
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: theme.colors.white },
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.4,
+  safeArea: {
+    flex: 1,
+    backgroundColor: palette.background,
   },
   listContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: 40,
+    flexGrow: 1,
+    padding: space.lg,
+    paddingBottom: space.huge,
+  },
+  separator: {
+    height: space.md,
+  },
+  flex: {
+    flex: 1,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  tabular: {
+    fontVariant: ['tabular-nums'],
   },
   orderCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.soft,
+    backgroundColor: palette.surface,
+    borderRadius: radii.lg,
+    padding: space.lg,
+    gap: space.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.borderStrong,
+  },
+  orderCardUrgent: {
+    borderWidth: 1.5,
+    borderColor: palette.warning,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  orderIdRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pkgIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: theme.colors.primaryXLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  orderId: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    letterSpacing: 0.5,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.radius.pill,
-    gap: 5,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    alignItems: 'flex-start',
+    gap: space.md,
   },
   countdownRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#fef3c7',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 10,
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    borderRadius: radii.sm,
+    backgroundColor: palette.warningSoft,
   },
-  countdownText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#b45309',
-    fontVariant: ['tabular-nums'],
-  },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.borderLight,
-    marginBottom: 12,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
-  },
-  dateItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  dateText: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
+  countdownUrgent: {
+    backgroundColor: palette.errorSoft,
   },
   cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    fontSize: 11,
-    color: theme.colors.textMuted,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    letterSpacing: -0.3,
+    alignItems: 'flex-end',
+    paddingTop: space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.border,
   },
   trackBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primaryXLight,
+    minHeight: 32,
   },
-  trackText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.colors.primary,
-  },
-  footerLoader: { paddingVertical: 20 },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 80,
-    paddingHorizontal: 40,
-  },
-  emptyIconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: theme.colors.primaryXLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.textPrimary,
-    marginBottom: 8,
-    letterSpacing: -0.3,
-    textAlign: 'center',
-  },
-  emptyHint: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
+  footerLoader: {
+    paddingVertical: space.xl,
   },
   guestContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: space.xxl,
   },
-  guestIconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: theme.colors.primaryXLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  guestTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-    letterSpacing: -0.4,
-  },
-  guestMessage: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: theme.spacing.xl,
-  },
-  guestLoginBtn: {
-    height: 52,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    ...theme.shadows.soft,
-  },
-  guestLoginBtnText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  guestRegBtn: {
-    height: 52,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary,
-  },
-  guestRegBtnText: {
-    color: theme.colors.primary,
-    fontSize: 16,
-    fontWeight: '700',
+  guestSecond: {
+    marginTop: space.md,
   },
 });
 

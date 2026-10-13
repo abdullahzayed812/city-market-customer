@@ -8,12 +8,12 @@ export const useStoreDetails = (vendorId: string) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
-  const { data: vendor, isLoading: vendorLoading } = useQuery({
+  const { data: vendor, isLoading: vendorLoading, error: vendorError, refetch: refetchVendor } = useQuery({
     queryKey: ['vendor', vendorId],
     queryFn: () => VendorService.getVendorById(vendorId),
   });
 
-  const { data: vendorCategories, isLoading: categoriesLoading } = useQuery({
+  const { data: vendorCategories, isLoading: categoriesLoading, refetch: refetchCategories } = useQuery({
     queryKey: ['vendor-categories', vendorId],
     queryFn: () => CatalogService.getVendorCategories(vendorId),
   });
@@ -25,5 +25,8 @@ export const useStoreDetails = (vendorId: string) => {
     categoriesLoading,
     vendorCategories: vendorCategories || [],
     insets,
+    vendorError,
+    refetchVendor,
+    refetchCategories,
   };
 };

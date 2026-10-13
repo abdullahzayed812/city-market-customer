@@ -50,15 +50,12 @@ export const HomeScreenSkeleton = () => (
     {/* Section title skeleton */}
     <SkeletonBox width={120} height={18} borderRadius={9} style={styles.sectionSk} />
 
-    {/* Cards row skeleton */}
+    {/* Store tiles skeleton (compact grid, as on the home screen) */}
     <View style={styles.cardRow}>
-      {[1, 2].map(i => (
-        <View key={i} style={styles.cardSk}>
-          <SkeletonBox width="100%" height={120} borderRadius={0} />
-          <View style={styles.cardInfo}>
-            <SkeletonBox width="70%" height={14} borderRadius={7} style={{ marginBottom: 6 }} />
-            <SkeletonBox width="50%" height={11} borderRadius={5} />
-          </View>
+      {[1, 2, 3, 4].map(i => (
+        <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+          <SkeletonBox width="100%" height={72} borderRadius={14} />
+          <SkeletonBox width="80%" height={10} borderRadius={5} style={{ marginTop: 6 }} />
         </View>
       ))}
     </View>
@@ -105,15 +102,6 @@ const styles = StyleSheet.create({
   cardRow: {
     flexDirection: 'row',
     gap: theme.spacing.md,
-  },
-  cardSk: {
-    flex: 1,
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-  },
-  cardInfo: {
-    padding: theme.spacing.sm,
   },
   productCardSk: {
     backgroundColor: theme.colors.white,
